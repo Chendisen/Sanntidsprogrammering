@@ -8,14 +8,20 @@ import (
     "time"
 )
 
-var i = 0
+var i int = 0
 
 func incrementing() {
     //TODO: increment i 1000000 times
+    for j:= 0; j < 1000000; j++{
+        i += 1
+    }
 }
 
 func decrementing() {
     //TODO: decrement i 1000000 times
+    for j:= 0; j < 1000000; j++{
+        i -= 1
+    }
 }
 
 func main() {
@@ -23,6 +29,8 @@ func main() {
     runtime.GOMAXPROCS(2)    
 	
     // TODO: Spawn both functions as goroutines
+    go incrementing()
+    go decrementing()
 	
     // We have no direct way to wait for the completion of a goroutine (without additional synchronization of some sort)
     // We will do it properly with channels soon. For now: Sleep.
