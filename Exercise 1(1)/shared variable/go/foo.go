@@ -31,7 +31,6 @@ func main() {
     // TODO: Spawn both functions as goroutines
     go incrementing()
     go decrementing()
-    Println("Hei")
 	
     // We have no direct way to wait for the completion of a goroutine (without additional synchronization of some sort)
     // We will do it properly with channels soon. For now: Sleep.
