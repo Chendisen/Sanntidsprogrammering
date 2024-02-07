@@ -7,8 +7,8 @@ import (
 )
 
 type DirnBehaviourPair struct {
-	dirn      driver.MotorDirection
-	behaviour elevator.ElevatorBehaviour
+	Dirn      driver.MotorDirection
+	Behaviour elevator.ElevatorBehaviour
 }
 
 func requests_above(e elevator.Elevator) int {
