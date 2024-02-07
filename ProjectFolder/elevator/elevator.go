@@ -3,7 +3,8 @@ package elevator
 import (
 	"fmt"
 	"Sanntid/elevator_io"
-	"Sanntid/timer"
+	"Sanntid/driver"
+	// "Sanntid/timer"
 )
 
 type ElevatorBehaviour int64 
@@ -32,9 +33,9 @@ type Configuration struct {
 }
 
 type Elevator struct {
-	Floor													int64
-	Dirn 													elevator_io.Dirn
-	Request[][] 	                                        int
+	Floor													int
+	Dirn 													driver.MotorDirection
+	Request[elevator_io.N_FLOORS][elevator_io.N_BUTTONS]    int
 	Behaviour 												ElevatorBehaviour
 	Config 													Configuration
 }
@@ -67,8 +68,8 @@ func Elevator_print(es Elevator) {
 	for floor := elevator_io.N_FLOORS - 1; floor >= 0; floor -- {
 		fmt.Println("  | %d", floor)
 		for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
-			if ((floor == elevator_io.N_FLOORS && btn == elevator_io.B_HallUp) ||
-				(floor == 0 && btn == elevator_io.B_Halldown)) {
+			if ((floor == elevator_io.N_FLOORS && btn == int(driver.BT_HallUp)) ||
+				(floor == 0 && btn == int(driver.BT_HallDown))) {
 				fmt.Println("|     ")
 			} else {
 				switch es.Request[floor][btn] {
@@ -87,7 +88,7 @@ func Elevator_print(es Elevator) {
 func Elevator_uninitialized() Elevator {
 	return Elevator {
 		Floor: 		-1, 
-		Dirn: 		elevator_io.D_Stop,
+		Dirn: 		driver.MD_Stop,
 		Behaviour: 	EB_Idle,
 		Config: 	Configuration 	{ClearRequestVariant: 	CV_InDirn,
 					 				DoorOpenDuration_s: 	3.0},
