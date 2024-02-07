@@ -201,3 +201,10 @@ func toBool(a byte) bool {
 func IntToBool(a int) bool {
 	return a != 0
 }
+
+func BoolToInt(b bool) int {
+	if b{
+		return 1
+	}
+	return 0
+}
