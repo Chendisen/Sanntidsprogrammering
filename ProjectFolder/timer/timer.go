@@ -5,21 +5,21 @@ import (
 )
 
 func get_current_time() float64 {
-	return (time.Now().Seconds() + time.Now().Milliseconds()*0.000001)
+	return (float64(time.Now().Second()) + float64(time.Now().Nanosecond())*float64(0.000000001))
 }
 
 var timerEndTime float64
 var timerActive bool
 
-func timer_start(duration float64) {
+func Timer_start(duration float64) {
 	timerEndTime = get_current_time() + duration
-	timerActive = 1
+	timerActive = true
 }
 
-func timer_stop() {
-	timerActive = 0
+func Timer_stop() {
+	timerActive = false
 }
 
-func timer_timedOut() bool {
+func Timer_timedOut() bool {
 	return (timerActive && (get_current_time() > timerEndTime))
 }
