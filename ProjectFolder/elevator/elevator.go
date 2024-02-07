@@ -34,7 +34,7 @@ type Configuration struct {
 type Elevator struct {
 	Floor													int64
 	Dirn 													elevator_io.Dirn
-	Request[elevator_io.N_FLOORS][elevator_io.N_BUTTONS] 	int
+	Request[][] 	                                        int
 	Behaviour 												ElevatorBehaviour
 	Config 													Configuration
 }
@@ -93,3 +93,4 @@ func Elevator_uninitialized() Elevator {
 					 				DoorOpenDuration_s: 	3.0},
 	}
 }
+
