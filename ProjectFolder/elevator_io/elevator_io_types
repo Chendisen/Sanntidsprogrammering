@@ -1,0 +1,18 @@
+package elevatorio
+
+type Dirn int64
+
+const (
+	D_Down Dirn = -1
+	D_Stop Dirn = 0
+	D_Up Dirn = 1
+)
+
+type Button int64
+
+const (
+	B_HallUp Button = iota
+	B_Halldown
+	B_Cab
+)
+
