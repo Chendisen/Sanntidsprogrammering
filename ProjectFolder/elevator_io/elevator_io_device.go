@@ -8,6 +8,7 @@ const N_FLOORS int = 4
 const N_BUTTONS int = 3
 
 const addr string = "localhost"
+const port string = "15657"
 
 // type Dirn int
 
@@ -40,8 +41,8 @@ type ElevOutputDevice struct {
 	MotorDirection     func(driver.MotorDirection)
 }
 
-func init() {
-	driver.Init(addr, N_FLOORS)
+func Init() {
+	driver.Init(addr+":"+port, N_FLOORS)
 }
 
 func wrap_requestButton(f int, b driver.ButtonType) bool {
