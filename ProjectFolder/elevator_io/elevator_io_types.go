@@ -2,6 +2,7 @@ package elevator_io
 
 import (
 	"fmt"
+	""
 )
 
 const N_FLOORS int = 4
@@ -38,7 +39,9 @@ type ElevOutputDevice struct {
 	motorDirection func(Dirn)
 }
 
-func elevio_getInputDevice
+func elevio_getInputDevice() ElevInputDevice {
+
+}
 
 func elevio_dirn_toString(d Dirn) string {
 
