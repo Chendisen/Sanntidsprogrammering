@@ -82,35 +82,35 @@ func Requests_chooseDirection(e elevator.Elevator) DirnBehaviourPair {
 	}
 }
 
-func Requests_shouldStop(e elevator.Elevator) int {
+func Requests_shouldStop(e elevator.Elevator) bool {
 	switch e.Dirn {
 	case driver.MD_Down:
-		return driver.BoolToInt((driver.IntToBool(e.Request[e.Floor][driver.BT_HallDown])) ||
+		return (driver.IntToBool(e.Request[e.Floor][driver.BT_HallDown])) ||
 								(driver.IntToBool(e.Request[e.Floor][driver.BT_Cab])) ||
-								!driver.IntToBool(requests_below(e)))
+								!driver.IntToBool(requests_below(e))
 	case driver.MD_Up:
-		return driver.BoolToInt((driver.IntToBool(e.Request[e.Floor][driver.BT_HallUp])) ||
+		return (driver.IntToBool(e.Request[e.Floor][driver.BT_HallUp])) ||
 								(driver.IntToBool(e.Request[e.Floor][driver.BT_Cab])) ||
-								!driver.IntToBool(requests_above(e)))
+								!driver.IntToBool(requests_above(e))
 	case driver.MD_Stop:
-		return 1
+		return true
 	default:
-		return 1
+		return true
 	}
 }
 
-func Requests_shouldClearImmediately(e elevator.Elevator, btn_floor int, btn_type driver.ButtonType) int {
+func Requests_shouldClearImmediately(e elevator.Elevator, btn_floor int, btn_type driver.ButtonType) bool {
 	switch e.Config.ClearRequestVariant {
 	case elevator.CV_all:
-		return driver.BoolToInt(e.Floor == btn_floor)
+		return e.Floor == btn_floor
 	case elevator.CV_InDirn:
-		return driver.BoolToInt(e.Floor == btn_floor &&
+		return (e.Floor == btn_floor &&
 								((e.Dirn == driver.MD_Up && btn_type == driver.BT_HallUp) ||
 								(e.Dirn == driver.MD_Down && btn_type == driver.BT_HallDown) ||
 								(e.Dirn == driver.MD_Stop) ||
 								(btn_type == driver.BT_Cab)))
 	default:
-		return 0
+		return false
 	}
 }
 
