@@ -82,7 +82,7 @@ func Fsm_onRequestButtonPress(btn_floor int, btn_type driver.ButtonType) {
 		break
 	}
 
-	elevator.setAllLights(elev)
+	elevator.SetAllLights(elev)
 
 	fmt.Printf("\nNew state:\n")
 	elevator.Elevator_print(elev)
@@ -92,9 +92,9 @@ func Fsm_onFloorArrival(newFloor int) {
 	pc, _, _, _ := runtime.Caller(0) 
 	functionName := runtime.FuncForPC(pc).Name()
 
-	fmt.Printf("\n\n%s(%d, %s)\n", functionName, btn_floor, elevator_io.Elevio_button_toString(btn_type)) //uuuuuhhhm what is all this
+	fmt.Printf("\n\n%s(%d, %s)\n", functionName, newFloor, elevator_io.Elevio_button_toString()) //uuuuuhhhm what is all this
 
 	elevator.Elevator_print(elev)
 
-	elev.Floor = int64(newFloor)
+	elev.Floor = newFloor
 }
