@@ -26,18 +26,18 @@ const addr string = "localhost"
 // )
 
 type ElevInputDevice struct {
-	floorSensor   func() int
-	requestButton func(int, driver.ButtonType) bool
-	stopButton    func() bool
-	obstruction   func() bool
+	FloorSensor   func() int
+	RequestButton func(int, driver.ButtonType) bool
+	StopButton    func() bool
+	Obstruction   func() bool
 }
 
 type ElevOutputDevice struct {
-	floorIndicator     func(int)
-	requestButtonLight func(int, driver.ButtonType, bool)
-	doorLight          func(bool)
-	stopButtonLight    func(bool)
-	motorDirection     func(driver.MotorDirection)
+	FloorIndicator     func(int)
+	RequestButtonLight func(int, driver.ButtonType, bool)
+	DoorLight          func(bool)
+	StopButtonLight    func(bool)
+	MotorDirection     func(driver.MotorDirection)
 }
 
 func init() {
@@ -58,20 +58,20 @@ func wrap_motorDirection(d driver.MotorDirection) {
 
 func Elevio_getInputDevice() ElevInputDevice {
 	return ElevInputDevice{
-		floorSensor:   driver.GetFloor,
-		requestButton: wrap_requestButton,
-		stopButton:    driver.GetStop,
-		obstruction:   driver.GetObstruction,
+		FloorSensor:   driver.GetFloor,
+		RequestButton: wrap_requestButton,
+		StopButton:    driver.GetStop,
+		Obstruction:   driver.GetObstruction,
 	}
 }
 
 func Elevio_getOutputDevice() ElevOutputDevice {
 	return ElevOutputDevice{
-		floorIndicator:     driver.SetFloorIndicator,
-		requestButtonLight: wrap_requestButtonLight,
-		doorLight:          driver.SetDoorOpenLamp,
-		stopButtonLight:    driver.SetStopLamp,
-		motorDirection:     wrap_motorDirection,
+		FloorIndicator:     driver.SetFloorIndicator,
+		RequestButtonLight: wrap_requestButtonLight,
+		DoorLight:          driver.SetDoorOpenLamp,
+		StopButtonLight:    driver.SetStopLamp,
+		MotorDirection:     wrap_motorDirection,
 	}
 }
 
