@@ -1,11 +1,11 @@
-package elevatorio
+package elevator_io
 
 import (
 	"fmt"
 )
 
-var N_FLOORS int = 4
-var N_BUTTONS int = 3
+const N_FLOORS int = 4
+const N_BUTTONS int = 3
 
 type Dirn int64
 
