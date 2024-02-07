@@ -54,19 +54,12 @@ func eb_toString(eb ElevatorBehaviour) string {
 }
 
 func Elevator_print(es Elevator) {
-	fmt.Println("  +-----------------------+\n")
-	fmt.Println(
-		"  |floor = %2d          |\n",
-		"  |dirn  = %12s|\n",
-		"  |behav = %12s|\n",
-		es.Floor, 
-		elevator_io.Elevio_dirn_toString(es.Dirn),
-		eb_toString(es.Behaviour),
-	)
-	fmt.Println("  +-----------------------+\n")
-	fmt.Println("  | up | dn | cab |\n")
+	fmt.Println("  +-----------------------+")
+	fmt.Printf("  |floor = %2d          |\n  |dirn  = %12s|\n  |behav = %12s|\n", es.Floor, elevator_io.Elevio_dirn_toString(es.Dirn),eb_toString(es.Behaviour))
+	fmt.Println("  +-----------------------+")
+	fmt.Println("  | up | dn | cab |")
 	for floor := elevator_io.N_FLOORS - 1; floor >= 0; floor -- {
-		fmt.Println("  | %d", floor)
+		fmt.Printf("  | %d", floor)
 		for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
 			if ((floor == elevator_io.N_FLOORS && btn == int(driver.BT_HallUp)) ||
 				(floor == 0 && btn == int(driver.BT_HallDown))) {
@@ -80,9 +73,9 @@ func Elevator_print(es Elevator) {
 				}
 			}
 		}
-		fmt.Println("|\n")
+		fmt.Println("|")
 	}
-	fmt.Println("  +-----------------------+\n")
+	fmt.Println("  +-----------------------+")
 }
 
 func Elevator_uninitialized() Elevator {
