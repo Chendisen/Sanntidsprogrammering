@@ -1,10 +1,9 @@
 package main
 
 import (
-	"Sanntid/elevator"
-	"Sanntid/requests"
+	"Sanntid/run_elevator"
 
 )
 func main() {
-
+	go run_elevator.Run_elevator()
 }
