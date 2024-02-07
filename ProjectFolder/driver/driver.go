@@ -190,7 +190,7 @@ func toByte(a bool) byte {
 	return b
 }
 
-func toBool(a byte) bool {
+func ToBool(a byte) bool {
 	var b bool = false
 	if a != 0 {
 		b = true
