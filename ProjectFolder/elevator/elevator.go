@@ -38,6 +38,7 @@ type Elevator struct {
 	Request[elevator_io.N_FLOORS][elevator_io.N_BUTTONS]    int
 	Behaviour 												ElevatorBehaviour
 	Config 													Configuration
+	DoorObstructed											bool
 }
 
 func eb_toString(eb ElevatorBehaviour) string {
@@ -80,11 +81,12 @@ func Elevator_print(es Elevator) {
 
 func Elevator_uninitialized() Elevator {
 	return Elevator {
-		Floor: 		-1, 
-		Dirn: 		driver.MD_Stop,
-		Behaviour: 	EB_Idle,
-		Config: 	Configuration 	{ClearRequestVariant: 	CV_InDirn,
-					 				DoorOpenDuration_s: 	3.0},
+		Floor: 			-1, 
+		Dirn: 			driver.MD_Stop,
+		Behaviour: 		EB_Idle,
+		Config: 		Configuration 	{ClearRequestVariant: 	CV_InDirn,
+					 					DoorOpenDuration_s: 	3.0},
+		DoorObstructed: false,
 	}
 }
 

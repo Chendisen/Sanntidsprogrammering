@@ -86,12 +86,12 @@ func Requests_shouldStop(e elevator.Elevator) bool {
 	switch e.Dirn {
 	case driver.MD_Down:
 		return (driver.IntToBool(e.Request[e.Floor][driver.BT_HallDown])) ||
-								(driver.IntToBool(e.Request[e.Floor][driver.BT_Cab])) ||
-								!driver.IntToBool(requests_below(e))
+			(driver.IntToBool(e.Request[e.Floor][driver.BT_Cab])) ||
+			!driver.IntToBool(requests_below(e))
 	case driver.MD_Up:
 		return (driver.IntToBool(e.Request[e.Floor][driver.BT_HallUp])) ||
-								(driver.IntToBool(e.Request[e.Floor][driver.BT_Cab])) ||
-								!driver.IntToBool(requests_above(e))
+			(driver.IntToBool(e.Request[e.Floor][driver.BT_Cab])) ||
+			!driver.IntToBool(requests_above(e))
 	case driver.MD_Stop:
 		return true
 	default:
@@ -105,16 +105,16 @@ func Requests_shouldClearImmediately(e elevator.Elevator, btn_floor int, btn_typ
 		return e.Floor == btn_floor
 	case elevator.CV_InDirn:
 		return (e.Floor == btn_floor &&
-								((e.Dirn == driver.MD_Up && btn_type == driver.BT_HallUp) ||
-								(e.Dirn == driver.MD_Down && btn_type == driver.BT_HallDown) ||
-								(e.Dirn == driver.MD_Stop) ||
-								(btn_type == driver.BT_Cab)))
+			((e.Dirn == driver.MD_Up && btn_type == driver.BT_HallUp) ||
+				(e.Dirn == driver.MD_Down && btn_type == driver.BT_HallDown) ||
+				(e.Dirn == driver.MD_Stop) ||
+				(btn_type == driver.BT_Cab)))
 	default:
 		return false
 	}
 }
 
-func Requests_clearAtCurrentFloor(e elevator.Elevator) elevator.Elevator {
+func Requests_clearAtCurrentFloor(e *elevator.Elevator) {
 	switch e.Config.ClearRequestVariant {
 	case elevator.CV_all:
 		for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
@@ -124,12 +124,12 @@ func Requests_clearAtCurrentFloor(e elevator.Elevator) elevator.Elevator {
 		e.Request[e.Floor][driver.BT_Cab] = 0
 		switch e.Dirn {
 		case driver.MD_Up:
-			if !driver.IntToBool(requests_above(e)) && !driver.IntToBool(e.Request[e.Floor][driver.BT_HallUp]) {
+			if !driver.IntToBool(requests_above(*e)) && !driver.IntToBool(e.Request[e.Floor][driver.BT_HallUp]) {
 				e.Request[e.Floor][driver.BT_HallDown] = 0
 			}
 			e.Request[e.Floor][driver.BT_HallUp] = 0
 		case driver.MD_Down:
-			if !driver.IntToBool(requests_below(e)) && !driver.IntToBool(e.Request[e.Floor][driver.BT_HallDown]) {
+			if !driver.IntToBool(requests_below(*e)) && !driver.IntToBool(e.Request[e.Floor][driver.BT_HallDown]) {
 				e.Request[e.Floor][driver.BT_HallUp] = 0
 			}
 			e.Request[e.Floor][driver.BT_HallDown] = 0
@@ -141,5 +141,4 @@ func Requests_clearAtCurrentFloor(e elevator.Elevator) elevator.Elevator {
 			e.Request[e.Floor][driver.BT_HallDown] = 0
 		}
 	}
-	return e
 }

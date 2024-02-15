@@ -4,142 +4,161 @@ import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
 	"Sanntid/elevator_io"
-	"fmt"
-	"runtime"
 	"Sanntid/requests"
 	"Sanntid/timer"
+	"fmt"
+	"runtime"
 )
 
-var elev elevator.Elevator
-var outputDevice elevator_io.ElevOutputDevice
+// var elev elevator.Elevator
+// var outputDevice elevator_io.ElevOutputDevice
 
-func init() {
-	elev = elevator.Elevator_uninitialized()
-	outputDevice = elevator_io.Elevio_getOutputDevice()
-}
+// func Init() {
+// 	elev = elevator.Elevator_uninitialized()
+// 	outputDevice = elevator_io.Elevio_getOutputDevice()
+// }
 
-func setAllLights(es elevator.Elevator) {
+func setAllLights(es *elevator.Elevator) {
 
 	for floor := 0; floor < elevator_io.N_FLOORS; floor++ {
 		for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
-			outputDevice.RequestButtonLight(floor, driver.ButtonType(btn), driver.IntToBool(es.Request[floor][btn]))
+			//outputDevice.RequestButtonLight(floor, driver.ButtonType(btn), driver.IntToBool(es.Request[floor][btn]))
+			driver.SetButtonLamp(driver.ButtonType(btn), floor, driver.IntToBool(es.Request[floor][btn]))
 		}
 	}
 }
 
-func Fsm_onInitBetweenFloors() {
-	outputDevice.MotorDirection(driver.MD_Down)
-	elev.Dirn = driver.MD_Down
-	elev.Behaviour = elevator.EB_Moving
+func Fsm_onInitBetweenFloors(es *elevator.Elevator) {
+	driver.SetMotorDirection(driver.MD_Down)
+	es.Dirn = driver.MD_Down
+	es.Behaviour = elevator.EB_Moving
 }
 
-func Fsm_onRequestButtonPress(btn_floor int, btn_type driver.ButtonType) {
+func Fsm_onRequestButtonPress(es *elevator.Elevator, tmr *timer.Timer, btn_floor int, btn_type driver.ButtonType) {
 
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
 	fmt.Printf("\n\n%s(%d, %s)\n", functionName, btn_floor, elevator_io.Elevio_button_toString(btn_type))
 
-	elevator.Elevator_print(elev)
+	elevator.Elevator_print(*es)
 
-	switch(elev.Behaviour){
+	switch es.Behaviour {
 
 	case elevator.EB_DoorOpen:
-		if(requests.Requests_shouldClearImmediately(elev, btn_floor, btn_type)) {
-			timer.Timer_start(elev.Config.DoorOpenDuration_s)
+		if requests.Requests_shouldClearImmediately(*es, btn_floor, btn_type) {
+			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
 		} else {
-			elev.Request[btn_floor][int(btn_type)] = 1
+			es.Request[btn_floor][int(btn_type)] = 1
 		}
-			
+
 	case elevator.EB_Moving:
-		elev.Request[btn_floor][int(btn_type)] = 1
-		
+		es.Request[btn_floor][int(btn_type)] = 1
+
 	case elevator.EB_Idle:
 
-		elev.Request[btn_floor][int(btn_type)] = 1
-		pair := requests.Requests_chooseDirection(elev)
-		elev.Dirn = pair.Dirn
-		elev.Behaviour = pair.Behaviour
+		es.Request[btn_floor][int(btn_type)] = 1
+		pair := requests.Requests_chooseDirection(*es)
+		es.Dirn = pair.Dirn
+		es.Behaviour = pair.Behaviour
 
-		switch(pair.Behaviour){
+		switch pair.Behaviour {
 
 		case elevator.EB_DoorOpen:
-			outputDevice.DoorLight(true)
-			timer.Timer_start(elev.Config.DoorOpenDuration_s)
-			elev = requests.Requests_clearAtCurrentFloor(elev)
-			
+			driver.SetDoorOpenLamp(true)
+			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
+			requests.Requests_clearAtCurrentFloor(es)
+
 		case elevator.EB_Moving:
-			outputDevice.MotorDirection(elev.Dirn)
-			
+			driver.SetMotorDirection(es.Dirn)
+
 		case elevator.EB_Idle:
-					}
+		}
 
-			}
+	}
 
-	setAllLights(elev)
+	setAllLights(es)
 
 	fmt.Printf("\nNew state:\n")
-	elevator.Elevator_print(elev)
+	elevator.Elevator_print(*es)
 }
 
-func Fsm_onFloorArrival(newFloor int) {
-	pc, _, _, _ := runtime.Caller(0) 
+func Fsm_onFloorArrival(es *elevator.Elevator, tmr *timer.Timer, newFloor int) {
+	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
 	fmt.Printf("\n\n%s(%d)\n", functionName, newFloor) //uuuuuhhhm what is all this
-	elevator.Elevator_print(elev)
+	elevator.Elevator_print(*es)
 
-	elev.Floor = newFloor
+	es.Floor = newFloor
 
-	outputDevice.FloorIndicator(elev.Floor)
+	driver.SetFloorIndicator(es.Floor)
 
-	switch(elev.Behaviour){
+	switch es.Behaviour {
 	case elevator.EB_Moving:
-		if(requests.Requests_shouldStop(elev)){
-			outputDevice.MotorDirection(driver.MD_Stop)
-			outputDevice.DoorLight(true)
-			elev= requests.Requests_clearAtCurrentFloor(elev)
-			timer.Timer_start(elev.Config.DoorOpenDuration_s)
-			setAllLights(elev)
-			elev.Behaviour = elevator.EB_DoorOpen
+		if requests.Requests_shouldStop(*es) {
+
+			es.Dirn = driver.MD_Stop
+			driver.SetMotorDirection(es.Dirn)
+			driver.SetDoorOpenLamp(true)
+
+			requests.Requests_clearAtCurrentFloor(es)
+
+			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
+
+			setAllLights(es)
+			es.Behaviour = elevator.EB_DoorOpen
 		}
 	default:
 	}
 
 	fmt.Printf("\nNew State:\n")
-	elevator.Elevator_print(elev)
+	elevator.Elevator_print(*es)
 }
 
-func Fsm_onDoorTimeout() {
-	pc, _, _, _ := runtime.Caller(0) 
+func Fsm_onDoorTimeout(es *elevator.Elevator, tmr *timer.Timer) {
+	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
 	fmt.Printf("\n\n%s()\n", functionName) //uuuuuhhhm what is all this
-	elevator.Elevator_print(elev)
+	elevator.Elevator_print(*es)
 
-	switch(elev.Behaviour){
+	switch es.Behaviour {
 	case elevator.EB_DoorOpen:
-		pair := requests.Requests_chooseDirection(elev)
-		elev.Dirn = pair.Dirn
-		elev.Behaviour = pair.Behaviour
+		pair := requests.Requests_chooseDirection(*es)
+		es.Dirn = pair.Dirn
+		es.Behaviour = pair.Behaviour
 
-		switch(elev.Behaviour){
+		switch es.Behaviour {
 		case elevator.EB_DoorOpen:
-			timer.Timer_start(elev.Config.DoorOpenDuration_s)
-			elev = requests.Requests_clearAtCurrentFloor(elev)
-			setAllLights(elev)
+			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
+			requests.Requests_clearAtCurrentFloor(es)
+			setAllLights(es)
 
 		case elevator.EB_Moving:
-			outputDevice.DoorLight(false)
-			outputDevice.MotorDirection(elev.Dirn)
+			driver.SetDoorOpenLamp(false)
+			driver.SetMotorDirection(es.Dirn)
+
 		case elevator.EB_Idle:
-			outputDevice.DoorLight(false)
-			outputDevice.MotorDirection(elev.Dirn)
+			driver.SetDoorOpenLamp(false)
+			driver.SetMotorDirection(es.Dirn)
 		}
 	default:
 	}
 
 	fmt.Printf("\nNew State:\n")
-	elevator.Elevator_print(elev)
+	elevator.Elevator_print(*es)
 
+}
+
+func Fsm_checkTimeOut(es *elevator.Elevator, tmr *timer.Timer) {
+	for {
+		if es.DoorObstructed {
+			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
+		}
+		if timer.Timer_timedOut(tmr) {
+			timer.Timer_stop(tmr)
+			Fsm_onDoorTimeout(es, tmr)
+		}
+	}
 }
