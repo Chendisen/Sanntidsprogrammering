@@ -1,0 +1,11 @@
+1. Why would we aim to detect success in results, instead of the more classical way of detecting errors/failures?
+We aim to detect success in results instead of errors because we have no way of knowing all error modes, and error checking is in the end just checking 
+    for errors that are known. We are not able to detect errors we are not looking for. 
+Not detecting an error and continuing execution is bad, not detecting success and trying again is an acceptable mistake. 
+
+2. Why would we want to self-terminate, instead of handling the error immediately in the "primary" (as opposed to deferring it to the backup as it "spins up")?
+We would want to self-terminate because it is a guaranteed way of handling an error or other unknown situations, as we know that we can handle a restart. 
+
+3. Is there any reason to prefer a process pair style, as opposed to making a separate supervisor-like program whose sole purpose is to restart the main program?
+Maybe, we have not landed on a conclusion yet. 
+
