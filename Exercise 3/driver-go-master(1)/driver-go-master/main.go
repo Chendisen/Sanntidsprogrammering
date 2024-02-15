@@ -1,14 +1,10 @@
 package main
 
 import "Driver-go/elevio"
-import "Driver-go/something"
 import "fmt"
 
 
 func main(){
-
-    elevio.TestFunction()
-    something.NAME()
 
     numFloors := 4
 
@@ -61,4 +57,30 @@ func main(){
             }
         }
     }    
+}
+
+func Elevio_dirn_toString(d driver.MotorDirection) string {
+	switch d {
+	case driver.MD_Up:
+		return "MD_Up"
+	case driver.MD_Down:
+		return "MD_Down"
+	case driver.MD_Stop:
+		return "MD_Stop"
+	default:
+		return "MD_UNDEFINED"
+	}
+}
+
+func Elevio_button_toString(b driver.ButtonType) string {
+	switch b {
+	case driver.BT_HallUp:
+		return "BT_HallUp"
+	case driver.BT_HallDown:
+		return "BT_HallDown"
+	case driver.BT_Cab:
+		return "BT_Cab"
+	default:
+		return "BT_UNDEFINED"
+	}
 }
