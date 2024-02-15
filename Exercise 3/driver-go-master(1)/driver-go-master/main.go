@@ -1,14 +1,10 @@
 package main
 
 import "Driver-go/elevio"
-import "Driver-go/something"
 import "fmt"
 
 
 func main(){
-
-    elevio.TestFunction()
-    something.NAME()
 
     numFloors := 4
 
