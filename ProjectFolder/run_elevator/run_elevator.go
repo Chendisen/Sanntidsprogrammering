@@ -1,5 +1,5 @@
 package run_elevator
-
+/*
 import (
 	"Sanntid/driver"
 	"Sanntid/elevator_io"
@@ -53,3 +53,4 @@ func Run_elevator() {
 		time.Sleep(time.Duration(inputPollRate_ms * 1000))
 	}
 }
+*/
