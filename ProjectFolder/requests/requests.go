@@ -3,7 +3,6 @@ package requests
 import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
-	"Sanntid/elevator_io"
 )
 
 type DirnBehaviourPair struct {
@@ -12,8 +11,8 @@ type DirnBehaviourPair struct {
 }
 
 func requests_above(e elevator.Elevator) int {
-	for floor := e.Floor + 1; floor < elevator_io.N_FLOORS; floor++ {
-		for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
+	for floor := e.Floor + 1; floor < driver.N_FLOORS; floor++ {
+		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			if driver.IntToBool(e.Request[floor][btn]) {
 				return 1
 			}
@@ -24,7 +23,7 @@ func requests_above(e elevator.Elevator) int {
 
 func requests_below(e elevator.Elevator) int {
 	for floor := 0; floor < e.Floor; floor++ {
-		for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
+		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			if driver.IntToBool(e.Request[floor][btn]) {
 				return 1
 			}
@@ -34,7 +33,7 @@ func requests_below(e elevator.Elevator) int {
 }
 
 func requests_here(e elevator.Elevator) int {
-	for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
+	for btn := 0; btn < driver.N_BUTTONS; btn++ {
 		if driver.IntToBool(e.Request[e.Floor][btn]) {
 			return 1
 		}
@@ -117,7 +116,7 @@ func Requests_shouldClearImmediately(e elevator.Elevator, btn_floor int, btn_typ
 func Requests_clearAtCurrentFloor(e *elevator.Elevator) {
 	switch e.Config.ClearRequestVariant {
 	case elevator.CV_all:
-		for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
+		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			e.Request[e.Floor][btn] = 0
 		}
 	case elevator.CV_InDirn:

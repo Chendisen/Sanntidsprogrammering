@@ -3,7 +3,6 @@ package fsm
 import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
-	"Sanntid/elevator_io"
 	"Sanntid/requests"
 	"Sanntid/timer"
 	"fmt"
@@ -20,8 +19,8 @@ import (
 
 func setAllLights(es *elevator.Elevator) {
 
-	for floor := 0; floor < elevator_io.N_FLOORS; floor++ {
-		for btn := 0; btn < elevator_io.N_BUTTONS; btn++ {
+	for floor := 0; floor < driver.N_FLOORS; floor++ {
+		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			//outputDevice.RequestButtonLight(floor, driver.ButtonType(btn), driver.IntToBool(es.Request[floor][btn]))
 			driver.SetButtonLamp(driver.ButtonType(btn), floor, driver.IntToBool(es.Request[floor][btn]))
 		}
@@ -39,7 +38,7 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, tmr *timer.Timer, btn_floor
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
-	fmt.Printf("\n\n%s(%d, %s)\n", functionName, btn_floor, elevator_io.Elevio_button_toString(btn_type))
+	fmt.Printf("\n\n%s(%d, %s)\n", functionName, btn_floor, driver.Driver_button_toString(btn_type))
 
 	elevator.Elevator_print(*es)
 
