@@ -208,3 +208,29 @@ func BoolToInt(b bool) int {
 	}
 	return 0
 }
+
+func Driver_dirn_toString(d MotorDirection) string {
+	switch d {
+	case MD_Up:
+		return "MD_Up"
+	case MD_Down:
+		return "MD_Down"
+	case MD_Stop:
+		return "MD_Stop"
+	default:
+		return "MD_UNDEFINED"
+	}
+}
+
+func Driver_button_toString(b ButtonType) string {
+	switch b {
+	case BT_HallUp:
+		return "BT_HallUp"
+	case BT_HallDown:
+		return "BT_HallDown"
+	case BT_Cab:
+		return "BT_Cab"
+	default:
+		return "BT_UNDEFINED"
+	}
+}
