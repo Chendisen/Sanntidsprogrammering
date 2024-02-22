@@ -1,4 +1,4 @@
-package recieve
+package receive
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 const port string = "12345"
 const messageSize int = 1024
 
-func Peer_recieveAlive() {
+func Peer_receiveAlive() {
 	udpAddr, err := net.ResolveUDPAddr("udp", ":"+port)
 	if err != nil {
 		fmt.Println("Failed to resolve UDP address")
@@ -25,12 +25,12 @@ func Peer_recieveAlive() {
 	buffer := make([]byte, messageSize)
 
 	for {
-		_, _, err := conn.ReadFromUDP(buffer)
+		n, err := conn.Read(buffer)
 		if err != nil {
 			fmt.Println("Failed to read UDP message")
 			continue
 		}
 
-		fmt.Printf("Recieved message: %s", string(buffer))
+		fmt.Printf("Recieved message: %s", string(buffer[:n]))
 	}
 }

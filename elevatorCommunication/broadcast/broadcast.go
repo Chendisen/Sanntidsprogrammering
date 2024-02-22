@@ -29,26 +29,21 @@ func Peer_broadcastAlive() {
 
 	fmt.Print(ip)
 
-	udpAddr, err := net.ResolveUDPAddr("udp", broadcastAddr+":"+port)
-	if err != nil {
-		fmt.Println("Failed to resolve udp address")
-		return
-	}
-
+	udpAddr := broadcastAddr + ":" + port
+	fmt.Println(udpAddr)
+	
 	for{
-		conn, err := net.DialUDP("udp", nil, udpAddr)
+		conn, err := net.Dial("udp", udpAddr)
 		if err != nil {
 			fmt.Println("Failed to dial udp")
 		}
 
-		message := []byte(ip)
+		message := []byte(ip.String() + "\n")
 
 		_, err = conn.Write(message)
 		if err != nil {
 			fmt.Println("Error sending UDP message: ", err)
 		}
-
-		fmt.Println("UDP message sent successfully")
 
 		conn.Close()
 		time.Sleep(time.Millisecond * 100)
