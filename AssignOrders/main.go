@@ -63,7 +63,7 @@ func main(){
         return
     }
     
-    ret, err := exec.Command("./Project-resources/cost_fns/hall_request_assigner/"+hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
+    ret, err := exec.Command("./"+hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
     if err != nil {
         fmt.Println("exec.Command error: ", err)
         fmt.Println(string(ret))
