@@ -34,7 +34,7 @@ type Configuration struct {
 type Elevator struct {
 	Floor													int
 	Dirn 													driver.MotorDirection
-	Request[driver.N_FLOORS][driver.N_BUTTONS]    int
+	Request[driver.N_FLOORS][driver.N_BUTTONS]    			int
 	Behaviour 												ElevatorBehaviour
 	Config 													Configuration
 	DoorObstructed											bool
