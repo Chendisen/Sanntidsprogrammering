@@ -57,25 +57,30 @@ func check_timeout(tmr *Timer) {
 		}
 	}
 
-	exec.Command("gnome-terminal", "--", "go", "run", "").Run()
 }
 
 func broadcastUDP() {
-	connection1, err := net.Dial("udp", "localhost:12345")
-	if err != nil {
-		panic(err)
+	for {
+		connection1, err := net.Dial("udp", "localhost:12345")
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = connection1.Write([]byte("Don't @ me bro!\000"))
+		if err != nil {
+			panic(err)
+		}
+		connection1.Close()
 	}
-	
-	_, err = connection1.Write([]byte("Don't @ me bro!\000"))
-	if err != nil {
-		panic(err)
-	}
-	
-	connection1.Close()
 }
 
-func receiveUDP() {
-	serverAddr, err := net.ResolveUDPAddr("udp", ":20014")
+func createBackup() {
+	exec.Command("gnome-terminal", "--", "go", "run", "main.go").Run()
+}
+
+func receiveUDP(c chan string, quit chan int) {
+
+	serverAddr, err := net.ResolveUDPAddr("udp", "localhost:12345")
 	if err != nil {
 		panic(err)
 	}
@@ -84,17 +89,64 @@ func receiveUDP() {
 	if err != nil {
 		panic(err)
 	}
-	defer connection.Close()
 
 	buffer := make([]byte, 1024)
-	mLen, err := connection.Read(buffer)
-	if err != nil {
-		fmt.Println("Error reading: ", err.Error())
+
+	var i int = 0
+	for {
+		i += 1
+		select {
+		case <-quit:
+			connection.Close()
+			fmt.Print("Help me")
+			return
+		default:
+			mLen, err := connection.Read(buffer)
+			if err != nil {
+				fmt.Println("Error reading: ", err.Error())
+			}
+			fmt.Println("Received: ", string(buffer[:mLen]), i)
+
+			c <- string(buffer[:mLen])
+		}
 	}
-	fmt.Println("Received: ", string(buffer[:mLen]))
 }
 
 func main() {
-	var tmr Timer = Timer{timerEndTime: 0, timerActive: false}
-	check_timeout(&tmr)
+	var isMain bool = false
+
+	var recievedMessage string = ""
+	var recieveMessageTimer Timer = Timer{timerEndTime: 0, timerActive: false}
+
+	c := make(chan string, 5)
+	quit := make(chan int, 5)
+	go receiveUDP(c, quit)
+
+	Timer_start(&recieveMessageTimer, 3)
+
+	for !isMain {
+
+		fmt.Print(Timer_timedOut((&recieveMessageTimer)), recievedMessage)
+
+		select {
+		case <-c:
+			recievedMessage = <-c
+		default:
+			if recievedMessage == "" && Timer_timedOut(&recieveMessageTimer) {
+				Timer_stop(&recieveMessageTimer)
+				isMain = true
+				quit <- 1
+			}
+			if recievedMessage != "" {
+				Timer_start(&recieveMessageTimer, 3)
+			}
+			recievedMessage = ""
+		}
+	}
+
+	time.Sleep(time.Millisecond * 1000)
+	fmt.Println("Creating backup!")
+	createBackup()
+
+	go broadcastUDP()
 }
