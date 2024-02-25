@@ -1,4 +1,4 @@
-package cyclicCounter
+package cyclic_counter
 
 type Counter struct {
 	Value int
