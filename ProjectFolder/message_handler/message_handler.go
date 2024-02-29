@@ -4,35 +4,13 @@ import(
 	"encoding/json"
 	"Sanntid/elevator"
 	"Sanntid/cyclic_counter"
+	"Sanntid/world_view"
 )
 
 
-type AssignedRequestsMessage struct {
-	AssignedOrders		map[string][][2]bool	 		`json:"assignedOrders"`
-}
-
-type StatesAndRequestsMessage struct {
-    OrderAssignerInput	HRAInputMessage		  			`json:"orderAssignerInput"`
-	AssignedOrders		AssignedRequestsMessage			`json:"assignedRequests"`
-}
-
 type StandardMessage struct {
-    IPAddress		    string                   	`json:"IPAddress"`
-  	StatesRequests		StatesAndRequestsMessage    `json:"statesRequests"`
-}
-
-
-func SetElevatorStateMessage(elevState elevator.Elevator) ElevatorStateMessage {
-	var cabRequests []int
-	for floor, requests := range(elevState.Request) {
-		cabRequests = append(cabRequests, requests[2])
-	}
-	return ElevatorStateMessage{
-		Behaviour:		elevState.Behaviour
-		Floor:			elevState.Floor
-		Direction:		elevState.Dirn
-		CabRequests:	cabRequests
-	}
+    IPAddress	    string                   	`json:"IPAddress"`
+  	WorldView		world_view.WorldView    	`json:"worldView"`
 }
 
 // TODO: Should probably have functions that take in struct from wordlview
@@ -43,15 +21,33 @@ func GetSenderIP(message StandardMessage) string {
 	return message.IPAddress
 }
 
-func GetAssignedRequests(message StandardMessage) map[string][][2]cyclic_counter.Counter{
-	return message.StatesRequests.AssignedRequests
+func GetWorldView(message StandardMessage) world_view.WorldView{
+	return message.WorldView
 }
 
-func GetStates(message StandardMessage) map[string]ElevatorStateMessage {
-	return message.StatesRequests.OrderAssignerInput.States
+
+func CreateStandardMessage(a_world_view world_view.WorldView, ip_address string) StandardMessage {
+	return StandardMessage{
+		IPAddress: 	ip_address,
+		WorldView:	a_world_view,
+	}
 }
 
-func GetHallRequests(message StandardMessage) [][2]cyclic_counter.Counter {
-	return message.StatesRequests.OrderAssignerInput.HallRequests
+
+func PackMessage(message StandardMessage) []byte {
+	jsonBytes, err := json.Marshal(message)
+	if err != nil {
+        fmt.Println("json.Marshal error: ", err)
+        return
+    }
+	return jsonBytes
 }
 
+func UnpackMessage(jsonBytes []byte) message StandardMessage {
+	err = json.Unmarshal(jsonBytes, &message)
+	if err != nil {
+        fmt.Println("json.Unmarshal error: ", err)
+        return
+    }
+	return message
+}

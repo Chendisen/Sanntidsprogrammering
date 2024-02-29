@@ -40,6 +40,11 @@ func main() {
 	for {
 		select {
 		case a := <-drv_buttons:
+
+			// Press of button shall update my worldview which will then propagate out and be published that new info has been found
+			// 		But we must seperate between cab and hall buttons since cab calls can only be handled by itself. 
+			// We must then have an own function for reading in the world view and update the requests matrix of the elevator. 
+
 			fmt.Printf("%+v\n", a)
 			//driver.SetButtonLamp(a.Button, a.Floor, true)
 			fsm.Fsm_onRequestButtonPress(&elev, &tmr, a.Floor, a.Button)
