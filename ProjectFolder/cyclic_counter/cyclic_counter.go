@@ -1,5 +1,7 @@
 package cyclic_counter
 
+const MAX int = 15
+
 type Counter struct {
 	Value int
 	Max int
