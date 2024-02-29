@@ -130,7 +130,7 @@ func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string,
 					c <- 1
 					break
 				}
-			}
+			}fsm.Fsm_onRequestButtonPress(&elev, &tmr, a.Floor, a.Button)
 		}
 		currentView.AssignedOrders = newView.AssignedOrders
 	}

@@ -43,7 +43,8 @@ func PackMessage(message StandardMessage) []byte {
 	return jsonBytes
 }
 
-func UnpackMessage(jsonBytes []byte) message StandardMessage {
+func UnpackMessage(jsonBytes []byte) StandardMessage {
+	var message StandardMessage
 	err = json.Unmarshal(jsonBytes, &message)
 	if err != nil {
         fmt.Println("json.Unmarshal error: ", err)
