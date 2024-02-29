@@ -3,6 +3,7 @@ package elevator
 import (
 	"fmt"
 	"Sanntid/driver"
+	"Sanntid/world_view"
 	// "Sanntid/timer"
 )
 
@@ -89,3 +90,11 @@ func Elevator_uninitialized() Elevator {
 	}
 }
 
+
+func UpdateElevatorRequests(es *Elevator, assignedOrders [][2]bool) {
+	for floor, buttons := range assignedOrders{
+		for button, value := range buttons{
+			es.Request[floor][button] = value
+		}
+	}
+}
