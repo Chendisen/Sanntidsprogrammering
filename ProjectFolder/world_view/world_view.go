@@ -55,6 +55,16 @@ func (es *ElevatorState) SetDirection(d string){
 	es.Direction = d
 	cyclic_counter.Increment(&es.Version)
 }
+
+func (es *ElevatorState) SetCabRequestAtFloor(f int){
+	es.CabRequests[f] = true
+	cyclic_counter.Increment(&es.Version)
+}
+
+func (es *ElevatorState) ClearCabRequestAtFloor(f int){
+	es.CabRequests[f] = false
+	cyclic_counter.Increment(&es.Version)
+}
 //WordlView functions
 
 func (wv *WorldView) ShouldAddNode(IP string) bool{
@@ -76,6 +86,20 @@ func (wv *WorldView) AddNewNodes(newView WorldView){
 			wv.AddNodeToWorldView(IP)
 		}
 	}
+}
+
+func (wv *WorldView) SetHallRequestAtFloor(f int, b int){
+	if(wv.HallRequests[f][b].ToBool()){
+		return
+	} else{
+		cyclic_counter.Increment(&wv.HallRequests[f][b])
+	}
+}
+
+func (wv *WorldView) ClearHallRequestAtFloor(f int, b int){
+	if(wv.HallRequests[f][b].ToBool()){
+		cyclic_counter.Increment(&wv.HallRequests[f][b])
+	} 
 }
 
 func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string, myIP string, aliveList AliveList, c chan int){
@@ -125,7 +149,7 @@ func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool{
 	return wv.AssignedOrders[myIP]
 } 
 
-func (wv *WorldView) GetMyCabOrders(myIP string) []bool{
+func (wv *WorldView) GetMyCabRequests(myIP string) []bool{
 	return wv.States[myIP].GetCabRequests()
 }
 

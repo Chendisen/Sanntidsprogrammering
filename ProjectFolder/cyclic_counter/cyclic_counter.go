@@ -45,3 +45,7 @@ func UpdateValue(counter *Counter, value int){
 		counter.Value = value
 	}
 }
+
+func (cc Counter) ToBool() bool{
+	return cc.Value%2 == 1
+}

@@ -1,7 +1,7 @@
 package bcast
 
 import (
-	"Network-go/network/conn"
+	"Sanntid/network/conn"
 	"encoding/json"
 	"fmt"
 	"net"
