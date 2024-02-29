@@ -5,3 +5,5 @@ package world_view
 // 			for fault checking messages before taking decisions. 
 // 			Must therefore have functions that compares the received 
 // 			messages and the ones of our world view.  
+
+

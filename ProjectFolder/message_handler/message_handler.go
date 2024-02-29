@@ -6,40 +6,14 @@ import(
 	"Sanntid/cyclic_counter"
 )
 
-type ElevatorState struct {
-    Behaviour   string      `json:"behaviour"`
-    Floor       int         `json:"floor"` 
-    Direction   string      `json:"direction"`
-    CabRequests []bool      `json:"cabRequests"`
-}
 
-type HRAInput struct {
-    HallRequests    [][2]bool                   `json:"hallRequests"`
-    States          map[string]ElevatorState    `json:"states"`
-}
-
-type StatesAndRequests struct {
-    OrderAssignerInput	HRAInput				  	`json:"orderAssignerInput"`
-	AssignedRequests	map[string][][2]bool		`json:"assignedRequests"`
-}
-
-
-type ElevatorStateMessage struct {
-    Behaviour   string      `json:"behaviour"`
-    Floor       int         `json:"floor"` 
-    Direction   string      `json:"direction"`
-    CabRequests []int       `json:"cabRequests"`
-	// TODO: Change data type of CabRequests to CyclicCounter
-}
-
-type HRAInputMessage struct {
-    HallRequests    [][2]cyclic_counter.Counter			`json:"hallRequests"`
-    States          map[string]ElevatorStateMessage     `json:"states"`
+type AssignedRequestsMessage struct {
+	AssignedOrders		map[string][][2]bool	 		`json:"assignedOrders"`
 }
 
 type StatesAndRequestsMessage struct {
-    OrderAssignerInput	HRAInput				  					`json:"orderAssignerInput"`
-	AssignedRequests	map[string][][2]cyclic_counter.Counter		`json:"assignedRequests"`
+    OrderAssignerInput	HRAInputMessage		  			`json:"orderAssignerInput"`
+	AssignedOrders		AssignedRequestsMessage			`json:"assignedRequests"`
 }
 
 type StandardMessage struct {
