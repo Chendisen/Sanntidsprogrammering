@@ -31,11 +31,58 @@ type WorldView struct {
 	AssignedOrders  map[string][][2]bool		`json:"assignedOrders"` 			
 }
 
-func MakeElevatorState(counterMax int) ElevatorState{
-	return ElevatorState{Version: cyclic_counter.MakeCounter(counterMax), Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]bool, driver.N_FLOORS)}
+//ElevatorState functions
+
+func MakeElevatorState() ElevatorState{
+	return ElevatorState{Version: cyclic_counter.MakeCounter(50), Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]bool, driver.N_FLOORS)}
 }
 
-func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string, myIP string, aliveList AliveList){
+func (es ElevatorState) GetCabRequests() []bool{
+	return es.CabRequests
+} 
+
+func (es *ElevatorState) SetBehaviour(b string){
+	es.Behaviour = b
+	cyclic_counter.Increment(&es.Version)
+}
+
+func (es *ElevatorState) SetFloor(f int){
+	es.Floor = f
+	cyclic_counter.Increment(&es.Version)
+}
+
+func (es *ElevatorState) SetDirection(d string){
+	es.Direction = d
+	cyclic_counter.Increment(&es.Version)
+}
+//WordlView functions
+
+func (wv *WorldView) ShouldAddNode(IP string) bool{
+	if _,isPresent := wv.States[IP]; !isPresent {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (wv *WorldView) AddNodeToWorldView(IP string){
+	wv.States[IP] = MakeElevatorState()
+	wv.AssignedOrders[IP] = make([][2]bool, driver.N_FLOORS)
+}
+
+func (wv *WorldView) AddNewNodes(newView WorldView){
+	for IP := range newView.States{
+		if wv.ShouldAddNode(IP) {
+			wv.AddNodeToWorldView(IP)
+		}
+	}
+}
+
+func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string, myIP string, aliveList AliveList, c chan int){
+
+	currentView.AddNewNodes(newView)
+	(&newView).AddNewNodes(*currentView)
+
 	for i, floor := range newView.HallRequests {
 		for j, hallRequest := range floor {
 			if cyclic_counter.ShouldUpdate(hallRequest, currentView.HallRequests[i][j]) {
@@ -53,20 +100,32 @@ func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string,
 	}
 
 	if senderIP == aliveList.Master {
+		for i, floor := range newView.AssignedOrders[myIP]{
+			for j, orderAssigned := range floor{
+				if orderAssigned != currentView.AssignedOrders[myIP][i][j]{
+					c <- 1
+					break
+				}
+			}
+		}
 		currentView.AssignedOrders = newView.AssignedOrders
 	}
 }
 
-func (wv *WorldView) InitWorldView(){
-	var hallRequests [][2]cyclic_counter.Counter
-
+func (wv *WorldView) MakeWorldView(myIP string){
 	for i := 0; i < driver.N_FLOORS; i++ {
-		hallRequests[i][0] = cyclic_counter.MakeCounter(cyclic_counter.MAX)
-		hallRequests[i][1] = cyclic_counter.MakeCounter(cyclic_counter.MAX)
+		wv.HallRequests = append(wv.HallRequests, [2]cyclic_counter.Counter{cyclic_counter.MakeCounter(cyclic_counter.MAX), cyclic_counter.MakeCounter(cyclic_counter.MAX)})
 	}
+
+	wv.States[myIP] = MakeElevatorState()
+	wv.AssignedOrders[myIP] = make([][2]bool, driver.N_FLOORS)
 }
 
 func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool{
 	return wv.AssignedOrders[myIP]
 } 
+
+func (wv *WorldView) GetMyCabOrders(myIP string) []bool{
+	return wv.States[myIP].GetCabRequests()
+}
 
