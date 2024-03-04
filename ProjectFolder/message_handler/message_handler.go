@@ -2,8 +2,6 @@ package message_handler
 
 import(
 	"encoding/json"
-	"Sanntid/elevator"
-	"Sanntid/cyclic_counter"
 	"Sanntid/world_view"
 	"fmt"
 )

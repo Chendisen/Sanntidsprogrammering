@@ -6,7 +6,6 @@ import (
 	"Sanntid/fsm"
 	"Sanntid/timer"
 	"Sanntid/world_view"
-	"Sanntid/network/localip"
 	"fmt"
 )
 
@@ -33,7 +32,7 @@ func main() {
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
-	go fsm.Fsm_checkTimeOut(&elev, &wld_view, alv_list.myIP, &tmr)
+	go fsm.Fsm_checkTimeOut(&elev, &wld_view, alv_list.MyIP, &tmr)
 
 	// a:= <- drv_floors
 	// if a==-1 {
@@ -46,11 +45,10 @@ func main() {
 		select {
 		case a := <-drv_buttons:
 
-			select {
-			case a.Button == 2:
-				Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
-			default: 
-				wld_view.SetHallRequestAtFloor(a.Floor, a.Button)
+			if a.Button == 2 {
+				fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
+			} else {
+				wld_view.SetHallRequestAtFloor(a.Floor, int(a.Button))
 			}
 
 			// Press of button shall update my worldview which will then propagate out and be published that new info has been found.
@@ -91,14 +89,13 @@ func main() {
 					driver.SetButtonLamp(b, f, false)
 				}
 			}
-		case a := <-ord_updated:
-			for floor, buttons := range wld_view.GetMyAssignedOrders() {
+		case _ = <-ord_updated:
+			for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
 				for button, value := range buttons {
-					if value == True {
-						Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
-					}
-					else{
-						es.Request[floor][button] = 0
+					if value == true {
+						fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, floor, driver.ButtonType(button))
+					} else{
+						elev.Request[floor][button] = 0
 					}
 				}
 			}

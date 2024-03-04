@@ -112,6 +112,16 @@ func (wv *WorldView) ClearHallRequestAtFloor(f int, b int){
 	} 
 }
 
+func (wv *WorldView) GetHallRequests() [][2]bool {
+	var hall_requests [][2]bool
+	for floor, buttons := range wv.HallRequests {
+		for button, value := range buttons {
+			hall_requests[floor][button] = value.ToBool()
+		}
+	}
+	return hall_requests
+}
+
 func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- int){
 
 	currentView.AddNewNodes(newView)
