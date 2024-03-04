@@ -146,7 +146,9 @@ func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string,
 	}
 }
 
-func (wv *WorldView) MakeWorldView(myIP string){
+func MakeWorldView(myIP string) WorldView{
+	var wv WorldView
+	
 	for i := 0; i < driver.N_FLOORS; i++ {
 		wv.HallRequests = append(wv.HallRequests, [2]cyclic_counter.Counter{cyclic_counter.MakeCounter(cyclic_counter.MAX), cyclic_counter.MakeCounter(cyclic_counter.MAX)})
 	}
@@ -162,6 +164,29 @@ func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool{
 func (wv *WorldView) GetMyCabRequests(myIP string) []bool{
 	return wv.States[myIP].GetCabRequests()
 }
+
+func (wv *WordlView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int) {
+	es := wv.States[myIP]
+
+	if btn_type == 2 {
+		(&es).SetCabRequestAtFloor(btn_floor)
+	}
+	else {
+		wv.SetHallRequestAtFloor(btn_floor, btn_type)
+	}
+}
+
+func (wv *WordlView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type int) {
+	es := wv.States[myIP]
+
+	if btn_type == 2 {
+		(&es).ClearCabRequestAtFloor(btn_floor)
+	}
+	else {
+		wv.ClearHallRequestAtFloor(btn_floor, btn_type)
+	}
+}
+
 
 //AliveList funcitons
 
