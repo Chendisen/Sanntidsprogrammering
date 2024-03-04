@@ -112,7 +112,7 @@ func (wv *WorldView) ClearHallRequestAtFloor(f int, b int){
 	} 
 }
 
-func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string, myIP string, aliveList AliveList, c chan int){
+func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- int){
 
 	currentView.AddNewNodes(newView)
 	(&newView).AddNewNodes(*currentView)
@@ -137,7 +137,7 @@ func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string,
 		for i, floor := range newView.AssignedOrders[myIP]{
 			for j, orderAssigned := range floor{
 				if orderAssigned != currentView.AssignedOrders[myIP][i][j]{
-					c <- 1
+					ord_updated <- 1
 					break
 				}
 			}
@@ -155,6 +155,8 @@ func MakeWorldView(myIP string) WorldView{
 
 	wv.States[myIP] = MakeElevatorState()
 	wv.AssignedOrders[myIP] = make([][2]bool, driver.N_FLOORS)
+
+	return wv
 }
 
 func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool{
@@ -165,24 +167,22 @@ func (wv *WorldView) GetMyCabRequests(myIP string) []bool{
 	return wv.States[myIP].GetCabRequests()
 }
 
-func (wv *WordlView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int) {
+func (wv *WorldView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int) {
 	es := wv.States[myIP]
 
 	if btn_type == 2 {
 		(&es).SetCabRequestAtFloor(btn_floor)
-	}
-	else {
+	} else {
 		wv.SetHallRequestAtFloor(btn_floor, btn_type)
 	}
 }
 
-func (wv *WordlView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type int) {
+func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type int) {
 	es := wv.States[myIP]
 
 	if btn_type == 2 {
 		(&es).ClearCabRequestAtFloor(btn_floor)
-	}
-	else {
+	} else {
 		wv.ClearHallRequestAtFloor(btn_floor, btn_type)
 	}
 }

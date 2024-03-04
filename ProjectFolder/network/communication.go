@@ -12,7 +12,7 @@ import (
 //
 //	will be received as zero-values.
 
-func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view.AliveList) {
+func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view.AliveList, myView *world_view.WorldView, ord_updated chan<- int) {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	// We make a channel for receiving updates on the id's of the peers that are
@@ -25,29 +25,29 @@ func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view
 	go peers.Receiver(15647, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
-	helloTx := make(chan world_view.WorldView)
-	helloRx := make(chan world_view.WorldView)
+	//helloTx := make(chan world_view.WorldView)
+	//helloRx := make(chan world_view.WorldView)
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	go bcast.Transmitter(16569, helloTx)
-	go bcast.Receiver(16569, helloRx)
+	//go bcast.Transmitter(16569, helloTx)
+	//go bcast.Receiver(16569, helloRx)
 
 	// The example message. We just send one of these every second.
 
-	go func() {
+	/*go func() {
 		var wv world_view.WorldView
 		for {
 			wv = <-c
 			helloTx <- wv
 		}
-	}()
+	}()*/
 
 	fmt.Println("Started")
 	for {
 		select {
 		case p := <-peerUpdateCh:
-			
+
 			al.UpdateAliveList(p)
 
 			fmt.Printf("Peer update:\n")
@@ -55,8 +55,8 @@ func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 
-		case a := <-helloRx:
-			fmt.Printf("Received: %#v\n", a)
-		}
+		/*case newView := <-helloRx:
+			myView.UpdateWorldView(newView, "123", al.MyIP, *al, ord_updated)
+		*/}
 	}
 }
