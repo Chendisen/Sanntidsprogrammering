@@ -1,7 +1,7 @@
 package network
 
 import (
-	"Sanntid/network/bcast"
+	//"Sanntid/network/bcast"
 	"Sanntid/network/peers"
 	"Sanntid/world_view"
 	"fmt"
@@ -12,7 +12,7 @@ import (
 //
 //	will be received as zero-values.
 
-func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view.AliveList, myView *world_view.WorldView, ord_updated chan<- int) {
+func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view.AliveList){ //, myView *world_view.WorldView, ord_updated chan<- int) {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	// We make a channel for receiving updates on the id's of the peers that are
