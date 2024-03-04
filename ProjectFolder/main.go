@@ -110,3 +110,5 @@ func main() {
 
 // TODO: Floor sensor lights dont work properly
 // TODO: Elevator picks up people going in both directions when entering floor
+
+// Help me
