@@ -1,7 +1,6 @@
 package network
 
 import (
-	"Sanntid/network/messages"
 	"Sanntid/world_view"
 	"Sanntid/network/bcast"
 	"Sanntid/network/peers"
@@ -13,7 +12,7 @@ import (
 //
 //	will be received as zero-values.
 
-func StartCommunication(myIP string, c chan world_view.WorldView) {
+func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view.AliveList) {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	// We make a channel for receiving updates on the id's of the peers that are
@@ -48,6 +47,7 @@ func StartCommunication(myIP string, c chan world_view.WorldView) {
 	for {
 		select {
 		case p := <-peerUpdateCh:
+			pu <- p
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)

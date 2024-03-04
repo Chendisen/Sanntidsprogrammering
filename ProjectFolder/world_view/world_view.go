@@ -3,16 +3,25 @@ package world_view
 import (
 	"Sanntid/cyclic_counter"
 	"Sanntid/driver"
+	"Sanntid/network/localip"
+	"Sanntid/network/peers"
 )
 
 // TODO: Have structs that is similar to the ones we send in messages
-// 			They will correspond to our world view and act as a middleman 
-// 			for fault checking messages before taking decisions. 
-// 			Must therefore have functions that compares the received 
-// 			messages and the ones of our world view.  
+// 			They will correspond to our world view and act as a middleman
+// 			for fault checking messages before taking decisions.
+// 			Must therefore have functions that compares the received
+// 			messages and the ones of our world view.
+
+type Role int
+
+const (
+	Slave Role = iota
+	Master
+)
 
 type AliveList struct {
-	Version 	cyclic_counter.Counter
+	MyIP string
 	NodesAlive 	[]string
 	Master 		string
 }
@@ -66,6 +75,7 @@ func (es *ElevatorState) ClearCabRequestAtFloor(f int){
 	cyclic_counter.Increment(&es.Version)
 }
 //WordlView functions
+
 
 func (wv *WorldView) ShouldAddNode(IP string) bool{
 	if _,isPresent := wv.States[IP]; !isPresent {
@@ -130,7 +140,7 @@ func UpdateWorldView(newView WorldView, currentView *WorldView, senderIP string,
 					c <- 1
 					break
 				}
-			}fsm.Fsm_onRequestButtonPress(&elev, &tmr, a.Floor, a.Button)
+			}
 		}
 		currentView.AssignedOrders = newView.AssignedOrders
 	}
@@ -151,5 +161,66 @@ func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool{
 
 func (wv *WorldView) GetMyCabRequests(myIP string) []bool{
 	return wv.States[myIP].GetCabRequests()
+}
+
+//AliveList funcitons
+
+func MakeAliveList() AliveList{
+	myIP,_ := localip.LocalIP()
+	return AliveList{MyIP: myIP}
+}
+
+func GetMyRole(al AliveList) Role {
+	if al.Master == al.MyIP {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+func (al *AliveList) ShouldUpdateList(p peers.PeerUpdate) bool{
+	if len(p.Lost) != 0 {
+		return true
+	} else if len(p.New) != 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (al *AliveList) ShouldUpdateMaster(p peers.PeerUpdate) (bool, string){
+	var shouldUpdate bool = false
+	var newMaster string = ""
+	if len(p.Lost) != 0{
+		for _,lostNode := range p.Lost {
+			if lostNode == al.Master{
+				shouldUpdate = true
+				for _,candidate := range p.Peers {
+					if candidate > newMaster{
+						newMaster = candidate
+					}
+				}
+				return shouldUpdate, newMaster
+			}
+		}
+	} else if p.New > al.Master {
+		newMaster = p.New
+		shouldUpdate = true
+		return shouldUpdate, newMaster
+	}
+	return shouldUpdate, newMaster	
+}
+
+func (al *AliveList) UpdateMaster(newMaster string){
+	al.Master = newMaster
+}
+
+func (al *AliveList) UpdateAliveList(p peers.PeerUpdate){
+	al.NodesAlive = p.Peers
+	shouldUpdateMaster, newMaster := al.ShouldUpdateMaster(p)
+
+	if shouldUpdateMaster {
+		al.UpdateMaster(newMaster)
+	}
 }
 
