@@ -13,7 +13,6 @@ import (
 func main() {
 
 	const numFloors int = 4
-	const myIP,_ string = localip.LocalIP()
 	driver.Init("localhost:15657", numFloors)
 
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
@@ -34,7 +33,7 @@ func main() {
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
-	go fsm.Fsm_checkTimeOut(&elev, &tmr)
+	go fsm.Fsm_checkTimeOut(&elev, &wld_view, alv_list.myIP, &tmr)
 
 	// a:= <- drv_floors
 	// if a==-1 {
@@ -49,7 +48,7 @@ func main() {
 
 			select {
 			case a.Button == 2:
-				Fsm_onRequestButtonPress(&elev, &tmr, a.Floor, a.Button)
+				Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
 			default: 
 				wld_view.SetHallRequestAtFloor(a.Floor, a.Button)
 			}
@@ -75,7 +74,7 @@ func main() {
 			//     d = driver.MD_Up
 			// }
 			// driver.SetMotorDirection(d)
-			fsm.Fsm_onFloorArrival(&elev, &tmr, a)
+			fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr, a)
 
 		case a := <-drv_obstr:
 			fmt.Printf("%+v\n", a)
@@ -96,7 +95,7 @@ func main() {
 			for floor, buttons := range wld_view.GetMyAssignedOrders() {
 				for button, value := range buttons {
 					if value == True {
-						Fsm_onRequestButtonPress(&elev, &tmr, floor, button)
+						Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
 					}
 					else{
 						es.Request[floor][button] = 0

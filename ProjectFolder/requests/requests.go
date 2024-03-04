@@ -3,6 +3,7 @@ package requests
 import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
+	"Sanntid/world_view"
 )
 
 type DirnBehaviourPair struct {
@@ -113,31 +114,41 @@ func Requests_shouldClearImmediately(e elevator.Elevator, btn_floor int, btn_typ
 	}
 }
 
-func Requests_clearAtCurrentFloor(e *elevator.Elevator) {
+func Requests_clearAtCurrentFloor(e *elevator.Elevator, wld_view *world_view.WorldView, myIP string) {
 	switch e.Config.ClearRequestVariant {
 	case elevator.CV_all:
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			e.Request[e.Floor][btn] = 0
+			wld_view.ClearRequestAtFloor(myIP, e.Floor, btn)
 		}
 	case elevator.CV_InDirn:
 		e.Request[e.Floor][driver.BT_Cab] = 0
+		wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_Cab)
 		switch e.Dirn {
 		case driver.MD_Up:
 			if !driver.IntToBool(requests_above(*e)) && !driver.IntToBool(e.Request[e.Floor][driver.BT_HallUp]) {
 				e.Request[e.Floor][driver.BT_HallDown] = 0
+				wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
 			}
 			e.Request[e.Floor][driver.BT_HallUp] = 0
+			wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
 		case driver.MD_Down:
 			if !driver.IntToBool(requests_below(*e)) && !driver.IntToBool(e.Request[e.Floor][driver.BT_HallDown]) {
 				e.Request[e.Floor][driver.BT_HallUp] = 0
+				wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
 			}
 			e.Request[e.Floor][driver.BT_HallDown] = 0
+			wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
 		case driver.MD_Stop:
 			e.Request[e.Floor][driver.BT_HallUp] = 0
 			e.Request[e.Floor][driver.BT_HallDown] = 0
+			wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
+			wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
 		default:
 			e.Request[e.Floor][driver.BT_HallUp] = 0
 			e.Request[e.Floor][driver.BT_HallDown] = 0
+			wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
+			wld_view.ClearRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
 		}
 	}
 }

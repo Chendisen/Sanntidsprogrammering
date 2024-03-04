@@ -5,6 +5,7 @@ import (
 	"Sanntid/elevator"
 	"Sanntid/requests"
 	"Sanntid/timer"
+	"Sanntid/world_view"
 	"fmt"
 	"runtime"
 )
@@ -33,7 +34,7 @@ func Fsm_onInitBetweenFloors(es *elevator.Elevator) {
 	es.Behaviour = elevator.EB_Moving
 }
 
-func Fsm_onRequestButtonPress(es *elevator.Elevator, tmr *timer.Timer, btn_floor int, btn_type driver.ButtonType) {
+func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string, tmr *timer.Timer, btn_floor int, btn_type driver.ButtonType) {
 
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
@@ -49,14 +50,17 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, tmr *timer.Timer, btn_floor
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
 		} else {
 			es.Request[btn_floor][int(btn_type)] = 1
+			wld_view.SetRequestAtFloor(myIP, btn_floor, int(btn_type))
 		}
 
 	case elevator.EB_Moving:
 		es.Request[btn_floor][int(btn_type)] = 1
+		wld_view.SetRequestAtFloor(myIP, btn_floor, int(btn_type))
 
 	case elevator.EB_Idle:
 
 		es.Request[btn_floor][int(btn_type)] = 1
+		wld_view.SetRequestAtFloor(myIP, btn_floor, int(btn_type))
 		pair := requests.Requests_chooseDirection(*es)
 		es.Dirn = pair.Dirn
 		es.Behaviour = pair.Behaviour
@@ -66,7 +70,7 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, tmr *timer.Timer, btn_floor
 		case elevator.EB_DoorOpen:
 			driver.SetDoorOpenLamp(true)
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
-			requests.Requests_clearAtCurrentFloor(es)
+			requests.Requests_clearAtCurrentFloor(es, wld_view, myIP)
 
 		case elevator.EB_Moving:
 			driver.SetMotorDirection(es.Dirn)
@@ -82,7 +86,7 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, tmr *timer.Timer, btn_floor
 	elevator.Elevator_print(*es)
 }
 
-func Fsm_onFloorArrival(es *elevator.Elevator, tmr *timer.Timer, newFloor int) {
+func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string, tmr *timer.Timer, newFloor int) {
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
@@ -101,7 +105,7 @@ func Fsm_onFloorArrival(es *elevator.Elevator, tmr *timer.Timer, newFloor int) {
 			driver.SetMotorDirection(es.Dirn)
 			driver.SetDoorOpenLamp(true)
 
-			requests.Requests_clearAtCurrentFloor(es)
+			requests.Requests_clearAtCurrentFloor(es, wld_view, myIP)
 
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
 
@@ -115,7 +119,7 @@ func Fsm_onFloorArrival(es *elevator.Elevator, tmr *timer.Timer, newFloor int) {
 	elevator.Elevator_print(*es)
 }
 
-func Fsm_onDoorTimeout(es *elevator.Elevator, tmr *timer.Timer) {
+func Fsm_onDoorTimeout(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string, tmr *timer.Timer) {
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
@@ -131,7 +135,7 @@ func Fsm_onDoorTimeout(es *elevator.Elevator, tmr *timer.Timer) {
 		switch es.Behaviour {
 		case elevator.EB_DoorOpen:
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
-			requests.Requests_clearAtCurrentFloor(es)
+			requests.Requests_clearAtCurrentFloor(es, wld_view, myIP)
 			setAllLights(es)
 
 		case elevator.EB_Moving:
@@ -150,14 +154,14 @@ func Fsm_onDoorTimeout(es *elevator.Elevator, tmr *timer.Timer) {
 
 }
 
-func Fsm_checkTimeOut(es *elevator.Elevator, tmr *timer.Timer) {
+func Fsm_checkTimeOut(es *elevator.Elevator, wld_view *world_view.WordlView, myIP string, tmr *timer.Timer) {
 	for {
 		if es.DoorObstructed {
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
 		}
 		if timer.Timer_timedOut(tmr) {
 			timer.Timer_stop(tmr)
-			Fsm_onDoorTimeout(es, tmr)
+			Fsm_onDoorTimeout(es, wld_view, myIP, tmr)
 		}
 	}
 }

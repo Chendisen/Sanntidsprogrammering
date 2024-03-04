@@ -5,6 +5,7 @@ import(
 	"Sanntid/elevator"
 	"Sanntid/cyclic_counter"
 	"Sanntid/world_view"
+	"fmt"
 )
 
 
@@ -38,17 +39,17 @@ func PackMessage(message StandardMessage) []byte {
 	jsonBytes, err := json.Marshal(message)
 	if err != nil {
         fmt.Println("json.Marshal error: ", err)
-        return
+        panic(err)
     }
 	return jsonBytes
 }
 
 func UnpackMessage(jsonBytes []byte) StandardMessage {
 	var message StandardMessage
-	err = json.Unmarshal(jsonBytes, &message)
+	err := json.Unmarshal(jsonBytes, &message)
 	if err != nil {
         fmt.Println("json.Unmarshal error: ", err)
-        return
+        panic(err)
     }
 	return message
 }
