@@ -54,6 +54,7 @@ func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
+			fmt.Printf((" My role:  %s\n"), world_view.GetMyRole(*al))
 
 		/*case newView := <-helloRx:
 			myView.UpdateWorldView(newView, "123", al.MyIP, *al, ord_updated)
