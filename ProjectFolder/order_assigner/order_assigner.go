@@ -5,6 +5,7 @@ import(
 	"fmt"
 	"encoding/json"
 	"Sanntid/world_view"
+    "runtime"
 
 )
 
@@ -22,7 +23,7 @@ type HRAInput struct {
 }
 
 
-func assign_orders(a_world_view *world_view.WorldView) {
+func assign_orders(wld_view *world_view.WorldView) {
 
 	hraExecutable := ""
     switch runtime.GOOS {
@@ -31,18 +32,20 @@ func assign_orders(a_world_view *world_view.WorldView) {
         default:        panic("OS not supported")
     }
 
+
+    var states map[string]HRAElevState
+    for elevator, state := range wld_view.States{
+        states[elevator] =  HRAElevState{
+            Behavior: 		state.Behaviour,
+            Floor: 			state.Floor,
+            Direction:		state.Direction,
+            CabRequests: 	state.CabRequests,
+        }
+    }
+
 	input := HRAInput{
-		HallRequests: a_world_view.HallRequests,
-		States: map[string]HRAElevState{
-			for elevator, state := range a_world_view.States{
-				elevator: HRAElevState{
-					Behavior: 		state.Behaviour,
-					Floor: 			state.Floor,
-					Direction:		state.Direction,
-					CabRequests: 	state.CabRequests,
-				},
-			}
-		}
+		HallRequests: wld_view.GetHallRequests(),
+		States: states,
 	}
 
 	jsonBytes, err := json.Marshal(input)
@@ -65,5 +68,5 @@ func assign_orders(a_world_view *world_view.WorldView) {
         return
     }
 	
-	a_world_view.AssignedOrders = output
+	wld_view.AssignedOrders = *output
 } 

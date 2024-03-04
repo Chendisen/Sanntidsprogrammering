@@ -1,7 +1,7 @@
 package network
 
 import (
-	//"Sanntid/network/bcast"
+	// "Sanntid/network/bcast"
 	"Sanntid/network/peers"
 	"Sanntid/world_view"
 	"fmt"

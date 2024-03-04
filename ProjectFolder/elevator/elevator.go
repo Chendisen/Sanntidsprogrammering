@@ -3,8 +3,6 @@ package elevator
 import (
 	"fmt"
 	"Sanntid/driver"
-	"Sanntid/world_view"
-	// "Sanntid/timer"
 )
 
 type ElevatorBehaviour int64 
@@ -94,7 +92,7 @@ func Elevator_uninitialized() Elevator {
 func UpdateElevatorRequests(es *Elevator, assignedOrders [][2]bool) {
 	for floor, buttons := range assignedOrders{
 		for button, value := range buttons{
-			es.Request[floor][button] = value
+			es.Request[floor][button] = driver.BoolToInt(value)
 		}
 	}
 }

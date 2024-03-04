@@ -154,7 +154,7 @@ func Fsm_onDoorTimeout(es *elevator.Elevator, wld_view *world_view.WorldView, my
 
 }
 
-func Fsm_checkTimeOut(es *elevator.Elevator, wld_view *world_view.WordlView, myIP string, tmr *timer.Timer) {
+func Fsm_checkTimeOut(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string, tmr *timer.Timer) {
 	for {
 		if es.DoorObstructed {
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
