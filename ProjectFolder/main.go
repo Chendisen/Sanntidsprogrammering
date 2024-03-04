@@ -13,12 +13,13 @@ import (
 func main() {
 
 	const numFloors int = 4
-	const myIP, _ string = localip.LocalIP()
+	const myIP,_ string = localip.LocalIP()
 	driver.Init("localhost:15657", numFloors)
 
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
 	var tmr timer.Timer = timer.Timer_uninitialized()
-	var wld_view world_view.WorldView = world_view.MakeWorldView(myIP)
+	var alv_list world_view.AliveList = world_view.MakeAliveList()
+	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)	
 
 	//var d driver.MotorDirection = driver.MD_Up
 	//driver.SetMotorDirection(d)
@@ -48,10 +49,8 @@ func main() {
 
 			select {
 			case a.Button == 2:
-				wld_view.SetCabRequestAtFloor(a.Floor)
 				Fsm_onRequestButtonPress(&elev, &tmr, a.Floor, a.Button)
-			}
-			default{
+			default: 
 				wld_view.SetHallRequestAtFloor(a.Floor, a.Button)
 			}
 

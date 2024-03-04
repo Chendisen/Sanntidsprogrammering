@@ -1,9 +1,9 @@
 package network
 
 import (
-	"Sanntid/world_view"
 	"Sanntid/network/bcast"
 	"Sanntid/network/peers"
+	"Sanntid/world_view"
 	"fmt"
 )
 
@@ -47,7 +47,9 @@ func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view
 	for {
 		select {
 		case p := <-peerUpdateCh:
-			pu <- p
+			
+			al.UpdateAliveList(p)
+
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
