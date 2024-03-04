@@ -205,11 +205,11 @@ func MakeAliveList() AliveList{
 	return AliveList{MyIP: myIP}
 }
 
-func GetMyRole(al AliveList) Role {
+func GetMyRole(al AliveList) string {
 	if al.Master == al.MyIP {
-		return 1
+		return "master"
 	} else {
-		return 0
+		return "slave"
 	}
 }
 
