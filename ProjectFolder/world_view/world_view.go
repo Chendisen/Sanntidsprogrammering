@@ -38,7 +38,7 @@ type ElevatorState struct {
 
 type WorldView struct {
     HallRequests    [][2]cyclic_counter.Counter	`json:"hallRequests"`
-    States          map[string]ElevatorState    `json:"states"`
+    States          map[string]*ElevatorState    `json:"states"`
 	AssignedOrders  map[string][][2]bool		`json:"assignedOrders"` 			
 }
 
@@ -57,7 +57,7 @@ func (es *ElevatorState) SetBehaviour(b string){
 	cyclic_counter.Increment(&es.Version)
 }
 
-func (es ElevatorState) SetFloor(f int){
+func (es *ElevatorState) SetFloor(f int){
 	es.Floor = f
 	cyclic_counter.Increment(&es.Version)
 }
@@ -87,7 +87,7 @@ func (wv *WorldView) ShouldAddNode(IP string) bool{
 }
 
 func (wv *WorldView) AddNodeToWorldView(IP string){
-	wv.States[IP] = MakeElevatorState()
+	*wv.States[IP] = MakeElevatorState()
 	wv.AssignedOrders[IP] = make([][2]bool, driver.N_FLOORS)
 }
 
@@ -100,18 +100,16 @@ func (wv *WorldView) AddNewNodes(newView WorldView){
 }
 
 func (wv *WorldView) SetBehaviour(myIP string, eb elevator.ElevatorBehaviour){
-	es := wv.States[myIP]
-	(&es).SetBehaviour(elevator.Eb_toString(eb))
+	wv.States[myIP].SetBehaviour(elevator.Eb_toString(eb))
 }
 
 func (wv *WorldView) SetFloor(myIP string, f int){
-	(wv.States[myIP]).SetFloor(f)
+	wv.States[myIP].SetFloor(f)
 	
 }
 
 func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection){
-	es := wv.States[myIP]
-	(&es).SetDirection(driver.Driver_dirn_toString(md))
+	wv.States[myIP].SetDirection(driver.Driver_dirn_toString(md))
 }
 
 func (wv *WorldView) SetHallRequestAtFloor(f int, b int){
@@ -132,7 +130,7 @@ func (wv *WorldView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int)
 	es := wv.States[myIP]
 
 	if btn_type == 2 {
-		(&es).SetCabRequestAtFloor(btn_floor)
+		es.SetCabRequestAtFloor(btn_floor)
 	} else {
 		wv.SetHallRequestAtFloor(btn_floor, btn_type)
 	}
@@ -142,7 +140,7 @@ func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type in
 	es := wv.States[myIP]
 
 	if btn_type == 2 {
-		(&es).ClearCabRequestAtFloor(btn_floor)
+		es.ClearCabRequestAtFloor(btn_floor)
 	} else {
 		wv.ClearHallRequestAtFloor(btn_floor, btn_type)
 	}
@@ -204,13 +202,13 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 }
 
 func MakeWorldView(myIP string) WorldView{
-	var wv WorldView = WorldView{States: make(map[string]ElevatorState), AssignedOrders: make(map[string][][2]bool)}
+	var wv WorldView = WorldView{States: make(map[string]*ElevatorState), AssignedOrders: make(map[string][][2]bool)}
 	
 	for i := 0; i < driver.N_FLOORS; i++ {
 		wv.HallRequests = append(wv.HallRequests, [2]cyclic_counter.Counter{cyclic_counter.MakeCounter(cyclic_counter.MAX), cyclic_counter.MakeCounter(cyclic_counter.MAX)})
 	}
 
-	wv.States[myIP] = MakeElevatorState()
+	*wv.States[myIP] = MakeElevatorState()
 	wv.AssignedOrders[myIP] = make([][2]bool, driver.N_FLOORS)
 
 	return wv
