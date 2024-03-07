@@ -3,6 +3,7 @@ package world_view
 import (
 	"Sanntid/cyclic_counter"
 	"Sanntid/driver"
+	"Sanntid/elevator"
 	"Sanntid/network/localip"
 	"Sanntid/network/peers"
 )
@@ -97,9 +98,9 @@ func (wv *WorldView) AddNewNodes(newView WorldView){
 	}
 }
 
-func (wv *WorldView) SetBehaviour(myIP string, b string){
+func (wv *WorldView) SetBehaviour(myIP string, eb elevator.ElevatorBehaviour){
 	es := wv.States[myIP]
-	(&es).SetBehaviour(b)
+	(&es).SetBehaviour()
 }
 
 func (wv *WorldView) SetFloor( myIP string, f int){
