@@ -23,8 +23,8 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 	// We can disable/enable the transmitter after it has been started.
 	// This could be used to signal that we are somehow "unavailable".
 	peerTxEnable := make(chan bool)
-	go peers.Transmitter(15647, myIP, peerTxEnable)
-	go peers.Receiver(15647, peerUpdateCh)
+	go peers.Transmitter(55555, myIP, peerTxEnable)
+	go peers.Receiver(55555, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
 	msgTx := make(chan message_handler.StandardMessage)
@@ -32,8 +32,8 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	go bcast.Transmitter(16569, msgTx)
-	go bcast.Receiver(16569, msgRx)
+	go bcast.Transmitter(11111, msgTx)
+	go bcast.Receiver(11111, msgRx)
 
 	// The example message. We just send one of these every second.
 
