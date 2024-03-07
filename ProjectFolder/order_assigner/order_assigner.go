@@ -23,7 +23,7 @@ type HRAInput struct {
 }
 
 
-func assign_orders(wld_view *world_view.WorldView) {
+func assign_orders(wld_view *world_view.WorldView, alv_list) {
 
 	hraExecutable := ""
     switch runtime.GOOS {
