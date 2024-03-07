@@ -32,7 +32,7 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
         default:        panic("OS not supported")
     }
 
-    var states map[string]HRAElevState 
+    var states map[string]HRAElevState = make(map[string]HRAElevState)
     for _, alive_elevator := range alv_list.NodesAlive {
         for elevator, state := range wld_view.States{
             if alive_elevator == elevator  {

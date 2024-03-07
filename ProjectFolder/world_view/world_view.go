@@ -213,7 +213,7 @@ func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type in
 
 func MakeAliveList() AliveList{
 	myIP,_ := localip.LocalIP()
-	return AliveList{MyIP: myIP}
+	return AliveList{MyIP: myIP, Master: myIP}
 }
 
 func (al AliveList) AmIMaster() bool {
