@@ -38,14 +38,16 @@ func main() {
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
 	go fsm.Fsm_checkTimeOut(&elev, &wld_view, alv_list.MyIP, &tmr)
-	go network.StartCommunication(alv_list.MyIP, &alv_list, &wld_view, ord_updated, wld_updated)
+	
 
 	// a:= <- drv_floors
 	// if a==-1 {
 	// 	fsm.Fsm_onInitBetweenFloors(&elevator)
 	// }
 
-	fsm.Fsm_onInitBetweenFloors(&elev)
+	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
+
+	go network.StartCommunication(alv_list.MyIP, &alv_list, &wld_view, ord_updated, wld_updated)
 
 	for {
 		select {

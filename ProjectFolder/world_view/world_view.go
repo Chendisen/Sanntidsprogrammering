@@ -5,6 +5,7 @@ import (
 	"Sanntid/driver"
 	"Sanntid/network/localip"
 	"Sanntid/network/peers"
+	"fmt"
 )
 
 // TODO: Have structs that is similar to the ones we send in messages
@@ -147,7 +148,7 @@ func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type in
 }
 
 func (wv WorldView) GetHallRequests() [][2]bool {
-	var hall_requests [][2]bool
+	var hall_requests [][2]bool = make([][2]bool, len(wv.HallRequests))
 	for floor, buttons := range wv.HallRequests {
 		for button, value := range buttons {
 			hall_requests[floor][button] = value.ToBool()
@@ -222,6 +223,12 @@ func (wv *WorldView) GetMyCabRequests(myIP string) []bool{
 	return wv.States[myIP].GetCabRequests()
 }
 
+func (wv WorldView) PrintWorldView() {
+	fmt.Println("World View:")
+	for IP,states := range wv.States {
+		fmt.Printf("	Floor of %s: %d \n", IP, states.Floor)
+	}
+}
 
 //AliveList funcitons
 
@@ -283,4 +290,3 @@ func (al *AliveList) UpdateAliveList(p peers.PeerUpdate){
 		al.UpdateMaster(newMaster)
 	}
 }
-

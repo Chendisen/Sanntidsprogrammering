@@ -28,10 +28,12 @@ func setAllLights(es *elevator.Elevator) {
 	}
 }
 
-func Fsm_onInitBetweenFloors(es *elevator.Elevator) {
+func Fsm_onInitBetweenFloors(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string) {
 	driver.SetMotorDirection(driver.MD_Down)
 	es.Dirn = driver.MD_Down
+	wld_view.SetDirection(myIP, driver.MD_Down)
 	es.Behaviour = elevator.EB_Moving
+	wld_view.SetBehaviour(myIP, elevator.EB_Moving)
 }
 
 func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string, tmr *timer.Timer, btn_floor int, btn_type driver.ButtonType) {
@@ -63,7 +65,9 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldV
 		wld_view.SetRequestAtFloor(myIP, btn_floor, int(btn_type))
 		pair := requests.Requests_chooseDirection(*es)
 		es.Dirn = pair.Dirn
+		wld_view.SetDirection(myIP, pair.Dirn)
 		es.Behaviour = pair.Behaviour
+		wld_view.SetBehaviour(myIP, pair.Behaviour)
 
 		switch pair.Behaviour {
 
@@ -94,6 +98,7 @@ func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, m
 	elevator.Elevator_print(*es)
 
 	es.Floor = newFloor
+	wld_view.SetFloor(myIP, newFloor)
 
 	driver.SetFloorIndicator(es.Floor)
 
@@ -102,6 +107,7 @@ func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, m
 		if requests.Requests_shouldStop(*es) {
 
 			es.Dirn = driver.MD_Stop
+			wld_view.SetDirection(myIP, driver.MD_Stop)
 			driver.SetMotorDirection(es.Dirn)
 			driver.SetDoorOpenLamp(true)
 
@@ -111,6 +117,7 @@ func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, m
 
 			setAllLights(es)
 			es.Behaviour = elevator.EB_DoorOpen
+			wld_view.SetBehaviour(myIP, elevator.EB_DoorOpen)
 		}
 	default:
 	}
@@ -130,7 +137,9 @@ func Fsm_onDoorTimeout(es *elevator.Elevator, wld_view *world_view.WorldView, my
 	case elevator.EB_DoorOpen:
 		pair := requests.Requests_chooseDirection(*es)
 		es.Dirn = pair.Dirn
+		wld_view.SetDirection(myIP, pair.Dirn)
 		es.Behaviour = pair.Behaviour
+		wld_view.SetBehaviour(myIP, pair.Behaviour)
 
 		switch es.Behaviour {
 		case elevator.EB_DoorOpen:
