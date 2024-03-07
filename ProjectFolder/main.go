@@ -18,8 +18,9 @@ func main() {
 
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
 	var tmr timer.Timer = timer.Timer_uninitialized()
+	var elv_state world_view.ElevatorState = world_view.MakeElevatorState()
 	var alv_list world_view.AliveList = world_view.MakeAliveList()
-	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
+	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP, &elv_state)
 	//var std_msg message_handler.StandardMessage = message_handler.StandardMessage{alv_list.MyIP, wld_view}
 
 	//var d driver.MotorDirection = driver.MD_Up
@@ -57,6 +58,9 @@ func main() {
 				fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
 			} else {
 				wld_view.SetHallRequestAtFloor(a.Floor, int(a.Button))
+				go func() {
+					wld_updated <- true
+				} ()
 			}
 
 			// Press of button shall update my worldview which will then propagate out and be published that new info has been found.
@@ -111,9 +115,13 @@ func main() {
 			} ()
 			
 		case <-wld_updated:
+			
+			fmt.Println("We are in wld_updated")
+
 			go func() {	
 				if alv_list.AmIMaster() {
 					order_assigner.AssignOrders(&wld_view, &alv_list)
+					ord_updated <- true
 				}
 			} ()
 		}

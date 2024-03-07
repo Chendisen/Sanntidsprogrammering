@@ -175,7 +175,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	for IP, NodeState := range newView.States {
 		if IP != myIP{
 			if(cyclic_counter.ShouldUpdate(NodeState.Version, currentView.States[IP].Version)){
-				currentView.States[IP] = NodeState
+				*currentView.States[IP] = *NodeState
 				isUpdated = true
 			}
 		}
@@ -186,12 +186,12 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 			for j, orderAssigned := range floor{
 				if orderAssigned != currentView.AssignedOrders[myIP][i][j]{
 					ord_updated <- true
+					isUpdated = true
 					break
 				}
 			}
 		}
 		currentView.AssignedOrders = newView.AssignedOrders
-		isUpdated = true
 	}
 
 	if isUpdated {
@@ -201,14 +201,14 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	return isUpdated
 }
 
-func MakeWorldView(myIP string) WorldView{
+func MakeWorldView(myIP string, myState *ElevatorState) WorldView{
 	var wv WorldView = WorldView{States: make(map[string]*ElevatorState), AssignedOrders: make(map[string][][2]bool)}
 	
 	for i := 0; i < driver.N_FLOORS; i++ {
 		wv.HallRequests = append(wv.HallRequests, [2]cyclic_counter.Counter{cyclic_counter.MakeCounter(cyclic_counter.MAX), cyclic_counter.MakeCounter(cyclic_counter.MAX)})
 	}
 
-	*wv.States[myIP] = MakeElevatorState()
+	wv.States[myIP] = myState
 	wv.AssignedOrders[myIP] = make([][2]bool, driver.N_FLOORS)
 
 	return wv

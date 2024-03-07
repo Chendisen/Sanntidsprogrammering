@@ -54,8 +54,8 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 		return
 	}
 
-    wld_view.PrintWorldView()
-    input.PrintInput()
+    //wld_view.PrintWorldView()
+    //input.PrintInput()
 
 	ret, err := exec.Command("./order_assigner/"+hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
 	if err != nil {
@@ -72,6 +72,9 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 	}
 
 	wld_view.AssignedOrders = *output
+	for _,orders := range *output {
+		fmt.Print(orders)
+	}
 }
 
 func (inp HRAInput) PrintInput() {
