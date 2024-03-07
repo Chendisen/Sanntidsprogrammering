@@ -168,7 +168,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 }
 
 func MakeWorldView(myIP string) WorldView{
-	var wv WorldView
+	var wv WorldView = WorldView{States: make(map[string]ElevatorState), AssignedOrders: make(map[string][][2]bool)}
 	
 	for i := 0; i < driver.N_FLOORS; i++ {
 		wv.HallRequests = append(wv.HallRequests, [2]cyclic_counter.Counter{cyclic_counter.MakeCounter(cyclic_counter.MAX), cyclic_counter.MakeCounter(cyclic_counter.MAX)})
