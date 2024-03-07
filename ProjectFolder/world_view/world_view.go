@@ -57,7 +57,7 @@ func (es *ElevatorState) SetBehaviour(b string){
 	cyclic_counter.Increment(&es.Version)
 }
 
-func (es *ElevatorState) SetFloor(f int){
+func (es ElevatorState) SetFloor(f int){
 	es.Floor = f
 	cyclic_counter.Increment(&es.Version)
 }
@@ -105,8 +105,8 @@ func (wv *WorldView) SetBehaviour(myIP string, eb elevator.ElevatorBehaviour){
 }
 
 func (wv *WorldView) SetFloor(myIP string, f int){
-	es := wv.States[myIP]
-	(&es).SetFloor(f)
+	(wv.States[myIP]).SetFloor(f)
+	
 }
 
 func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection){
