@@ -39,22 +39,22 @@ type Elevator struct {
 	DoorObstructed											bool
 }
 
-func eb_toString(eb ElevatorBehaviour) string {
+func Eb_toString(eb ElevatorBehaviour) string {
 	switch eb {
 	case EB_Idle:
-		return "EB_Idle"
+		return "idle"
 	case EB_DoorOpen:
-		return "EB_DoorOpen"
+		return "doorOpen"
 	case EB_Moving:
-		return "EB_Moving"
+		return "moving"
 	default:
-		return "EB_UNDEFINED"
+		return "undefined"
 	}
 }
 
 func Elevator_print(es Elevator) {
 	fmt.Println("  +-----------------------+")
-	fmt.Printf("  |floor = %2d          |\n  |dirn  = %12s|\n  |behav = %12s|\n", es.Floor, driver.Driver_dirn_toString(es.Dirn),eb_toString(es.Behaviour))
+	fmt.Printf("  |floor = %2d          |\n  |dirn  = %12s|\n  |behav = %12s|\n", es.Floor, driver.Driver_dirn_toString(es.Dirn),Eb_toString(es.Behaviour))
 	fmt.Println("  +-----------------------+")
 	fmt.Println("  | up | dn | cab |")
 	for floor := driver.N_FLOORS - 1; floor >= 0; floor -- {
