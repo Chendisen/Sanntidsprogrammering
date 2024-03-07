@@ -7,6 +7,7 @@ import (
 	"Sanntid/order_assigner"
 	"Sanntid/timer"
 	"Sanntid/world_view"
+	"Sanntid/network"
 	"fmt"
 )
 
@@ -19,6 +20,7 @@ func main() {
 	var tmr timer.Timer = timer.Timer_uninitialized()
 	var alv_list world_view.AliveList = world_view.MakeAliveList()
 	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
+	//var std_msg message_handler.StandardMessage = message_handler.StandardMessage{alv_list.MyIP, wld_view}
 
 	//var d driver.MotorDirection = driver.MD_Up
 	//driver.SetMotorDirection(d)
@@ -29,12 +31,14 @@ func main() {
 	drv_stop := make(chan bool)
 	ord_updated := make(chan bool)
 	wld_updated := make(chan bool)
+	//msg_updated := make(chan message_handler.StandardMessage)
 
 	go driver.PollButtons(drv_buttons)
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
 	go fsm.Fsm_checkTimeOut(&elev, &wld_view, alv_list.MyIP, &tmr)
+	go network.StartCommunication(alv_list.MyIP, &alv_list, &wld_view, ord_updated, wld_updated)
 
 	// a:= <- drv_floors
 	// if a==-1 {
@@ -105,9 +109,11 @@ func main() {
 			} ()
 			
 		case <-wld_updated:
-			if alv_list.AmIMaster() {
-				go order_assigner.AssignOrders(&wld_view, &alv_list)
-			}
+			go func() {	
+				if alv_list.AmIMaster() {
+					order_assigner.AssignOrders(&wld_view, &alv_list)
+				}
+			} ()
 		}
 	}
 }

@@ -122,7 +122,7 @@ func (wv *WorldView) GetHallRequests() [][2]bool {
 	return hall_requests
 }
 
-func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- bool, wld_updated chan<- bool){
+func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- bool, wld_updated chan<- bool) bool{
 
 	var isUpdated bool = false
 
@@ -163,6 +163,8 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	if isUpdated {
 		wld_updated <- true
 	}
+
+	return isUpdated
 }
 
 func MakeWorldView(myIP string) WorldView{

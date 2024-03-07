@@ -6,6 +6,7 @@ import (
 	"Sanntid/network/peers"
 	"Sanntid/world_view"
 	"fmt"
+	"time"
 )
 
 // We define some custom struct to send over the network.
@@ -13,7 +14,7 @@ import (
 //
 //	will be received as zero-values.
 
-func StartCommunication(myIP string, c chan message_handler.StandardMessage, al *world_view.AliveList, myView *world_view.WorldView, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication(myIP string, al *world_view.AliveList, myView *world_view.WorldView, ord_updated chan<- bool, wld_updated chan<- bool) {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	// We make a channel for receiving updates on the id's of the peers that are
@@ -36,11 +37,12 @@ func StartCommunication(myIP string, c chan message_handler.StandardMessage, al 
 
 	// The example message. We just send one of these every second.
 
+	var sm message_handler.StandardMessage = message_handler.CreateStandardMessage(*myView, myIP)
+
 	go func() {
-		var sm message_handler.StandardMessage
 		for {
-			sm = <-c
 			msgTx <- sm
+			time.Sleep(500*time.Millisecond)
 		}
 	}()
 
@@ -58,7 +60,10 @@ func StartCommunication(myIP string, c chan message_handler.StandardMessage, al 
 			fmt.Printf((" Am i master?:  %t\n"), (*al).AmIMaster())
 
 		case recievedMsg := <-msgRx:
-			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, al.MyIP, *al, ord_updated, wld_updated)
+			viewIsUpdated := myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, al.MyIP, *al, ord_updated, wld_updated)
+			if viewIsUpdated {
+				sm.WorldView = *myView
+			}		
 		}
 	}
 }
