@@ -122,7 +122,9 @@ func (wv *WorldView) GetHallRequests() [][2]bool {
 	return hall_requests
 }
 
-func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- int){
+func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- bool, wld_updated chan<- bool){
+
+	var isUpdated bool = false
 
 	currentView.AddNewNodes(newView)
 	(&newView).AddNewNodes(*currentView)
@@ -131,6 +133,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		for j, hallRequest := range floor {
 			if cyclic_counter.ShouldUpdate(hallRequest, currentView.HallRequests[i][j]) {
 				cyclic_counter.UpdateValue(&currentView.HallRequests[i][j], hallRequest.Value)
+				isUpdated = true
 			}
 		}
 	}
@@ -139,6 +142,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		if IP != myIP{
 			if(cyclic_counter.ShouldUpdate(NodeState.Version, currentView.States[IP].Version)){
 				currentView.States[IP] = NodeState
+				isUpdated = true
 			}
 		}
 	}
@@ -147,12 +151,17 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		for i, floor := range newView.AssignedOrders[myIP]{
 			for j, orderAssigned := range floor{
 				if orderAssigned != currentView.AssignedOrders[myIP][i][j]{
-					ord_updated <- 1
+					ord_updated <- true
 					break
 				}
 			}
 		}
 		currentView.AssignedOrders = newView.AssignedOrders
+		isUpdated = true
+	}
+
+	if isUpdated {
+		wld_updated <- true
 	}
 }
 
@@ -205,11 +214,11 @@ func MakeAliveList() AliveList{
 	return AliveList{MyIP: myIP}
 }
 
-func GetMyRole(al AliveList) string {
+func AmIMaster(al AliveList) bool {
 	if al.Master == al.MyIP {
-		return "master"
+		return true
 	} else {
-		return "slave"
+		return false
 	}
 }
 
