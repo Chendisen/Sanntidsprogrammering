@@ -4,6 +4,7 @@ import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
 	"Sanntid/fsm"
+	"Sanntid/order_assigner"
 	"Sanntid/timer"
 	"Sanntid/world_view"
 	"fmt"
@@ -17,7 +18,7 @@ func main() {
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
 	var tmr timer.Timer = timer.Timer_uninitialized()
 	var alv_list world_view.AliveList = world_view.MakeAliveList()
-	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)	
+	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
 
 	//var d driver.MotorDirection = driver.MD_Up
 	//driver.SetMotorDirection(d)
@@ -26,8 +27,8 @@ func main() {
 	drv_floors := make(chan int)
 	drv_obstr := make(chan bool)
 	drv_stop := make(chan bool)
-	ord_updated := make(chan int)
-	wld_updated := make(chan int)
+	ord_updated := make(chan bool)
+	wld_updated := make(chan bool)
 
 	go driver.PollButtons(drv_buttons)
 	go driver.PollFloorSensor(drv_floors)
@@ -53,12 +54,11 @@ func main() {
 			}
 
 			// Press of button shall update my worldview which will then propagate out and be published that new info has been found.
-			// 		But we must seperate between cab and hall buttons since cab calls can only be handled by itself. 
-			// We must then have an own function for reading in the world view and update the requests matrix of the elevator. 
-			// Must find out how to make elevator only considers its requests matrix and state to make decisions.  
+			// 		But we must seperate between cab and hall buttons since cab calls can only be handled by itself.
+			// We must then have an own function for reading in the world view and update the requests matrix of the elevator.
+			// Must find out how to make elevator only considers its requests matrix and state to make decisions.
 
 			// When we change state we also need to update the world view, this should probably happen when we arrive at new floor and update state.
-
 
 			fmt.Printf("%+v\n", a)
 			//driver.SetButtonLamp(a.Button, a.Floor, true)
@@ -90,19 +90,23 @@ func main() {
 					driver.SetButtonLamp(b, f, false)
 				}
 			}
-		case _ = <-ord_updated:
-			for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
-				for button, value := range buttons {
-					if value == true {
-						fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, floor, driver.ButtonType(button))
-					} else{
-						elev.Request[floor][button] = 0
+
+		case <-ord_updated:
+			go func() { 
+				for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
+					for button, value := range buttons {
+						if value {
+							fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, floor, driver.ButtonType(button))
+						} else {
+							elev.Request[floor][button] = 0
+						}
 					}
 				}
-			}
-		case _ = <-wld_updated:
-			if alv_list.GetMyRole() == "master" {
-				assign_orders(&wld_view)
+			} ()
+			
+		case <-wld_updated:
+			if alv_list.AmIMaster() {
+				go order_assigner.AssignOrders(&wld_view, &alv_list)
 			}
 		}
 	}

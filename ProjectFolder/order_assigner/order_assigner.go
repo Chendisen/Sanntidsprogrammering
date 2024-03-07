@@ -23,7 +23,7 @@ type HRAInput struct {
 }
 
 
-func assign_orders(wld_view *world_view.WorldView, alv_list) {
+func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList) {
 
 	hraExecutable := ""
     switch runtime.GOOS {
@@ -32,14 +32,17 @@ func assign_orders(wld_view *world_view.WorldView, alv_list) {
         default:        panic("OS not supported")
     }
 
-
-    var states map[string]HRAElevState
-    for elevator, state := range wld_view.States{
-        states[elevator] =  HRAElevState{
-            Behavior: 		state.Behaviour,
-            Floor: 			state.Floor,
-            Direction:		state.Direction,
-            CabRequests: 	state.CabRequests,
+    var states map[string]HRAElevState 
+    for _, alive_elevator := range alv_list.NodesAlive {
+        for elevator, state := range wld_view.States{
+            if alive_elevator == elevator  {
+                states[elevator] =  HRAElevState{
+                    Behavior: 		state.Behaviour,
+                    Floor: 			state.Floor,
+                    Direction:		state.Direction,
+                    CabRequests: 	state.CabRequests,
+                }
+            }
         }
     }
 
