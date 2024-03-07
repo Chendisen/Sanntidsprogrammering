@@ -76,7 +76,6 @@ func (es *ElevatorState) ClearCabRequestAtFloor(f int){
 }
 //WordlView functions
 
-
 func (wv *WorldView) ShouldAddNode(IP string) bool{
 	if _,isPresent := wv.States[IP]; !isPresent {
 		return true
@@ -98,6 +97,21 @@ func (wv *WorldView) AddNewNodes(newView WorldView){
 	}
 }
 
+func (wv *WorldView) SetBehaviour(myIP string, b string){
+	es := wv.States[myIP]
+	(&es).SetBehaviour(b)
+}
+
+func (wv *WorldView) SetFloor( myIP string, f int){
+	es := wv.States[myIP]
+	(&es).SetFloor(f)
+}
+
+func (wv *WorldView) SetDirection(myIP string, d string){
+	es := wv.States[myIP]
+	(&es).SetDirection(d)
+}
+
 func (wv *WorldView) SetHallRequestAtFloor(f int, b int){
 	if(wv.HallRequests[f][b].ToBool()){
 		return
@@ -112,7 +126,27 @@ func (wv *WorldView) ClearHallRequestAtFloor(f int, b int){
 	} 
 }
 
-func (wv *WorldView) GetHallRequests() [][2]bool {
+func (wv *WorldView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int) {
+	es := wv.States[myIP]
+
+	if btn_type == 2 {
+		(&es).SetCabRequestAtFloor(btn_floor)
+	} else {
+		wv.SetHallRequestAtFloor(btn_floor, btn_type)
+	}
+}
+
+func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type int) {
+	es := wv.States[myIP]
+
+	if btn_type == 2 {
+		(&es).ClearCabRequestAtFloor(btn_floor)
+	} else {
+		wv.ClearHallRequestAtFloor(btn_floor, btn_type)
+	}
+}
+
+func (wv WorldView) GetHallRequests() [][2]bool {
 	var hall_requests [][2]bool
 	for floor, buttons := range wv.HallRequests {
 		for button, value := range buttons {
@@ -186,26 +220,6 @@ func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool{
 
 func (wv *WorldView) GetMyCabRequests(myIP string) []bool{
 	return wv.States[myIP].GetCabRequests()
-}
-
-func (wv *WorldView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int) {
-	es := wv.States[myIP]
-
-	if btn_type == 2 {
-		(&es).SetCabRequestAtFloor(btn_floor)
-	} else {
-		wv.SetHallRequestAtFloor(btn_floor, btn_type)
-	}
-}
-
-func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type int) {
-	es := wv.States[myIP]
-
-	if btn_type == 2 {
-		(&es).ClearCabRequestAtFloor(btn_floor)
-	} else {
-		wv.ClearHallRequestAtFloor(btn_floor, btn_type)
-	}
 }
 
 
