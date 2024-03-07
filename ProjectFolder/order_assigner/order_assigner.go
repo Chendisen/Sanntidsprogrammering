@@ -50,29 +50,25 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 
 	jsonBytes, err := json.Marshal(input)
 	if err != nil {
-		fmt.Println("json.Marshal error: ", err)
-		return
+		panic(err)
 	}
 
-    //wld_view.PrintWorldView()
-    //input.PrintInput()
+	//wld_view.PrintWorldView()
+	//input.PrintInput()
 
-	ret, err := exec.Command("./order_assigner/"+hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
+	ret, err := exec.Command(hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
 	if err != nil {
-		fmt.Println("exec.Command error: ", err)
-		fmt.Println(string(ret))
-		return
+		panic(err)
 	}
 
 	output := new(map[string][][2]bool)
 	err = json.Unmarshal(ret, &output)
 	if err != nil {
-		fmt.Println("json.Unmarshal error: ", err)
-		return
+		panic(err)
 	}
 
 	wld_view.AssignedOrders = *output
-	for _,orders := range *output {
+	for _, orders := range *output {
 		fmt.Print(orders)
 	}
 }

@@ -22,6 +22,8 @@ func Transmitter(port int, chans ...interface{}) {
 			Chan: reflect.ValueOf(ch),
 		}
 		typeNames[i] = reflect.TypeOf(ch).Elem().String()
+
+		
 	}
 
 	conn := conn.DialBroadcastUDP(port)
