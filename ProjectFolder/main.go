@@ -47,6 +47,12 @@ func main() {
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
 
+	for {
+		if elev.Floor != -1{
+			break
+		}
+	}
+
 	go network.StartCommunication(alv_list.MyIP, &alv_list, &wld_view, ord_updated, wld_updated)
 
 	for {
