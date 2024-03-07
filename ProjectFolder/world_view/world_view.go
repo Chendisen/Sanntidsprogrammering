@@ -44,8 +44,10 @@ type WorldView struct {
 
 //ElevatorState functions
 
-func MakeElevatorState() ElevatorState{
-	return ElevatorState{Version: cyclic_counter.MakeCounter(50), Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]bool, driver.N_FLOORS)}
+func MakeElevatorState() *ElevatorState{
+	newElevator := new(ElevatorState)
+	*newElevator = ElevatorState{Version: cyclic_counter.MakeCounter(50), Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]bool, driver.N_FLOORS)}
+	return newElevator
 }
 
 func (es ElevatorState) GetCabRequests() []bool{
@@ -87,7 +89,8 @@ func (wv *WorldView) ShouldAddNode(IP string) bool{
 }
 
 func (wv *WorldView) AddNodeToWorldView(IP string){
-	*wv.States[IP] = MakeElevatorState()
+
+	wv.States[IP] = MakeElevatorState()
 	wv.AssignedOrders[IP] = make([][2]bool, driver.N_FLOORS)
 }
 
@@ -201,14 +204,14 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	return isUpdated
 }
 
-func MakeWorldView(myIP string, myState *ElevatorState) WorldView{
+func MakeWorldView(myIP string) WorldView{
 	var wv WorldView = WorldView{States: make(map[string]*ElevatorState), AssignedOrders: make(map[string][][2]bool)}
 	
 	for i := 0; i < driver.N_FLOORS; i++ {
 		wv.HallRequests = append(wv.HallRequests, [2]cyclic_counter.Counter{cyclic_counter.MakeCounter(cyclic_counter.MAX), cyclic_counter.MakeCounter(cyclic_counter.MAX)})
 	}
 
-	wv.States[myIP] = myState
+	wv.States[myIP] = MakeElevatorState()
 	wv.AssignedOrders[myIP] = make([][2]bool, driver.N_FLOORS)
 
 	return wv

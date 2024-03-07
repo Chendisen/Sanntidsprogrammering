@@ -18,9 +18,8 @@ func main() {
 
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
 	var tmr timer.Timer = timer.Timer_uninitialized()
-	var elv_state world_view.ElevatorState = world_view.MakeElevatorState()
 	var alv_list world_view.AliveList = world_view.MakeAliveList()
-	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP, &elv_state)
+	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
 	//var std_msg message_handler.StandardMessage = message_handler.StandardMessage{alv_list.MyIP, wld_view}
 
 	//var d driver.MotorDirection = driver.MD_Up
