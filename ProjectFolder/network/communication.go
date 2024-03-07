@@ -1,7 +1,8 @@
 package network
 
 import (
-	// "Sanntid/network/bcast"
+	"Sanntid/message_handler"
+	"Sanntid/network/bcast"
 	"Sanntid/network/peers"
 	"Sanntid/world_view"
 	"fmt"
@@ -12,7 +13,7 @@ import (
 //
 //	will be received as zero-values.
 
-func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view.AliveList){ //, myView *world_view.WorldView, ord_updated chan<- int) {
+func StartCommunication(myIP string, c chan message_handler.StandardMessage, al *world_view.AliveList, myView *world_view.WorldView, ord_updated chan<- bool, wld_updated chan<- bool) {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	// We make a channel for receiving updates on the id's of the peers that are
@@ -25,23 +26,23 @@ func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view
 	go peers.Receiver(15647, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
-	//helloTx := make(chan world_view.WorldView)
-	//helloRx := make(chan world_view.WorldView)
+	msgTx := make(chan message_handler.StandardMessage)
+	msgRx := make(chan message_handler.StandardMessage)
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	//go bcast.Transmitter(16569, helloTx)
-	//go bcast.Receiver(16569, helloRx)
+	go bcast.Transmitter(16569, msgTx)
+	go bcast.Receiver(16569, msgRx)
 
 	// The example message. We just send one of these every second.
 
-	/*go func() {
-		var wv world_view.WorldView
+	go func() {
+		var sm message_handler.StandardMessage
 		for {
-			wv = <-c
-			helloTx <- wv
+			sm = <-c
+			msgTx <- sm
 		}
-	}()*/
+	}()
 
 	fmt.Println("Started")
 	for {
@@ -54,10 +55,10 @@ func StartCommunication(myIP string, c chan world_view.WorldView, al *world_view
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-			fmt.Printf((" My role:  %s\n"), world_view.GetMyRole(*al))
+			fmt.Printf((" Am i master?:  %t\n"), (*al).AmIMaster())
 
-		/*case newView := <-helloRx:
-			myView.UpdateWorldView(newView, "123", al.MyIP, *al, ord_updated)
-		*/}
+		case recievedMsg := <-msgRx:
+			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, al.MyIP, *al, ord_updated, wld_updated)
+		}
 	}
 }
