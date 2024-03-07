@@ -101,17 +101,17 @@ func (wv *WorldView) AddNewNodes(newView WorldView){
 
 func (wv *WorldView) SetBehaviour(myIP string, eb elevator.ElevatorBehaviour){
 	es := wv.States[myIP]
-	(&es).SetBehaviour()
+	(&es).SetBehaviour(elevator.Eb_toString(eb))
 }
 
-func (wv *WorldView) SetFloor( myIP string, f int){
+func (wv *WorldView) SetFloor(myIP string, f int){
 	es := wv.States[myIP]
 	(&es).SetFloor(f)
 }
 
-func (wv *WorldView) SetDirection(myIP string, d string){
+func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection){
 	es := wv.States[myIP]
-	(&es).SetDirection(d)
+	(&es).SetDirection(driver.Driver_dirn_toString(md))
 }
 
 func (wv *WorldView) SetHallRequestAtFloor(f int, b int){
