@@ -19,6 +19,9 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 	//  `go run main.go -id=our_id`
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
+
+	time.Sleep(5*time.Second)
+
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	// We can disable/enable the transmitter after it has been started.
 	// This could be used to signal that we are somehow "unavailable".
