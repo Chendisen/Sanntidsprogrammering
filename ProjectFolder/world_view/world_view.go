@@ -214,7 +214,7 @@ func MakeAliveList() AliveList{
 	return AliveList{MyIP: myIP}
 }
 
-func AmIMaster(al AliveList) bool {
+func (al AliveList) AmIMaster() bool {
 	if al.Master == al.MyIP {
 		return true
 	} else {
