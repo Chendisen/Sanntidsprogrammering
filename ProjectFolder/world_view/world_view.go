@@ -316,23 +316,39 @@ func (al *AliveList) UpdateAliveList(p peers.PeerUpdate) {
 	}
 }
 
-// // ShouldResetList functions
+// ShouldResetList functions
 
-// func MakeHeardFromList(myIP string) HeardFromList{
-// 	heardFromList := HeardFromList{HeardFrom: make(map[string][][3]bool)}
-// 	heardFromList.HeardFrom[myIP] = make([][3]bool, driver.N_FLOORS)
+func MakeHeardFromList(myIP string) HeardFromList{
+	heardFromList := HeardFromList{HeardFrom: make(map[string][][3]bool)}
+	heardFromList.HeardFrom[myIP] = make([][3]bool, driver.N_FLOORS)
 
-// 	return heardFromList
-// }
+	return heardFromList
+}
 
-// func (hfl HeardFromList) ShouldResetAtFloorButton(f int, b int, al AliveList) bool {
-// 	var count int = 0
-// 	for _,buttonArray := range hfl.HeardFrom{
-// 		if buttonArray[f][b] {
-// 			count++
-// 		}
-// 	}
-// 	return count == len(al.NodesAlive)
-// }
+func (hfl HeardFromList) ShouldResetAtFloorButton(f int, b int, al AliveList) bool {
+	var count int = 0
+	for _,buttonArray := range hfl.HeardFrom{
+		if buttonArray[f][b] {
+			count++
+		}
+	}
+	return count == len(al.NodesAlive)
+}
 
-// func (hfl *HeardFromList) SetHeardFrom(f int, b int)
+func (hfl *HeardFromList) SetHeardFrom(msgIP string, f int, b int) {
+	hfl.HeardFrom[msgIP][f][b] = true
+}
+
+func (hfl *HeardFromList) GetHeardFrom(msgIP string, f int, b int) bool {
+	return hfl.HeardFrom[msgIP][f][b]
+}
+
+func (hfl *HeardFromList) ClearHeardFrom(f int, b int) {
+	for _, hfl_buttons := range hfl.HeardFrom {
+		hfl_buttons[f][b] = false
+	}
+}
+
+func (hfl *HeardFromList) AddNodeToList(newIP string) {
+	hfl.HeardFrom[newIP] = make([][3]bool, driver.N_FLOORS)
+}
