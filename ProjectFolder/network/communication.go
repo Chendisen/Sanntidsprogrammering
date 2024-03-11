@@ -20,7 +20,7 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 
-	time.Sleep(5*time.Second)
+	time.Sleep(5 * time.Second)
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	// We can disable/enable the transmitter after it has been started.
@@ -45,7 +45,7 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 	go func() {
 		for {
 			msgTx <- sm
-			time.Sleep(500*time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}()
 
@@ -66,7 +66,7 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 			viewIsUpdated := myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, al.MyIP, *al, ord_updated, wld_updated)
 			if viewIsUpdated {
 				sm.WorldView = *myView
-			}		
+			}
 		}
 	}
 }

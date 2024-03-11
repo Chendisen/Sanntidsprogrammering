@@ -28,6 +28,10 @@ type AliveList struct {
 	Master 		string
 }
 
+type ShouldResetList struct {
+	ShouldReset [][2]bool
+}
+
 type ElevatorState struct {
 	Version 		cyclic_counter.Counter  `json:"version"`
     Behaviour   	string      			`json:"behaviour"`
@@ -108,7 +112,7 @@ func (wv *WorldView) SetBehaviour(myIP string, eb elevator.ElevatorBehaviour){
 
 func (wv *WorldView) SetFloor(myIP string, f int){
 	wv.States[myIP].SetFloor(f)
-	
+
 }
 
 func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection){
@@ -179,7 +183,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		if IP != myIP{
 			if(cyclic_counter.ShouldUpdate(NodeState.Version, currentView.States[IP].Version)){
 				*currentView.States[IP] = *NodeState
-				isUpdated = true
+isUpdated = true
 			}
 		}
 	}
@@ -189,7 +193,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 			for j, orderAssigned := range floor{
 				if orderAssigned != currentView.AssignedOrders[myIP][i][j]{
 					ord_updated <- true
-					isUpdated = true
+isUpdated = true
 					break
 				}
 			}
@@ -291,4 +295,10 @@ func (al *AliveList) UpdateAliveList(p peers.PeerUpdate){
 	if shouldUpdateMaster {
 		al.UpdateMaster(newMaster)
 	}
+}
+
+// ShouldResetList functions
+
+func (srl ShouldResetList) ShouldResetAtFloor(f int, b int) bool{
+	return srl.ShouldReset[f][b]
 }

@@ -51,6 +51,7 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldV
 		if requests.Requests_shouldClearImmediately(*es, btn_floor, btn_type) {
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
 		} else {
+			fmt.Println("Wrong to be here")
 			es.Request[btn_floor][int(btn_type)] = 1
 			wld_view.SetRequestAtFloor(myIP, btn_floor, int(btn_type))
 		}
