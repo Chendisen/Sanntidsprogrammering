@@ -44,6 +44,7 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 
 	go func() {
 		for {
+			sm.WorldView = *myView
 			msgTx <- sm
 			time.Sleep(1000 * time.Millisecond)
 		}
@@ -63,10 +64,7 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 			fmt.Printf((" Am i master?:  %t\n"), (*al).AmIMaster())
 
 		case recievedMsg := <-msgRx:
-			viewIsUpdated := myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, al.MyIP, *al, ord_updated, wld_updated)
-			if viewIsUpdated {
-				sm.WorldView = *myView
-			}
+			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, al.MyIP, *al, ord_updated, wld_updated)
 		}
 	}
 }

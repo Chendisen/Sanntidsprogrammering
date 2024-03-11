@@ -163,27 +163,36 @@ func (wv WorldView) GetHallRequests() [][2]bool {
 	return hall_requests
 }
 
-func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- bool, wld_updated chan<- bool) bool{
-
-	var isUpdated bool = false
+func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- bool, wld_updated chan<- bool){
 
 	currentView.AddNewNodes(newView)
 	(&newView).AddNewNodes(*currentView)
 
+	fmt.Println("Current: ")
+	currentView.PrintWorldView()
+	fmt.Println("\n\nNew: ")
+	newView.PrintWorldView()
+
+	var hallRequestsUpdated bool = false
 	for i, floor := range newView.HallRequests {
 		for j, hallRequest := range floor {
 			if cyclic_counter.ShouldUpdate(hallRequest, currentView.HallRequests[i][j]) {
 				cyclic_counter.UpdateValue(&currentView.HallRequests[i][j], hallRequest.Value)
-				isUpdated = true
+				hallRequestsUpdated = true
 			}
 		}
+	}
+
+	fmt.Printf("Is hall requests updated?: %t\n\n", hallRequestsUpdated)
+
+	if hallRequestsUpdated {
+		wld_updated <- true
 	}
 
 	for IP, NodeState := range newView.States {
 		if IP != myIP{
 			if(cyclic_counter.ShouldUpdate(NodeState.Version, currentView.States[IP].Version)){
 				*currentView.States[IP] = *NodeState
-isUpdated = true
 			}
 		}
 	}
@@ -193,7 +202,6 @@ isUpdated = true
 			for j, orderAssigned := range floor{
 				if orderAssigned != currentView.AssignedOrders[myIP][i][j]{
 					ord_updated <- true
-isUpdated = true
 					break
 				}
 			}
@@ -201,11 +209,9 @@ isUpdated = true
 		currentView.AssignedOrders = newView.AssignedOrders
 	}
 
-	if isUpdated {
+	/*if isUpdated {
 		wld_updated <- true
-	}
-
-	return isUpdated
+	}*/
 }
 
 func MakeWorldView(myIP string) WorldView{
@@ -230,10 +236,22 @@ func (wv *WorldView) GetMyCabRequests(myIP string) []bool{
 }
 
 func (wv WorldView) PrintWorldView() {
-	fmt.Println("World View:")
+	/*fmt.Println("World View:")
 	for IP,states := range wv.States {
 		fmt.Printf("	Floor of %s: %d \n", IP, states.Floor)
+	}*/
+	
+	fmt.Println("Assigned orders: ")
+	for IP,table := range wv.AssignedOrders {
+		fmt.Printf("Elevator: %s\n", IP)
+		for floor,values := range table {
+			fmt.Printf("	Floor: %d\n", floor)
+			for button, isAssigned := range values{
+				fmt.Printf("		Button: %d, %t\n", button, isAssigned)
+			}
+		}	
 	}
+
 }
 
 //AliveList funcitons

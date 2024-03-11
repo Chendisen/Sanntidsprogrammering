@@ -70,10 +70,10 @@ func main() {
 
 			// When we change state we also need to update the world view, this should probably happen when we arrive at new floor and update state.
 
-			fmt.Printf("%+v\n", a)
+			//fmt.Printf("%+v\n", a)
 			//driver.SetButtonLamp(a.Button, a.Floor, true)
 			// fsm.Fsm_onRequestButtonPress(&elev, &tmr, a.Floor, a.Button)
-			fmt.Printf("Request floor: %d", a.Floor)
+			//fmt.Printf("Request floor: %d\n", a.Floor)
 
 		case a := <-drv_floors:
 			fmt.Printf("This floor polled: %d\n", a)
@@ -102,7 +102,7 @@ func main() {
 			}
 
 		case <-ord_updated:
-			fmt.Println("Step 4")
+			fmt.Println("Step 5")
 			go func() { 
 				for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
 					for button, value := range buttons {

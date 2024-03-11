@@ -43,7 +43,7 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldV
 
 	fmt.Printf("\n\n%s(%d, %s)\n", functionName, btn_floor, driver.Driver_button_toString(btn_type))
 
-	elevator.Elevator_print(*es)
+	//elevator.Elevator_print(*es)
 
 	switch es.Behaviour {
 
@@ -51,7 +51,6 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldV
 		if requests.Requests_shouldClearImmediately(*es, btn_floor, btn_type) {
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
 		} else {
-			fmt.Println("Wrong to be here")
 			es.Request[btn_floor][int(btn_type)] = 1
 			wld_view.SetRequestAtFloor(myIP, btn_floor, int(btn_type))
 		}
@@ -87,8 +86,8 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldV
 
 	setAllLights(es)
 
-	fmt.Printf("\nNew state:\n")
-	elevator.Elevator_print(*es)
+	//fmt.Printf("\nNew state:\n")
+	//elevator.Elevator_print(*es)
 }
 
 func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string, tmr *timer.Timer, newFloor int) {
@@ -96,7 +95,7 @@ func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, m
 	functionName := runtime.FuncForPC(pc).Name()
 
 	fmt.Printf("\n\n%s(%d)\n", functionName, newFloor) //uuuuuhhhm what is all this
-	elevator.Elevator_print(*es)
+	//elevator.Elevator_print(*es)
 
 	es.Floor = newFloor
 	wld_view.SetFloor(myIP, newFloor)
@@ -123,8 +122,8 @@ func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, m
 	default:
 	}
 
-	fmt.Printf("\nNew State:\n")
-	elevator.Elevator_print(*es)
+	//fmt.Printf("\nNew State:\n")
+	//elevator.Elevator_print(*es)
 }
 
 func Fsm_onDoorTimeout(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string, tmr *timer.Timer) {
@@ -132,7 +131,7 @@ func Fsm_onDoorTimeout(es *elevator.Elevator, wld_view *world_view.WorldView, my
 	functionName := runtime.FuncForPC(pc).Name()
 
 	fmt.Printf("\n\n%s()\n", functionName) //uuuuuhhhm what is all this
-	elevator.Elevator_print(*es)
+	//elevator.Elevator_print(*es)
 
 	switch es.Behaviour {
 	case elevator.EB_DoorOpen:
@@ -159,8 +158,8 @@ func Fsm_onDoorTimeout(es *elevator.Elevator, wld_view *world_view.WorldView, my
 	default:
 	}
 
-	fmt.Printf("\nNew State:\n")
-	elevator.Elevator_print(*es)
+	//fmt.Printf("\nNew State:\n")
+	//elevator.Elevator_print(*es)
 
 }
 
