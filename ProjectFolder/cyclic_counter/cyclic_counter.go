@@ -2,7 +2,7 @@ package cyclic_counter
 
 import "fmt"
 
-const MAX int = 15
+const MAX int = 3
 
 type Counter struct {
 	Value       int

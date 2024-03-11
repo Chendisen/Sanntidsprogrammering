@@ -30,8 +30,8 @@ func StartCommunication(myIP string, al *world_view.AliveList, myView *world_vie
 	go peers.Receiver(55555, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
-	msgTx := make(chan message_handler.StandardMessage)
-	msgRx := make(chan message_handler.StandardMessage)
+	msgTx := make(chan message_handler.StandardMessage, 10)
+	msgRx := make(chan message_handler.StandardMessage, 10)
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.

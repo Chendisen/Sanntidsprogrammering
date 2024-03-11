@@ -23,116 +23,117 @@ const (
 )
 
 type AliveList struct {
-	MyIP string
-	NodesAlive 	[]string
-	Master 		string
+	MyIP       string
+	NodesAlive []string
+	Master     string
 }
 
-type ShouldResetList struct {
-	ShouldReset [][2]bool
+type HeardFromList struct {
+	HeardFrom map[string][][3]bool
 }
 
 type ElevatorState struct {
-	Version 		cyclic_counter.Counter  `json:"version"`
-    Behaviour   	string      			`json:"behaviour"`
-    Floor       	int         			`json:"floor"` 
-    Direction   	string      			`json:"direction"`
-    CabRequests 	[]bool      			`json:"cabRequests"`
+	Version     cyclic_counter.Counter `json:"version"`
+	Behaviour   string                 `json:"behaviour"`
+	Floor       int                    `json:"floor"`
+	Direction   string                 `json:"direction"`
+	CabRequests []bool                 `json:"cabRequests"`
 }
 
 type WorldView struct {
-    HallRequests    [][2]cyclic_counter.Counter	`json:"hallRequests"`
-    States          map[string]*ElevatorState    `json:"states"`
-	AssignedOrders  map[string][][2]bool		`json:"assignedOrders"` 			
+	HallRequests   [][2]cyclic_counter.Counter `json:"hallRequests"`
+	States         map[string]*ElevatorState   `json:"states"`
+	AssignedOrders map[string][][2]bool        `json:"assignedOrders"`
 }
 
 //ElevatorState functions
 
-func MakeElevatorState() *ElevatorState{
+func MakeElevatorState() *ElevatorState {
 	newElevator := new(ElevatorState)
 	*newElevator = ElevatorState{Version: cyclic_counter.MakeCounter(50), Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]bool, driver.N_FLOORS)}
 	return newElevator
 }
 
-func (es ElevatorState) GetCabRequests() []bool{
+func (es ElevatorState) GetCabRequests() []bool {
 	return es.CabRequests
-} 
+}
 
-func (es *ElevatorState) SetBehaviour(b string){
+func (es *ElevatorState) SetBehaviour(b string) {
 	es.Behaviour = b
 	cyclic_counter.Increment(&es.Version)
 }
 
-func (es *ElevatorState) SetFloor(f int){
+func (es *ElevatorState) SetFloor(f int) {
 	es.Floor = f
 	cyclic_counter.Increment(&es.Version)
 }
 
-func (es *ElevatorState) SetDirection(d string){
+func (es *ElevatorState) SetDirection(d string) {
 	es.Direction = d
 	cyclic_counter.Increment(&es.Version)
 }
 
-func (es *ElevatorState) SetCabRequestAtFloor(f int){
+func (es *ElevatorState) SetCabRequestAtFloor(f int) {
 	es.CabRequests[f] = true
 	cyclic_counter.Increment(&es.Version)
 }
 
-func (es *ElevatorState) ClearCabRequestAtFloor(f int){
+func (es *ElevatorState) ClearCabRequestAtFloor(f int) {
 	es.CabRequests[f] = false
 	cyclic_counter.Increment(&es.Version)
 }
+
 //WordlView functions
 
-func (wv *WorldView) ShouldAddNode(IP string) bool{
-	if _,isPresent := wv.States[IP]; !isPresent {
+func (wv *WorldView) ShouldAddNode(IP string) bool {
+	if _, isPresent := wv.States[IP]; !isPresent {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (wv *WorldView) AddNodeToWorldView(IP string){
+func (wv *WorldView) AddNodeToWorldView(IP string) {
 
 	wv.States[IP] = MakeElevatorState()
 	wv.AssignedOrders[IP] = make([][2]bool, driver.N_FLOORS)
 }
 
-func (wv *WorldView) AddNewNodes(newView WorldView){
-	for IP := range newView.States{
+func (wv *WorldView) AddNewNodes(newView WorldView) {
+	for IP := range newView.States {
 		if wv.ShouldAddNode(IP) {
 			wv.AddNodeToWorldView(IP)
 		}
 	}
 }
 
-func (wv *WorldView) SetBehaviour(myIP string, eb elevator.ElevatorBehaviour){
+func (wv *WorldView) SetBehaviour(myIP string, eb elevator.ElevatorBehaviour) {
 	wv.States[myIP].SetBehaviour(elevator.Eb_toString(eb))
 }
 
-func (wv *WorldView) SetFloor(myIP string, f int){
+func (wv *WorldView) SetFloor(myIP string, f int) {
 	wv.States[myIP].SetFloor(f)
 
 }
 
-func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection){
+func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection) {
 	wv.States[myIP].SetDirection(driver.Driver_dirn_toString(md))
 }
 
-func (wv *WorldView) SetHallRequestAtFloor(f int, b int){
-	if(wv.HallRequests[f][b].ToBool()){
+func (wv *WorldView) SetHallRequestAtFloor(f int, b int) {
+	if wv.HallRequests[f][b].ToBool() {
 		fmt.Println("Step 2, not set")
 		return
-	} else{
+	} else {
 		fmt.Println("Step 2, set")
 		cyclic_counter.Increment(&wv.HallRequests[f][b])
 	}
 }
 
-func (wv *WorldView) ClearHallRequestAtFloor(f int, b int){
-	if(wv.HallRequests[f][b].ToBool()){
+func (wv *WorldView) ClearHallRequestAtFloor(f int, b int) {
+	if wv.HallRequests[f][b].ToBool() {
 		cyclic_counter.Increment(&wv.HallRequests[f][b])
-	} 
+	}
 }
 
 func (wv *WorldView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int) {
@@ -140,7 +141,7 @@ func (wv *WorldView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int)
 
 	if btn_type == 2 {
 		es.SetCabRequestAtFloor(btn_floor)
-	} 
+	}
 }
 
 func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type int) {
@@ -163,7 +164,7 @@ func (wv WorldView) GetHallRequests() [][2]bool {
 	return hall_requests
 }
 
-func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- bool, wld_updated chan<- bool){
+func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	currentView.AddNewNodes(newView)
 	(&newView).AddNewNodes(*currentView)
@@ -190,17 +191,17 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	}
 
 	for IP, NodeState := range newView.States {
-		if IP != myIP{
-			if(cyclic_counter.ShouldUpdate(NodeState.Version, currentView.States[IP].Version)){
+		if IP != myIP {
+			if cyclic_counter.ShouldUpdate(NodeState.Version, currentView.States[IP].Version) {
 				*currentView.States[IP] = *NodeState
 			}
 		}
 	}
 
 	if senderIP == aliveList.Master {
-		for i, floor := range newView.AssignedOrders[myIP]{
-			for j, orderAssigned := range floor{
-				if orderAssigned != currentView.AssignedOrders[myIP][i][j]{
+		for i, floor := range newView.AssignedOrders[myIP] {
+			for j, orderAssigned := range floor {
+				if orderAssigned != currentView.AssignedOrders[myIP][i][j] {
 					ord_updated <- true
 					break
 				}
@@ -214,9 +215,9 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	}*/
 }
 
-func MakeWorldView(myIP string) WorldView{
+func MakeWorldView(myIP string) WorldView {
 	var wv WorldView = WorldView{States: make(map[string]*ElevatorState), AssignedOrders: make(map[string][][2]bool)}
-	
+
 	for i := 0; i < driver.N_FLOORS; i++ {
 		wv.HallRequests = append(wv.HallRequests, [2]cyclic_counter.Counter{cyclic_counter.MakeCounter(cyclic_counter.MAX), cyclic_counter.MakeCounter(cyclic_counter.MAX)})
 	}
@@ -227,11 +228,11 @@ func MakeWorldView(myIP string) WorldView{
 	return wv
 }
 
-func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool{
+func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool {
 	return wv.AssignedOrders[myIP]
-} 
+}
 
-func (wv *WorldView) GetMyCabRequests(myIP string) []bool{
+func (wv *WorldView) GetMyCabRequests(myIP string) []bool {
 	return wv.States[myIP].GetCabRequests()
 }
 
@@ -240,24 +241,24 @@ func (wv WorldView) PrintWorldView() {
 	for IP,states := range wv.States {
 		fmt.Printf("	Floor of %s: %d \n", IP, states.Floor)
 	}*/
-	
+
 	fmt.Println("Assigned orders: ")
-	for IP,table := range wv.AssignedOrders {
+	for IP, table := range wv.AssignedOrders {
 		fmt.Printf("Elevator: %s\n", IP)
-		for floor,values := range table {
+		for floor, values := range table {
 			fmt.Printf("	Floor: %d\n", floor)
-			for button, isAssigned := range values{
+			for button, isAssigned := range values {
 				fmt.Printf("		Button: %d, %t\n", button, isAssigned)
 			}
-		}	
+		}
 	}
 
 }
 
 //AliveList funcitons
 
-func MakeAliveList() AliveList{
-	myIP,_ := localip.LocalIP()
+func MakeAliveList() AliveList {
+	myIP, _ := localip.LocalIP()
 	return AliveList{MyIP: myIP, Master: myIP}
 }
 
@@ -269,7 +270,7 @@ func (al AliveList) AmIMaster() bool {
 	}
 }
 
-func (al *AliveList) ShouldUpdateList(p peers.PeerUpdate) bool{
+func (al *AliveList) ShouldUpdateList(p peers.PeerUpdate) bool {
 	if len(p.Lost) != 0 {
 		return true
 	} else if len(p.New) != 0 {
@@ -279,15 +280,15 @@ func (al *AliveList) ShouldUpdateList(p peers.PeerUpdate) bool{
 	}
 }
 
-func (al *AliveList) ShouldUpdateMaster(p peers.PeerUpdate) (bool, string){
+func (al *AliveList) ShouldUpdateMaster(p peers.PeerUpdate) (bool, string) {
 	var shouldUpdate bool = false
 	var newMaster string = ""
-	if len(p.Lost) != 0{
-		for _,lostNode := range p.Lost {
-			if lostNode == al.Master{
+	if len(p.Lost) != 0 {
+		for _, lostNode := range p.Lost {
+			if lostNode == al.Master {
 				shouldUpdate = true
-				for _,candidate := range p.Peers {
-					if candidate > newMaster{
+				for _, candidate := range p.Peers {
+					if candidate > newMaster {
 						newMaster = candidate
 					}
 				}
@@ -299,14 +300,14 @@ func (al *AliveList) ShouldUpdateMaster(p peers.PeerUpdate) (bool, string){
 		shouldUpdate = true
 		return shouldUpdate, newMaster
 	}
-	return shouldUpdate, newMaster	
+	return shouldUpdate, newMaster
 }
 
-func (al *AliveList) UpdateMaster(newMaster string){
+func (al *AliveList) UpdateMaster(newMaster string) {
 	al.Master = newMaster
 }
 
-func (al *AliveList) UpdateAliveList(p peers.PeerUpdate){
+func (al *AliveList) UpdateAliveList(p peers.PeerUpdate) {
 	al.NodesAlive = p.Peers
 	shouldUpdateMaster, newMaster := al.ShouldUpdateMaster(p)
 
@@ -315,8 +316,23 @@ func (al *AliveList) UpdateAliveList(p peers.PeerUpdate){
 	}
 }
 
-// ShouldResetList functions
+// // ShouldResetList functions
 
-func (srl ShouldResetList) ShouldResetAtFloor(f int, b int) bool{
-	return srl.ShouldReset[f][b]
-}
+// func MakeHeardFromList(myIP string) HeardFromList{
+// 	heardFromList := HeardFromList{HeardFrom: make(map[string][][3]bool)}
+// 	heardFromList.HeardFrom[myIP] = make([][3]bool, driver.N_FLOORS)
+
+// 	return heardFromList
+// }
+
+// func (hfl HeardFromList) ShouldResetAtFloorButton(f int, b int, al AliveList) bool {
+// 	var count int = 0
+// 	for _,buttonArray := range hfl.HeardFrom{
+// 		if buttonArray[f][b] {
+// 			count++
+// 		}
+// 	}
+// 	return count == len(al.NodesAlive)
+// }
+
+// func (hfl *HeardFromList) SetHeardFrom(f int, b int)
