@@ -121,8 +121,10 @@ func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection){
 
 func (wv *WorldView) SetHallRequestAtFloor(f int, b int){
 	if(wv.HallRequests[f][b].ToBool()){
+		fmt.Println("Step 2, not set")
 		return
 	} else{
+		fmt.Println("Step 2, set")
 		cyclic_counter.Increment(&wv.HallRequests[f][b])
 	}
 }
@@ -138,9 +140,7 @@ func (wv *WorldView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int)
 
 	if btn_type == 2 {
 		es.SetCabRequestAtFloor(btn_floor)
-	} else {
-		wv.SetHallRequestAtFloor(btn_floor, btn_type)
-	}
+	} 
 }
 
 func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type int) {

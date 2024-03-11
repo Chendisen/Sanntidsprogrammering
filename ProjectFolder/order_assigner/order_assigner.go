@@ -68,9 +68,7 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 	}
 
 	wld_view.AssignedOrders = *output
-	for _, orders := range *output {
-		fmt.Print(orders)
-	}
+	fmt.Println("Step 4")
 }
 
 func (inp HRAInput) PrintInput() {

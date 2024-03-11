@@ -56,6 +56,7 @@ func main() {
 			if a.Button == 2 {
 				fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
 			} else {
+				fmt.Println("Step 1")
 				wld_view.SetHallRequestAtFloor(a.Floor, int(a.Button))
 				go func() {
 					wld_updated <- true
@@ -101,6 +102,7 @@ func main() {
 			}
 
 		case <-ord_updated:
+			fmt.Println("Step 4")
 			go func() { 
 				for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
 					for button, value := range buttons {
@@ -115,7 +117,7 @@ func main() {
 			
 		case <-wld_updated:
 			
-			fmt.Println("We are in wld_updated")
+			fmt.Println("Step 3")
 
 			go func() {	
 				if alv_list.AmIMaster() {
