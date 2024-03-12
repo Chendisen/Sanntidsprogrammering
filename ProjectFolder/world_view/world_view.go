@@ -220,7 +220,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 
 	for f, floor := range newView.HallRequests {
 		for b, buttonStatus := range floor {
-			UpdateSynchronisedRequests(&currentView.HallRequests[f][b], buttonStatus, hfl, al, lightArray, f, b, senderIP, &wld_updated_flag, &ord_updated_flag)
+			UpdateSynchronisedRequests(&currentView.HallRequests[f][b], buttonStatus, hfl, al, lightArray, f, b, senderIP, &wld_updated_flag, &ord_updated_flag, "")
 		}
 	}
 
@@ -228,7 +228,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 
 	for IP, state := range newView.States {
 		for f, floorStatus := range state.CabRequests {
-			UpdateSynchronisedRequests(&currentView.States[IP].CabRequests[f], floorStatus, hfl, al, lightArray, f, driver.BT_Cab, senderIP, &wld_updated_flag, &ord_updated_flag)
+			UpdateSynchronisedRequests(&currentView.States[IP].CabRequests[f], floorStatus, hfl, al, lightArray, f, driver.BT_Cab, senderIP, &wld_updated_flag, &ord_updated_flag, IP)
 		}
 	}
 
@@ -399,12 +399,16 @@ func (hfl *HeardFromList) AddNodeToList(newIP string) {
 }
 
 // Big switch case for update world view
-func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *HeardFromList, alv_list AliveList, light_array *[][3]bool, f int, b int, rcd_IP string, wld_updated_flag *bool, ord_updated_flag *bool) {
+func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *HeardFromList, alv_list AliveList, light_array *[][3]bool, f int, b int, rcd_IP string, wld_updated_flag *bool, ord_updated_flag *bool, cabIP string) {
 	switch rcd_req {
 	case Order_Empty: // No requests
 		if *cur_req == Order_Finished {
 			// TODO: Channel that turns off the lights
-			(*light_array)[f][b] = false
+			if(b == driver.BT_Cab && alv_list.MyIP == cabIP){
+				(*light_array)[f][b] = false
+			} else if(b != driver.BT_Cab) {
+				(*light_array)[f][b] = false
+			}
 			*ord_updated_flag = true
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Empty
@@ -418,7 +422,11 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for assigning orders
 					// TODO: Channel for turning on the lights
-					(*light_array)[f][b] = true
+					if(b == driver.BT_Cab && alv_list.MyIP == cabIP){
+						(*light_array)[f][b] = true
+					} else if(b != driver.BT_Cab) {
+						(*light_array)[f][b] = true
+					}
 					*wld_updated_flag = true
 					hfl.ClearHeardFrom(f, b)
 					*cur_req = Order_Confirmed
@@ -430,7 +438,11 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 		if *cur_req == Order_Unconfirmed {
 			// TODO: Channel for updating assigned orders
 			// TODO: Channel for turning on lights
-			(*light_array)[f][b] = true
+			if(b == driver.BT_Cab && alv_list.MyIP == cabIP){
+				(*light_array)[f][b] = true
+			} else if(b != driver.BT_Cab) {
+				(*light_array)[f][b] = true
+			}
 			*ord_updated_flag = true
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Confirmed
@@ -443,7 +455,11 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			if alv_list.AmIMaster() {
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for turning off lights
-					(*light_array)[f][b] = false
+					if(b == driver.BT_Cab && alv_list.MyIP == cabIP){
+						(*light_array)[f][b] = false
+					} else if(b != driver.BT_Cab) {
+						(*light_array)[f][b] = false
+					}
 					*wld_updated_flag = true
 					hfl.ClearHeardFrom(f, b)
 					*cur_req = Order_Empty
