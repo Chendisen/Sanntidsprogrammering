@@ -114,35 +114,47 @@ func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection) {
 
 func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == driver.BT_Cab {
-		wv.States[myIP].SeenCabRequestAtFloor(f)
+		if wv.States[myIP].CabRequests[f] == Order_Empty{
+			wv.States[myIP].SeenCabRequestAtFloor(f)
+		}
 	} else {
-		wv.HallRequests[f][b] = Order_Unconfirmed
+		if wv.HallRequests[f][b] == Order_Empty{
+			wv.HallRequests[f][b] = Order_Unconfirmed
+		}
 	}
 }
 
-func (wv *WorldView) SetRequestAtFloor(myIP string, f int, b driver.ButtonType) {
+/*func (wv *WorldView) SetRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == driver.BT_Cab {
-		wv.States[myIP].SetCabRequestAtFloor(f)
+		if wv.States[myIP].CabRequests[f] != Order_Empty{
+			wv.States[myIP].FinishedCabRequestAtFloor(f)
+		}
 	} else {
-		wv.HallRequests[f][b] = Order_Confirmed
+		if wv.HallRequests[f][b] != Order_Empty{
+			wv.HallRequests[f][b] = Order_Finished
+		}
 	}
-}
+}*/
 
 func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == driver.BT_Cab {
-		wv.States[myIP].FinishedCabRequestAtFloor(f)
+		if wv.States[myIP].CabRequests[f] != Order_Empty{
+			wv.States[myIP].FinishedCabRequestAtFloor(f)
+		}
 	} else {
-		wv.HallRequests[f][b] = Order_Finished
+		if wv.HallRequests[f][b] != Order_Empty{
+			wv.HallRequests[f][b] = Order_Finished
+		}
 	}
 }
 
-func (wv *WorldView) ClearRequestAtFloor(myIP string, f int, b driver.ButtonType) {
+/*func (wv *WorldView) ClearRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == driver.BT_Cab {
 		wv.States[myIP].ClearCabRequestAtFloor(f)
 	} else {
 		wv.HallRequests[f][b] = Order_Empty
 	}
-}
+}*/
 
 func (wv WorldView) GetHallRequests() [][2]bool {
 	var hall_requests [][2]bool = make([][2]bool, len(wv.HallRequests))
@@ -195,11 +207,16 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		}
 	}
 
-	// currentView.AddNewNodes(newView)
-	// (&newView).AddNewNodes(*currentView)
+	//currentView.AddNewNodes(newView)
+	//(&newView).AddNewNodes(*currentView)
 
 	var wld_updated_flag bool = false
 	var ord_updated_flag bool = false
+
+	fmt.Println("New view:")
+	newView.PrintWorldView()
+	fmt.Println("\nCurrent view:")
+	currentView.PrintWorldView()
 
 	for f, floor := range newView.HallRequests {
 		for b, buttonStatus := range floor {
@@ -207,11 +224,16 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		}
 	}
 
+
+
 	for IP, state := range newView.States {
 		for f, floorStatus := range state.CabRequests {
 			UpdateSynchronisedRequests(&currentView.States[IP].CabRequests[f], floorStatus, hfl, al, lightArray, f, driver.BT_Cab, senderIP, &wld_updated_flag, &ord_updated_flag)
 		}
 	}
+
+	fmt.Printf("\nWorld updated: %t\n", wld_updated_flag)
+	fmt.Printf("Order updated: %t\n", ord_updated_flag)
 
 	if wld_updated_flag {
 		
@@ -251,15 +273,21 @@ func (wv WorldView) PrintWorldView() {
 		fmt.Printf("	Floor of %s: %d \n", IP, states.Floor)
 	}*/
 
-	fmt.Println("Assigned orders: ")
-	for IP, table := range wv.AssignedOrders {
-		fmt.Printf("Elevator: %s\n", IP)
-		for floor, values := range table {
-			fmt.Printf("	Floor: %d\n", floor)
-			for button, isAssigned := range values {
-				fmt.Printf("		Button: %d, %t\n", button, isAssigned)
-			}
+	fmt.Println("Hall requests: ")
+	for f, floor := range wv.HallRequests {
+		fmt.Printf("Floor: %d\n", f)
+		for b, buttonStatus := range floor {
+			fmt.Printf("	Button: %d, Status: %d\n", b, buttonStatus)
 		}
+	}
+
+	fmt.Println("Cab requests: ")
+	for IP,state := range wv.States {
+		fmt.Printf("	Elevator: %s\n", IP)
+		for f,buttonStatus := range state.CabRequests {
+			fmt.Printf("		Floor: %d, Status: %d\n", f, buttonStatus)
+		}
+		fmt.Println("")
 	}
 
 }
@@ -331,7 +359,6 @@ func (al *AliveList) UpdateAliveList(p peers.PeerUpdate) {
 func MakeHeardFromList(myIP string) HeardFromList {
 	heardFromList := HeardFromList{HeardFrom: make(map[string][][3]bool)}
 	heardFromList.HeardFrom[myIP] = make([][3]bool, driver.N_FLOORS)
-
 	return heardFromList
 }
 
@@ -381,6 +408,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			*ord_updated_flag = true
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Empty
+			fmt.Print("Case 1\n")
 		}
 	case Order_Unconfirmed: // Unconfirmed requests
 		if *cur_req == Order_Empty || *cur_req == Order_Unconfirmed {
@@ -396,6 +424,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 					*cur_req = Order_Confirmed
 				}
 			}
+			fmt.Print("Case 2\n")
 		}
 	case Order_Confirmed: // Confirmed requests
 		if *cur_req == Order_Unconfirmed {
@@ -405,6 +434,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			*ord_updated_flag = true
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Confirmed
+			fmt.Print("Case 3\n")
 		}
 	case Order_Finished: // Finished requests
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Confirmed || *cur_req == Order_Finished {
@@ -419,6 +449,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 					*cur_req = Order_Empty
 				}
 			}
+			fmt.Print("Case 4\n")
 		}
 
 	}

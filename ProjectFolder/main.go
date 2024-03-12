@@ -39,6 +39,7 @@ func main() {
 	go network.StartCommunication(alv_list.MyIP, &wld_view, &alv_list, &hrd_list, &lgt_array, ord_updated, wld_updated)
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
+	fsm.SetAllLights(lgt_array)
 
 	for {
 		select {
@@ -99,6 +100,13 @@ func main() {
 						} else {
 							elev.Request[floor][button] = 0
 						}
+					}
+				}
+				for floor,value := range wld_view.GetMyCabRequests(alv_list.MyIP) {
+					if value {
+						fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, floor, driver.BT_Cab)
+					} else {
+						elev.Request[floor][driver.BT_Cab] = 0
 					}
 				}
 			} ()

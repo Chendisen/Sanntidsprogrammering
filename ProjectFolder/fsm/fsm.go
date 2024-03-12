@@ -101,6 +101,8 @@ func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, m
 	case elevator.EB_Moving:
 		if requests.Requests_shouldStop(*es) {
 
+			fmt.Println("We should stop")
+
 			es.Dirn = driver.MD_Stop
 			wld_view.SetDirection(myIP, driver.MD_Stop)
 			driver.SetMotorDirection(es.Dirn)

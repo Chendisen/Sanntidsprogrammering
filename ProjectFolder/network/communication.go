@@ -20,7 +20,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	// We can disable/enable the transmitter after it has been started.
@@ -59,6 +59,9 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 			al.UpdateAliveList(p)
 			if myView.ShouldAddNode(p.New){
 				myView.AddNodeToWorldView(p.New)
+				if p.New != al.MyIP{
+					hfl.AddNodeToList(p.New)
+				}
 			}
 			myView.LastHeard[p.New] = time.Now().String()[11:19]
 
