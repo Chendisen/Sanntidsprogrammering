@@ -4,7 +4,6 @@ import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
 	"Sanntid/fsm"
-	"Sanntid/message_handler"
 	"Sanntid/network"
 	"Sanntid/order_assigner"
 	"Sanntid/timer"
@@ -21,8 +20,9 @@ func main() {
 	var tmr timer.Timer = timer.Timer_uninitialized()
 	var alv_list world_view.AliveList = world_view.MakeAliveList()
 	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
-	//var hrd_list world_view.HeardFromList = world_view.MakeHeardFromList(alv_list.MyIP)
-	//var std_msg message_handler.StandardMessage = message_handler.StandardMessage{alv_list.MyIP, wld_view}
+	var hrd_list world_view.HeardFromList = world_view.MakeHeardFromList(alv_list.MyIP)
+	
+	lgt_array := make([][3]bool, numFloors)
 
 	drv_buttons := make(chan driver.ButtonEvent)
 	drv_floors := make(chan int)
@@ -30,23 +30,15 @@ func main() {
 	drv_stop := make(chan bool)
 	ord_updated := make(chan bool, 10)
 	wld_updated := make(chan bool, 10)
-	new_message := make(chan message_handler.StandardMessage, 10)
 
 	go driver.PollButtons(drv_buttons)
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
 	go fsm.Fsm_checkTimeOut(&elev, &wld_view, alv_list.MyIP, &tmr)
-	
-
-	// a:= <- drv_floors
-	// if a==-1 {
-	// 	fsm.Fsm_onInitBetweenFloors(&elevator)
-	// }
+	go network.StartCommunication(alv_list.MyIP, &wld_view, &alv_list, &hrd_list, &lgt_array, ord_updated, wld_updated)
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
-
-	go network.StartCommunication(alv_list.MyIP, &alv_list, &wld_view, new_message)
 
 	for {
 		select {
@@ -99,6 +91,7 @@ func main() {
 		case <-ord_updated:
 			fmt.Println("Step 5")
 			go func() { 
+				fsm.SetAllLights(lgt_array)
 				for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
 					for button, value := range buttons {
 						if value {
@@ -123,8 +116,3 @@ func main() {
 		}
 	}
 }
-
-// TODO: Floor sensor lights dont work properly
-// TODO: Elevator picks up people going in both directions when entering floor
-
-// Help me

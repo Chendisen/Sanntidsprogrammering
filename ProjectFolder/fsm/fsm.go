@@ -18,7 +18,7 @@ import (
 // 	outputDevice = elevator_io.Elevio_getOutputDevice()
 // }
 
-func setAllLights(lightArray [][3]bool) {
+func SetAllLights(lightArray [][3]bool) {
 	for floor := 0; floor < driver.N_FLOORS; floor++ {
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			//outputDevice.RequestButtonLight(floor, driver.ButtonType(btn), driver.IntToBool(es.Request[floor][btn]))
