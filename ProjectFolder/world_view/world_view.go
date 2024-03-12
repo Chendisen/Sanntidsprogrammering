@@ -421,3 +421,5 @@ func UpdateSynchronisedRequests(cur_req *cyclic_counter.Counter, rcd_req *cyclic
 // TODO: Change design of fsm functions since we no longer set values of wld_view by ourselves. 
 			// Only time we set it ourselves is when we receive an order and hallrequest value is set to one. 
 			// And when we clear an order since we are finished and hallrequest value is set to three. 
+
+			
