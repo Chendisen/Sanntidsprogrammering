@@ -398,6 +398,12 @@ func (hfl *HeardFromList) AddNodeToList(newIP string) {
 	hfl.HeardFrom[newIP] = make([][3]bool, driver.N_FLOORS)
 }
 
+func (hfl HeardFromList) Print() {
+	for IP := range hfl.HeardFrom {
+		fmt.Printf("We have heard from: %s", IP)
+	}
+}
+
 // Big switch case for update world view
 func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *HeardFromList, alv_list AliveList, light_array *[][3]bool, f int, b int, rcd_IP string, wld_updated_flag *bool, ord_updated_flag *bool, cabIP string) {
 	switch rcd_req {

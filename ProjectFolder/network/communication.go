@@ -56,6 +56,8 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 		select {
 		case p := <-peerUpdateCh:
 
+			hfl.Print()
+
 			al.UpdateAliveList(p)
 			if myView.ShouldAddNode(p.New){
 				myView.AddNodeToWorldView(p.New)
@@ -64,6 +66,8 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 				}
 			}
 			myView.LastHeard[p.New] = time.Now().String()[11:19]
+
+			hfl.Print()
 
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
