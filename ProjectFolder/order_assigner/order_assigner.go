@@ -88,5 +88,6 @@ func (inp HRAInput) PrintInput() {
 		for _, value := range elev.CabRequests {
 			fmt.Printf(" %t", value)
 		}
+		fmt.Println("")
 	}
 }

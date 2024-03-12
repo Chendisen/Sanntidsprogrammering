@@ -114,11 +114,11 @@ func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection) {
 
 func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == driver.BT_Cab {
-		if wv.States[myIP].CabRequests[f] == Order_Empty{
+		if wv.States[myIP].CabRequests[f] == Order_Empty {
 			wv.States[myIP].SeenCabRequestAtFloor(f)
 		}
 	} else {
-		if wv.HallRequests[f][b] == Order_Empty{
+		if wv.HallRequests[f][b] == Order_Empty {
 			wv.HallRequests[f][b] = Order_Unconfirmed
 		}
 	}
@@ -138,11 +138,11 @@ func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b driver.ButtonType)
 
 func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == driver.BT_Cab {
-		if wv.States[myIP].CabRequests[f] != Order_Empty{
+		if wv.States[myIP].CabRequests[f] != Order_Empty {
 			wv.States[myIP].FinishedCabRequestAtFloor(f)
 		}
 	} else {
-		if wv.HallRequests[f][b] != Order_Empty{
+		if wv.HallRequests[f][b] != Order_Empty {
 			wv.HallRequests[f][b] = Order_Finished
 		}
 	}
@@ -213,18 +213,16 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	var wld_updated_flag bool = false
 	var ord_updated_flag bool = false
 
-	fmt.Println("New view:")
-	newView.PrintWorldView()
-	fmt.Println("\nCurrent view:")
-	currentView.PrintWorldView()
+	// fmt.Println("New view:")
+	// newView.PrintWorldView()
+	// fmt.Println("\nCurrent view:")
+	// currentView.PrintWorldView()
 
 	for f, floor := range newView.HallRequests {
 		for b, buttonStatus := range floor {
 			UpdateSynchronisedRequests(&currentView.HallRequests[f][b], buttonStatus, hfl, al, lightArray, f, b, senderIP, &wld_updated_flag, &ord_updated_flag, "")
 		}
 	}
-
-
 
 	for IP, state := range newView.States {
 		for f, floorStatus := range state.CabRequests {
@@ -236,7 +234,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	fmt.Printf("Order updated: %t\n", ord_updated_flag)
 
 	if wld_updated_flag {
-		
+
 		currentView.States[senderIP].Behaviour = newView.States[senderIP].Behaviour
 		currentView.States[senderIP].Direction = newView.States[senderIP].Direction
 		currentView.States[senderIP].Floor = newView.States[senderIP].Floor
@@ -268,12 +266,17 @@ func MakeWorldView(myIP string) WorldView {
 }
 
 func (wv WorldView) PrintWorldView() {
-	/*fmt.Println("World View:")
-	for IP,states := range wv.States {
-		fmt.Printf("	Floor of %s: %d \n", IP, states.Floor)
-	}*/
+	for IP, states := range wv.States {
 
-	fmt.Println("Hall requests: ")
+		fmt.Printf("State of %s: \n", IP)
+		fmt.Printf("		Floor: %d\n", states.Floor)
+		fmt.Printf("	Behaviour: %s\n", states.Behaviour)
+		fmt.Printf("	Direction: %s\n", states.Direction)
+		fmt.Println("")
+
+	}
+
+	/*fmt.Println("Hall requests: ")
 	for f, floor := range wv.HallRequests {
 		fmt.Printf("Floor: %d\n", f)
 		for b, buttonStatus := range floor {
@@ -288,7 +291,7 @@ func (wv WorldView) PrintWorldView() {
 			fmt.Printf("		Floor: %d, Status: %d\n", f, buttonStatus)
 		}
 		fmt.Println("")
-	}
+	}*/
 
 }
 
@@ -296,8 +299,11 @@ func (wv WorldView) PrintWorldView() {
 
 func MakeAliveList() AliveList {
 	myIP, _ := localip.LocalIP()
+	nodesAlive := make([]string, 1)
+	nodesAlive[0] = myIP
+	fmt.Printf("Length of nodesAlive: %d\n",len(nodesAlive))
 	//myIP := os.Getpid()
-	return AliveList{MyIP: myIP, Master: myIP}
+	return AliveList{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
 }
 
 func (al AliveList) AmIMaster() bool {
@@ -354,10 +360,19 @@ func (al *AliveList) UpdateAliveList(p peers.PeerUpdate) {
 	}
 }
 
+func (al AliveList) Print() {
+	fmt.Printf("Current alive nodes: \n")
+	for _, IP := range al.NodesAlive {
+		fmt.Printf("A node	%s\n", IP)
+	}
+	fmt.Println("")
+}
+
 // ShouldResetList functions
 
 func MakeHeardFromList(myIP string) HeardFromList {
 	heardFromList := HeardFromList{HeardFrom: make(map[string][][3]bool)}
+	heardFromList.HeardFrom[myIP] = make([][3]bool, driver.N_FLOORS)
 	return heardFromList
 }
 
@@ -371,7 +386,7 @@ func (hfl HeardFromList) ShouldResetAtFloorButton(f int, b int, al AliveList) bo
 	return count == len(al.NodesAlive)
 }
 
-func (hfl HeardFromList) ShouldAddNode(ip string) bool{
+func (hfl HeardFromList) ShouldAddNode(ip string) bool {
 	var check bool = true
 	for IP := range hfl.HeardFrom {
 		if IP == ip {
@@ -393,6 +408,7 @@ func (hfl *HeardFromList) GetHeardFrom(msgIP string, f int, b int) bool {
 func (hfl *HeardFromList) CheckHeardFromAll(alv_list AliveList, f int, b int) bool {
 	var heard_from_all bool = true
 	for _, alv_nodes := range alv_list.NodesAlive {
+		fmt.Printf("Alive nodes: %s", alv_nodes)
 		heard_from_all = heard_from_all && hfl.HeardFrom[alv_nodes][f][b]
 	}
 	return heard_from_all
@@ -414,6 +430,17 @@ func (hfl HeardFromList) Print() {
 		fmt.Printf("	%s\n", IP)
 	}
 	fmt.Printf("")
+
+	for IP, table := range hfl.HeardFrom {
+		fmt.Printf("Elevator: %s \n", IP)
+		for f, buttons := range table {
+			fmt.Printf("	Floor: %d", f)
+			for b := range buttons {
+				fmt.Printf("	Button: %d", b)
+			}
+			fmt.Print("\n")
+		}
+	}
 }
 
 // Big switch case for update world view
@@ -422,9 +449,9 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 	case Order_Empty: // No requests
 		if *cur_req == Order_Finished {
 			// TODO: Channel that turns off the lights
-			if(b == driver.BT_Cab && alv_list.MyIP == cabIP){
+			if b == driver.BT_Cab && alv_list.MyIP == cabIP {
 				(*light_array)[f][b] = false
-			} else if(b != driver.BT_Cab) {
+			} else if b != driver.BT_Cab {
 				(*light_array)[f][b] = false
 			}
 			*ord_updated_flag = true
@@ -437,12 +464,14 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			*cur_req = Order_Unconfirmed
 			hfl.SetHeardFrom(rcd_IP, f, b)
 			if alv_list.AmIMaster() {
+				alv_list.Print()
+				hfl.Print()
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for assigning orders
 					// TODO: Channel for turning on the lights
-					if(b == driver.BT_Cab && alv_list.MyIP == cabIP){
+					if b == driver.BT_Cab && alv_list.MyIP == cabIP {
 						(*light_array)[f][b] = true
-					} else if(b != driver.BT_Cab) {
+					} else if b != driver.BT_Cab {
 						(*light_array)[f][b] = true
 					}
 					*wld_updated_flag = true
@@ -456,9 +485,9 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 		if *cur_req == Order_Unconfirmed {
 			// TODO: Channel for updating assigned orders
 			// TODO: Channel for turning on lights
-			if(b == driver.BT_Cab && alv_list.MyIP == cabIP){
+			if b == driver.BT_Cab && alv_list.MyIP == cabIP {
 				(*light_array)[f][b] = true
-			} else if(b != driver.BT_Cab) {
+			} else if b != driver.BT_Cab {
 				(*light_array)[f][b] = true
 			}
 			*ord_updated_flag = true
@@ -473,9 +502,9 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			if alv_list.AmIMaster() {
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for turning off lights
-					if(b == driver.BT_Cab && alv_list.MyIP == cabIP){
+					if b == driver.BT_Cab && alv_list.MyIP == cabIP {
 						(*light_array)[f][b] = false
-					} else if(b != driver.BT_Cab) {
+					} else if b != driver.BT_Cab {
 						(*light_array)[f][b] = false
 					}
 					*wld_updated_flag = true
