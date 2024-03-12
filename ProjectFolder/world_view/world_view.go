@@ -358,7 +358,6 @@ func (al *AliveList) UpdateAliveList(p peers.PeerUpdate) {
 
 func MakeHeardFromList(myIP string) HeardFromList {
 	heardFromList := HeardFromList{HeardFrom: make(map[string][][3]bool)}
-	heardFromList.HeardFrom[myIP] = make([][3]bool, driver.N_FLOORS)
 	return heardFromList
 }
 
@@ -370,6 +369,17 @@ func (hfl HeardFromList) ShouldResetAtFloorButton(f int, b int, al AliveList) bo
 		}
 	}
 	return count == len(al.NodesAlive)
+}
+
+func (hfl HeardFromList) ShouldAddNode(ip string) bool{
+	var check bool = true
+	for IP := range hfl.HeardFrom {
+		if IP == ip {
+			check = false
+			return check
+		}
+	}
+	return check
 }
 
 func (hfl *HeardFromList) SetHeardFrom(msgIP string, f int, b int) {
@@ -399,9 +409,11 @@ func (hfl *HeardFromList) AddNodeToList(newIP string) {
 }
 
 func (hfl HeardFromList) Print() {
+	fmt.Println("We have heard from: ")
 	for IP := range hfl.HeardFrom {
-		fmt.Printf("We have heard from: %s", IP)
+		fmt.Printf("	%s\n", IP)
 	}
+	fmt.Printf("")
 }
 
 // Big switch case for update world view
