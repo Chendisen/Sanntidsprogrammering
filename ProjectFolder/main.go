@@ -54,15 +54,17 @@ func main() {
 		select {
 		case a := <-drv_buttons:
 
-			if a.Button == 2 {
-				fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
-			} else {
-				fmt.Println("Step 1")
-				wld_view.SetHallRequestAtFloor(a.Floor, int(a.Button))
-				go func() {
-					wld_updated <- true
-				} ()
-			}
+			wld_view.SeenRequestAtFloor(alv_list.MyIP, a.Floor, a.Button)
+
+			// if a.Button == 2 {
+			// 	fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
+			// } else {
+			// 	fmt.Println("Step 1")
+			// 	wld_view.SetHallRequestAtFloor(a.Floor, int(a.Button))
+			// 	go func() {
+			// 		wld_updated <- true
+			// 	} ()
+			// }
 
 			// Press of button shall update my worldview which will then propagate out and be published that new info has been found.
 			// 		But we must seperate between cab and hall buttons since cab calls can only be handled by itself.
