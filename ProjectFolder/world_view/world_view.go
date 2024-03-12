@@ -15,24 +15,19 @@ import (
 // 			Must therefore have functions that compares the received
 // 			messages and the ones of our world view.
 
-type Role int
-
-const (
-	Slave Role = iota
-	Master
-)
-
 type AliveList struct {
 	MyIP       string
 	NodesAlive []string
 	Master     string
 }
 
+type OrderStatus int
+
 const (
-	Order_Empty   			OrderStatus = 0
-	Order_Unconfirmed                   = 1
-	Order_Confirmed                 	= 2
-	Order_Finished						= 3
+	Order_Empty   			OrderStatus = iota
+	Order_Unconfirmed                   
+	Order_Confirmed                 	
+	Order_Finished						
 )
 
 type HeardFromList struct {
@@ -43,20 +38,23 @@ type ElevatorState struct {
 	Behaviour   string                 		`json:"behaviour"`
 	Floor       int                    		`json:"floor"`
 	Direction   string                 		`json:"direction"`
-	CabRequests []cyclic_counter.Counter	`json:"cabRequests"`
+	CabRequests []OrderStatus				`json:"cabRequests"`
 }
 
 type WorldView struct {
-	HallRequests   [][2]cyclic_counter.Counter `json:"hallRequests"`
-	States         map[string]*ElevatorState   `json:"states"`
-	AssignedOrders map[string][][2]bool        `json:"assignedOrders"`
+	HallRequests   [][2]OrderStatus 			`json:"hallRequests"`
+	States         map[string]*ElevatorState   	`json:"states"`
+	AssignedOrders map[string][][2]bool        	`json:"assignedOrders"`
 }
 
+func (os OrderStatus) ToBool() {
+	return os == Order_Confirmed || os == Order_Finished
+ }
 //ElevatorState functions
 
 func MakeElevatorState() *ElevatorState {
 	newElevator := new(ElevatorState)
-	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]cyclic_counter.Counter, driver.N_FLOORS)}
+	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]OrderStatus, driver.N_FLOORS)}
 	return newElevator
 }
 
@@ -81,19 +79,19 @@ func (es *ElevatorState) SetDirection(d string) {
 }
 
 func (es *ElevatorState) SeenCabRequestAtFloor(f int) {
-	es.CabRequests[f].Value = 1
+	es.CabRequests[f] = Order_Unconfirmed
 }
 
 func (es *ElevatorState) SetCabRequestAtFloor(f int) {
-	es.CabRequests[f].Value = 2
+	es.CabRequests[f].Value = Order_Confirmed
 }
 
 func (es *ElevatorState) FinishedCabRequestAtFloor(f int) {
-	es.CabRequests[f].Value = 3
+	es.CabRequests[f].Value = Order_Finished
 }
 
 func (es *ElevatorState) ClearCabRequestAtFloor(f int) {
-	es.CabRequests[f].Value = 0
+	es.CabRequests[f].Value = Order_Empty
 }
 
 //WordlView functions
@@ -133,7 +131,7 @@ func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection) {
 	wv.States[myIP].SetDirection(driver.Driver_dirn_toString(md))
 }
 
-func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b int){
+func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b driver.ButtonType){
 	if b == 2{
 		wv.States[myIP].SeenCabRequestAtFloor(f)
 	} else{
@@ -141,7 +139,7 @@ func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b int){
 	}
 }
 
-func (wv *WorldView) SetRequestAtFloor(myIP string, f int, b int) {
+func (wv *WorldView) SetRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == 2{
 		wv.States[myIP].SetCabRequestAtFloor(f)
 	} else{
@@ -149,7 +147,7 @@ func (wv *WorldView) SetRequestAtFloor(myIP string, f int, b int) {
 	}
 }
 
-func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b int) {
+func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == 2{
 		wv.States[myIP].FinishedCabRequestAtFloor(f)
 	} else{
@@ -157,7 +155,7 @@ func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b int) {
 	}
 }
 
-func (wv *WorldView) ClearRequestAtFloor(myIP string, f int, b int) {
+func (wv *WorldView) ClearRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == 2{
 		wv.States[myIP].ClearCabRequestAtFloor(f)
 	} else{
@@ -175,47 +173,51 @@ func (wv WorldView) GetHallRequests() [][2]bool {
 	return hall_requests
 }
 
-func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, aliveList AliveList, ord_updated chan<- bool, wld_updated chan<- bool) {
+func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, myIP string, al *AliveList, hfl *HeardFromList, ord_updated chan<- bool, wld_updated chan<- bool) {
+
+	if senderIP == myIP {
+		if !al.AmIMaster() {
+			return
+		}
+	}
 
 	currentView.AddNewNodes(newView)
 	(&newView).AddNewNodes(*currentView)
 
-	fmt.Println("Current: ")
-	currentView.PrintWorldView()
-	fmt.Println("\n\nNew: ")
-	newView.PrintWorldView()
+	// fmt.Println("Current: ")
+	// currentView.PrintWorldView()
+	// fmt.Println("\n\nNew: ")
+	// newView.PrintWorldView()
 
 	var hallRequestsUpdated bool = false
-	for i, floor := range newView.HallRequests {
-		for j, buttonPressed := range floor {
-			
+	for f, floor := range newView.HallRequests {
+		for b, buttonPressed := range floor {
+			UpdateSynchronisedRequests(&currentView.HallRequests[f][b], buttonPressed, hfl, al, f, b, senderIP)
 		}
 	}
 
-	fmt.Printf("Is hall requests updated?: %t\n\n", hallRequestsUpdated)
+	for IP,state := range newView.States {
+		if IP != myIP{
+			for f,floor := range state.CabRequests {
+				UpdateSynchronisedRequests(&currentView.States[myIP].CabRequests[f], floor, hfl, al, f, int(driver.BT_Cab), senderIP)
+			}
+		}
+	}
 
 	if hallRequestsUpdated {
 		wld_updated <- true
 	}
 
-	for IP, NodeState := range newView.States {
-		if IP != myIP {
-			if cyclic_counter.ShouldUpdate(NodeState.Version, currentView.States[IP].Version) {
-				*currentView.States[IP] = *NodeState
-			}
-		}
-	}
-
-	if senderIP == aliveList.Master {
+	if senderIP == al.Master {
 		for i, floor := range newView.AssignedOrders[myIP] {
 			for j, orderAssigned := range floor {
 				if orderAssigned != currentView.AssignedOrders[myIP][i][j] {
 					ord_updated <- true
+					currentView.AssignedOrders = newView.AssignedOrders
 					break
 				}
 			}
 		}
-		currentView.AssignedOrders = newView.AssignedOrders
 	}
 
 	/*if isUpdated {
@@ -371,18 +373,18 @@ func (hfl *HeardFromList) AddNodeToList(newIP string) {
 
 
 // Big switch case for update world view
-func UpdateSynchronisedRequests(cur_req *cyclic_counter.Counter, rcd_req *cyclic_counter.Counter, hfl *HeardFromList, alv_list *AliveList, f int, b int, rcd_IP string) {
+func UpdateSynchronisedRequests(cur_req *cyclic_counter.Counter, rcd_req cyclic_counter.Counter, hfl *HeardFromList, alv_list *AliveList, f int, b int, rcd_IP string) {
 	switch rcd_req.Value {
-	case Order_Empty: // No requests
-		if cur_req.Value == Order_Finished {
+	case int(Order_Empty): // No requests
+		if cur_req.Value == int(Order_Finished) {
 			// TODO: Channel that turns off the lights
 			// TODO: Clear correct value on elevatorstate requests
 			hfl.ClearHeardFrom(f, b)
-			cur_req.Value = Order_Empty
+			cur_req.Value = int(Order_Empty)
 		} 
-	case Order_Unconfirmed: // Unconfirmed requests
-		if cur_req.Value == Order_Empty || cur_req.Value == Order_Unconfirmed {
-			cur_req.Value = Order_Unconfirmed
+	case int(Order_Unconfirmed): // Unconfirmed requests
+		if cur_req.Value == int(Order_Empty) || cur_req.Value == int(Order_Unconfirmed) {
+			cur_req.Value = int(Order_Unconfirmed)
 			hfl.SetHeardFrom(rcd_IP, f, b)
 			if alv_list.AmIMaster() {
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
@@ -390,27 +392,27 @@ func UpdateSynchronisedRequests(cur_req *cyclic_counter.Counter, rcd_req *cyclic
 					// TODO: Channel for turning on the lights
 					// TODO: Set correct value on elevatorstate requests
 					hfl.ClearHeardFrom(f, b)
-					cur_req.Value = Order_Confirmed
+					cur_req.Value = int(Order_Confirmed)
 				}
 			}
 		}
-	case Order_Confirmed: // Confirmed requests
-		if cur_req.Value == Order_Unconfirmed {
+	case int(Order_Confirmed): // Confirmed requests
+		if cur_req.Value == int(Order_Unconfirmed) {
 			// TODO: Channel for updating assigned orders
 			// TODO: Channel for turning on lights
 			hfl.ClearHeardFrom(f, b)
-			cur_req.Value = Order_Confirmed
+			cur_req.Value = int(Order_Confirmed)
 		}
-	case Order_Finished: // Finished requests
-		if cur_req.Value == Order_Unconfirmed || cur_req.Value == Order_Confirmed || cur_req.Value == Order_Finished {
-			cur_req.Value = Order_Finished
+	case int(Order_Finished): // Finished requests
+		if cur_req.Value == int(Order_Unconfirmed) || cur_req.Value == int(Order_Confirmed) || cur_req.Value == int(Order_Finished) {
+			cur_req.Value = int(Order_Finished)
 			hfl.SetHeardFrom(rcd_IP, f, b)
 			if alv_list.AmIMaster() {
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for turning off lights
 					// TODO: Clear correct value on elevatorstate requests
 					hfl.ClearHeardFrom(f, b)
-					cur_req.Value = Order_Empty
+					cur_req.Value = int(Order_Empty
 				}
 			}
 		}

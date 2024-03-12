@@ -1,6 +1,8 @@
 package cyclic_counter
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const MAX int = 3
 
