@@ -233,18 +233,15 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	fmt.Printf("\nWorld updated: %t\n", wld_updated_flag)
 	fmt.Printf("Order updated: %t\n", ord_updated_flag)
 
+	if sendTime > currentView.LastHeard[senderIP] {
+		currentView.States[senderIP].Behaviour = newView.States[senderIP].Behaviour
+		currentView.States[senderIP].Direction = newView.States[senderIP].Direction
+		currentView.States[senderIP].Floor = newView.States[senderIP].Floor
+	}
+
 	if wld_updated_flag {
-
-		currentView.States[senderIP].Behaviour = newView.States[senderIP].Behaviour
-		currentView.States[senderIP].Direction = newView.States[senderIP].Direction
-		currentView.States[senderIP].Floor = newView.States[senderIP].Floor
 		wld_updated <- true
-
 	} else if ord_updated_flag {
-
-		currentView.States[senderIP].Behaviour = newView.States[senderIP].Behaviour
-		currentView.States[senderIP].Direction = newView.States[senderIP].Direction
-		currentView.States[senderIP].Floor = newView.States[senderIP].Floor
 		currentView.AssignedOrders = newView.AssignedOrders
 		ord_updated <- true
 
@@ -301,7 +298,7 @@ func MakeAliveList() AliveList {
 	myIP, _ := localip.LocalIP()
 	nodesAlive := make([]string, 1)
 	nodesAlive[0] = myIP
-	fmt.Printf("Length of nodesAlive: %d\n",len(nodesAlive))
+	fmt.Printf("Length of nodesAlive: %d\n", len(nodesAlive))
 	//myIP := os.Getpid()
 	return AliveList{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
 }
