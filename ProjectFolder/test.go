@@ -1,4 +1,4 @@
-package network
+package main
 
 import (
 	"Sanntid/message_handler"
@@ -14,7 +14,7 @@ import (
 //
 //	will be received as zero-values.
 
-func StartCommunication(myIP string, al *world_view.AliveList, hfl *world_view.HeardFromList, myView *world_view.WorldView, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication2(myIP string, al *world_view.AliveList, hfl *world_view.HeardFromList, myView *world_view.WorldView, ord_updated chan<- bool, wld_updated chan<- bool) {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	// We make a channel for receiving updates on the id's of the peers that are
@@ -73,3 +73,25 @@ func StartCommunication(myIP string, al *world_view.AliveList, hfl *world_view.H
 		}
 	}
 }
+
+func main() {
+	const numFloors int = 4
+	//driver.Init("localhost:15657", numFloors)
+
+	//var elev elevator.Elevator = elevator.Elevator_uninitialized()
+	//var tmr timer.Timer = timer.Timer_uninitialized()
+	var alv_list world_view.AliveList = world_view.MakeAliveList()
+	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
+	var hrd_list world_view.HeardFromList = world_view.MakeHeardFromList(alv_list.MyIP)
+
+	wv_update := make(chan bool, 10)
+	ord_updated := make(chan bool, 10)
+
+
+	go StartCommunication2(alv_list.MyIP, &alv_list, &hrd_list, &wld_view, ord_updated, wv_update)
+
+	for {
+		continue
+	}
+
+}	

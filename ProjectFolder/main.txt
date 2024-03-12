@@ -4,10 +4,10 @@ import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
 	"Sanntid/fsm"
+	"Sanntid/network"
 	"Sanntid/order_assigner"
 	"Sanntid/timer"
 	"Sanntid/world_view"
-	"Sanntid/network"
 	"fmt"
 )
 
@@ -20,7 +20,7 @@ func main() {
 	var tmr timer.Timer = timer.Timer_uninitialized()
 	var alv_list world_view.AliveList = world_view.MakeAliveList()
 	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
-	//var hrd_list world_view.HeardFromList = world_view.MakeHeardFromList(alv_list.MyIP)
+	var hrd_list world_view.HeardFromList = world_view.MakeHeardFromList(alv_list.MyIP)
 	//var std_msg message_handler.StandardMessage = message_handler.StandardMessage{alv_list.MyIP, wld_view}
 
 	//var d driver.MotorDirection = driver.MD_Up
@@ -48,7 +48,7 @@ func main() {
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
 
-	go network.StartCommunication(alv_list.MyIP, &alv_list, &wld_view, ord_updated, wld_updated)
+	go network.StartCommunication(alv_list.MyIP, &alv_list, &hrd_list, &wld_view, ord_updated, wld_updated)
 
 	for {
 		select {
@@ -80,12 +80,6 @@ func main() {
 
 		case a := <-drv_floors:
 			fmt.Printf("This floor polled: %d\n", a)
-			// if a == numFloors-1 {
-			//     d = driver.MD_Down
-			// } else if a == 0 {
-			//     d = driver.MD_Up
-			// }
-			// driver.SetMotorDirection(d)
 			fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr, a)
 
 		case a := <-drv_obstr:
