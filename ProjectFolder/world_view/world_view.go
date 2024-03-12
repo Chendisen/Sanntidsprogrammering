@@ -187,7 +187,7 @@ func (wv *WorldView) AddNewNodes(newView WorldView) {
 
 //Updates
 
-func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, sendTime string, myIP string, al AliveList, hfl *HeardFromList, ord_updated chan<- bool, wld_updated chan<- bool) {
+func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, sendTime string, myIP string, al AliveList, hfl *HeardFromList, ord_updated chan<- bool, wld_updated chan<- bool, set_lights chan<- bool) {
 
 	if senderIP == myIP {
 		if !al.AmIMaster() {
@@ -200,14 +200,14 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 
 	for f, floor := range newView.HallRequests {
 		for b, buttonPressed := range floor {
-			UpdateSynchronisedRequests(&currentView.HallRequests[f][b], buttonPressed, hfl, al, f, b, senderIP)
+			UpdateSynchronisedRequests(&currentView.HallRequests[f][b], buttonPressed, hfl, al, f, b, senderIP, wld_updated, set_lights)
 		}
 	}
 
 	for IP,state := range newView.States {
 		if IP != myIP{
 			for f,floor := range state.CabRequests {
-				UpdateSynchronisedRequests(&currentView.States[myIP].CabRequests[f], floor, hfl, al, f, int(driver.BT_Cab), senderIP)
+				UpdateSynchronisedRequests(&currentView.States[myIP].CabRequests[f], floor, hfl, al, f, int(driver.BT_Cab), senderIP, wld_updated, set_lights)
 			}
 		}
 	}
@@ -375,7 +375,7 @@ func (hfl *HeardFromList) AddNodeToList(newIP string) {
 
 
 // Big switch case for update world view
-func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *HeardFromList, alv_list AliveList, f int, b int, rcd_IP string) {
+func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *HeardFromList, alv_list AliveList, f int, b int, rcd_IP string, wld_updated chan<- bool, set_lights chan<- bool) {
 	switch rcd_req {
 	case Order_Empty: // No requests
 		if *cur_req == Order_Finished {
@@ -391,6 +391,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			if alv_list.AmIMaster() {
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for assigning orders
+					wld_updated <- true
 					// TODO: Channel for turning on the lights
 					// TODO: Set correct value on elevatorstate requests
 					hfl.ClearHeardFrom(f, b)
@@ -402,6 +403,8 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 		if *cur_req == Order_Unconfirmed {
 			// TODO: Channel for updating assigned orders
 			// TODO: Channel for turning on lights
+			set_lights <- true
+
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Confirmed
 		}
