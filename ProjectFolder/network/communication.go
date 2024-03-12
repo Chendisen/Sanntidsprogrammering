@@ -47,7 +47,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 			sm.WorldView = *myView
 			sm.SendTime = time.Now().String()[11:19]
 			msgTx <- sm
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 
