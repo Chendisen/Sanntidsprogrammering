@@ -7,6 +7,7 @@ import (
 	"Sanntid/network/localip"
 	"Sanntid/network/peers"
 	"fmt"
+	//"os"
 )
 
 // TODO: Have structs that is similar to the ones we send in messages
@@ -211,7 +212,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		}
 	}
 
-	if sendTime > currentView.LastHeard[senderIP] {
+	if sendTime > currentView.LastHeard[senderIP] && senderIP != myIP{
 		fmt.Println("We are indeed updating the state")
 		currentView.States[senderIP] = newView.States[senderIP]
 	}
@@ -269,6 +270,7 @@ func (wv WorldView) PrintWorldView() {
 
 func MakeAliveList() AliveList {
 	myIP, _ := localip.LocalIP()
+	//myIP := os.Getpid()
 	return AliveList{MyIP: myIP, Master: myIP}
 }
 

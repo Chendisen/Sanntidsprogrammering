@@ -20,8 +20,6 @@ func StartCommunication2(myIP string, al *world_view.AliveList, hfl *world_view.
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 
-	time.Sleep(5 * time.Second)
-
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	// We can disable/enable the transmitter after it has been started.
 	// This could be used to signal that we are somehow "unavailable".
@@ -57,7 +55,7 @@ func StartCommunication2(myIP string, al *world_view.AliveList, hfl *world_view.
 		case p := <-peerUpdateCh:
 
 			al.UpdateAliveList(p)
-			if myView.ShouldAddNode(p.New){
+			if myView.ShouldAddNode(p.New) {
 				myView.AddNodeToWorldView(p.New)
 			}
 			myView.LastHeard[p.New] = time.Now().String()[11:19]
@@ -75,7 +73,7 @@ func StartCommunication2(myIP string, al *world_view.AliveList, hfl *world_view.
 }
 
 func main() {
-	const numFloors int = 4
+	//const numFloors int = 4
 	//driver.Init("localhost:15657", numFloors)
 
 	//var elev elevator.Elevator = elevator.Elevator_uninitialized()
@@ -87,6 +85,7 @@ func main() {
 	wv_update := make(chan bool, 10)
 	ord_updated := make(chan bool, 10)
 
+	fmt.Print(alv_list.MyIP)
 
 	go StartCommunication2(alv_list.MyIP, &alv_list, &hrd_list, &wld_view, ord_updated, wv_update)
 
@@ -94,4 +93,4 @@ func main() {
 		continue
 	}
 
-}	
+}
