@@ -33,7 +33,6 @@ type HeardFromList struct {
 }
 
 type ElevatorState struct {
-	Version     cyclic_counter.Counter 		`json:"version"`
 	Behaviour   string                 		`json:"behaviour"`
 	Floor       int                    		`json:"floor"`
 	Direction   string                 		`json:"direction"`
@@ -50,7 +49,7 @@ type WorldView struct {
 
 func MakeElevatorState() *ElevatorState {
 	newElevator := new(ElevatorState)
-	*newElevator = ElevatorState{Version: cyclic_counter.MakeCounter(50), Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]cyclic_counter.Counter, driver.N_FLOORS)}
+	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]cyclic_counter.Counter, driver.N_FLOORS)}
 	return newElevator
 }
 
@@ -64,27 +63,30 @@ func (es ElevatorState) GetCabRequests() []bool {
 
 func (es *ElevatorState) SetBehaviour(b string) {
 	es.Behaviour = b
-	cyclic_counter.Increment(&es.Version)
 }
 
 func (es *ElevatorState) SetFloor(f int) {
 	es.Floor = f
-	cyclic_counter.Increment(&es.Version)
 }
 
 func (es *ElevatorState) SetDirection(d string) {
 	es.Direction = d
-	cyclic_counter.Increment(&es.Version)
+}
+
+func (es *ElevatorState) SeenCabRequestAtFloor(f int) {
+	es.CabRequests[f].Value = 1
 }
 
 func (es *ElevatorState) SetCabRequestAtFloor(f int) {
-	es.CabRequests[f] = true
-	cyclic_counter.Increment(&es.Version)
+	es.CabRequests[f].Value = 2
+}
+
+func (es *ElevatorState) FinishedCabRequestAtFloor(f int) {
+	es.CabRequests[f].Value = 3
 }
 
 func (es *ElevatorState) ClearCabRequestAtFloor(f int) {
-	es.CabRequests[f] = false
-	cyclic_counter.Increment(&es.Version)
+	es.CabRequests[f].Value = 0
 }
 
 //WordlView functions
@@ -124,37 +126,35 @@ func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection) {
 	wv.States[myIP].SetDirection(driver.Driver_dirn_toString(md))
 }
 
-func (wv *WorldView) SetHallRequestAtFloor(f int, b int) {
-	if wv.HallRequests[f][b].ToBool() {
-		fmt.Println("Step 2, not set")
-		return
-	} else {
-		fmt.Println("Step 2, set")
-		cyclic_counter.Increment(&wv.HallRequests[f][b])
+func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b int){
+	if b == 2{
+		wv.States[myIP].SeenCabRequestAtFloor(f)
+	} else{
+		wv.HallRequests[f][b].Value = 1
 	}
 }
 
-func (wv *WorldView) ClearHallRequestAtFloor(f int, b int) {
-	if wv.HallRequests[f][b].ToBool() {
-		cyclic_counter.Increment(&wv.HallRequests[f][b])
+func (wv *WorldView) SetRequestAtFloor(myIP string, f int, b int) {
+	if b == 2{
+		wv.States[myIP].SetCabRequestAtFloor(f)
+	} else{
+		wv.HallRequests[f][b].Value = 2
 	}
 }
 
-func (wv *WorldView) SetRequestAtFloor(myIP string, btn_floor int, btn_type int) {
-	es := wv.States[myIP]
-
-	if btn_type == 2 {
-		es.SetCabRequestAtFloor(btn_floor)
+func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b int) {
+	if b == 2{
+		wv.States[myIP].FinishedCabRequestAtFloor(f)
+	} else{
+		wv.HallRequests[f][b].Value = 3
 	}
 }
 
-func (wv *WorldView) ClearRequestAtFloor(myIP string, btn_floor int, btn_type int) {
-	es := wv.States[myIP]
-
-	if btn_type == 2 {
-		es.ClearCabRequestAtFloor(btn_floor)
-	} else {
-		wv.ClearHallRequestAtFloor(btn_floor, btn_type)
+func (wv *WorldView) ClearRequestAtFloor(myIP string, f int, b int) {
+	if b == 2{
+		wv.States[myIP].ClearCabRequestAtFloor(f)
+	} else{
+		wv.HallRequests[f][b].Value = 0
 	}
 }
 
@@ -180,11 +180,8 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 
 	var hallRequestsUpdated bool = false
 	for i, floor := range newView.HallRequests {
-		for j, hallRequest := range floor {
-			if cyclic_counter.ShouldUpdate(hallRequest, currentView.HallRequests[i][j]) {
-				cyclic_counter.UpdateValue(&currentView.HallRequests[i][j], hallRequest.Value)
-				hallRequestsUpdated = true
-			}
+		for j, buttonPressed := range floor {
+			
 		}
 	}
 

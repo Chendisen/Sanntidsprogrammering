@@ -14,12 +14,12 @@ func MakeCounter(max int) Counter {
 	return Counter{Value: 0, Max: max, ShouldReset: false}
 }
 
-func Reset(counter *Counter) {
-	counter.Value = 0
-	counter.ShouldReset = false
+func (cc *Counter) Reset() {
+	cc.Value = 0
+	cc.ShouldReset = false
 }
 
-func ShouldUpdate(recieved Counter, current Counter) bool {
+func (current *Counter) ShouldUpdate(recieved Counter) bool {
 	var shouldUpdate bool = false
 
 	if recieved.Value > current.Value {
@@ -31,24 +31,24 @@ func ShouldUpdate(recieved Counter, current Counter) bool {
 	return shouldUpdate
 }
 
-func Increment(counter *Counter) {
-	if counter.Value == counter.Max {
-		counter.PrintCounter()
-		Reset(counter)
+func (cc *Counter) Increment() {
+	if cc.Value == cc.Max {
+		cc.PrintCounter()
+		cc.Reset()
 	} else {
-		counter.Value++
+		cc.Value++
 	}
-	if counter.Value == counter.Max {
-		counter.ShouldReset = true
+	if cc.Value == cc.Max {
+		cc.ShouldReset = true
 	}
 }
 
-func UpdateValue(counter *Counter, value int) {
-	if counter.Value > value {
-		counter.Value = value
-		counter.ShouldReset = false
+func (cc *Counter) UpdateValue(value int) {
+	if cc.Value > value {
+		cc.Value = value
+		cc.ShouldReset = false
 	} else {
-		counter.Value = value
+		cc.Value = value
 	}
 }
 
