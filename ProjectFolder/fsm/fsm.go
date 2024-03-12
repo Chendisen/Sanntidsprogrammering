@@ -18,12 +18,11 @@ import (
 // 	outputDevice = elevator_io.Elevio_getOutputDevice()
 // }
 
-func setAllLights(es *elevator.Elevator) {
-
+func setAllLights(lightArray [][3]bool) {
 	for floor := 0; floor < driver.N_FLOORS; floor++ {
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			//outputDevice.RequestButtonLight(floor, driver.ButtonType(btn), driver.IntToBool(es.Request[floor][btn]))
-			driver.SetButtonLamp(driver.ButtonType(btn), floor, driver.IntToBool(es.Request[floor][btn]))
+			driver.SetButtonLamp(driver.ButtonType(btn), floor, lightArray[floor][btn])
 		}
 	}
 }
@@ -82,8 +81,6 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldV
 
 	}
 
-	setAllLights(es)
-
 	//fmt.Printf("\nNew state:\n")
 	//elevator.Elevator_print(*es)
 }
@@ -113,7 +110,6 @@ func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, m
 
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
 
-			setAllLights(es)
 			es.Behaviour = elevator.EB_DoorOpen
 			wld_view.SetBehaviour(myIP, elevator.EB_DoorOpen)
 		}
@@ -143,7 +139,6 @@ func Fsm_onDoorTimeout(es *elevator.Elevator, wld_view *world_view.WorldView, my
 		case elevator.EB_DoorOpen:
 			timer.Timer_start(tmr, es.Config.DoorOpenDuration_s)
 			requests.Requests_clearAtCurrentFloor(es, wld_view, myIP)
-			setAllLights(es)
 
 		case elevator.EB_Moving:
 			driver.SetDoorOpenLamp(false)

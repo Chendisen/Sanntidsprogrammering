@@ -14,7 +14,7 @@ import (
 //
 //	will be received as zero-values.
 
-func StartCommunication(myIP string, al *world_view.AliveList, hfl *world_view.HeardFromList, myView *world_view.WorldView, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication(myIP string, al *world_view.AliveList, myView *world_view.WorldView, new_message chan<- message_handler.StandardMessage) {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	// We make a channel for receiving updates on the id's of the peers that are
@@ -69,7 +69,8 @@ func StartCommunication(myIP string, al *world_view.AliveList, hfl *world_view.H
 			fmt.Printf((" Am i master?:  %t\n"), (*al).AmIMaster())
 
 		case recievedMsg := <-msgRx:
-			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, al.MyIP, *al, hfl, ord_updated, wld_updated)
+			//myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, al.MyIP, *al, hfl, ord_updated, wld_updated)
+			new_message <- recievedMsg
 		}
 	}
 }
