@@ -207,8 +207,8 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		}
 	}
 
-	//currentView.AddNewNodes(newView)
-	//(&newView).AddNewNodes(*currentView)
+	currentView.AddNewNodes(newView)
+	(&newView).AddNewNodes(*currentView)
 
 	var wld_updated_flag bool = false
 	var ord_updated_flag bool = false
