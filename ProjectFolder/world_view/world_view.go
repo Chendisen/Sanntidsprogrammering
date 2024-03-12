@@ -40,11 +40,11 @@ type HeardFromList struct {
 }
 
 type ElevatorState struct {
-	Version     cyclic_counter.Counter `json:"version"`
-	Behaviour   string                 `json:"behaviour"`
-	Floor       int                    `json:"floor"`
-	Direction   string                 `json:"direction"`
-	CabRequests []bool                 `json:"cabRequests"`
+	Version     cyclic_counter.Counter 		`json:"version"`
+	Behaviour   string                 		`json:"behaviour"`
+	Floor       int                    		`json:"floor"`
+	Direction   string                 		`json:"direction"`
+	CabRequests []cyclic_counter.Counter	`json:"cabRequests"`
 }
 
 type WorldView struct {
@@ -57,12 +57,16 @@ type WorldView struct {
 
 func MakeElevatorState() *ElevatorState {
 	newElevator := new(ElevatorState)
-	*newElevator = ElevatorState{Version: cyclic_counter.MakeCounter(50), Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]bool, driver.N_FLOORS)}
+	*newElevator = ElevatorState{Version: cyclic_counter.MakeCounter(50), Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]cyclic_counter.Counter, driver.N_FLOORS)}
 	return newElevator
 }
 
 func (es ElevatorState) GetCabRequests() []bool {
-	return es.CabRequests
+	cabRequests := make([]bool, driver.N_FLOORS)
+	for i,val := range es.CabRequests {
+		cabRequests[i] = val.ToBool()
+	}
+	return cabRequests
 }
 
 func (es *ElevatorState) SetBehaviour(b string) {

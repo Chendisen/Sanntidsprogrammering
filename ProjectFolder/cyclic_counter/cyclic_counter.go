@@ -53,7 +53,7 @@ func UpdateValue(counter *Counter, value int) {
 }
 
 func (cc Counter) ToBool() bool {
-	return cc.Value%2 == 1
+	return cc.Value == 2 || cc.Value == 3
 }
 
 func (cc Counter) PrintCounter() {
