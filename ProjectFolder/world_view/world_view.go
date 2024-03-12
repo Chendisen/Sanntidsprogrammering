@@ -28,6 +28,13 @@ type AliveList struct {
 	Master     string
 }
 
+const (
+	Order_Empty   			OrderStatus = 0
+	Order_Unconfirmed                   = 1
+	Order_Confirmed                 	= 2
+	Order_Finished						= 3
+)
+
 type HeardFromList struct {
 	HeardFrom map[string][][3]bool
 }
@@ -343,6 +350,14 @@ func (hfl *HeardFromList) GetHeardFrom(msgIP string, f int, b int) bool {
 	return hfl.HeardFrom[msgIP][f][b]
 }
 
+func (hfl *HeardFromList) CheckHeardFromAll(alv_list *AliveList, f int, b int) bool {
+	var heard_from_all bool = true
+	for _, alv_nodes := range alv_list.NodesAlive {
+		heard_from_all = heard_from_all && hfl.HeardFrom[alv_nodes][f][b] 
+	} 
+	return heard_from_all
+}
+
 func (hfl *HeardFromList) ClearHeardFrom(f int, b int) {
 	for _, hfl_buttons := range hfl.HeardFrom {
 		hfl_buttons[f][b] = false
@@ -352,3 +367,56 @@ func (hfl *HeardFromList) ClearHeardFrom(f int, b int) {
 func (hfl *HeardFromList) AddNodeToList(newIP string) {
 	hfl.HeardFrom[newIP] = make([][3]bool, driver.N_FLOORS)
 }
+
+
+// Big switch case for update world view
+func UpdateSynchronisedRequests(cur_req *cyclic_counter.Counter, rcd_req *cyclic_counter.Counter, hfl *HeardFromList, alv_list *AliveList, f int, b int, rcd_IP string) {
+	switch rcd_req.Value {
+	case Order_Empty: // No requests
+		if cur_req.Value == Order_Finished {
+			// TODO: Channel that turns off the lights
+			// TODO: Clear correct value on elevatorstate requests
+			hfl.ClearHeardFrom(f, b)
+			cur_req.Value = Order_Empty
+		} 
+	case Order_Unconfirmed: // Unconfirmed requests
+		if cur_req.Value == Order_Empty || cur_req.Value == Order_Unconfirmed {
+			cur_req.Value = Order_Unconfirmed
+			hfl.SetHeardFrom(rcd_IP, f, b)
+			if alv_list.AmIMaster() {
+				if hfl.CheckHeardFromAll(alv_list, f, b) {
+					// TODO: Channel for assigning orders
+					// TODO: Channel for turning on the lights
+					// TODO: Set correct value on elevatorstate requests
+					hfl.ClearHeardFrom(f, b)
+					cur_req.Value = Order_Confirmed
+				}
+			}
+		}
+	case Order_Confirmed: // Confirmed requests
+		if cur_req.Value == Order_Unconfirmed {
+			// TODO: Channel for updating assigned orders
+			// TODO: Channel for turning on lights
+			hfl.ClearHeardFrom(f, b)
+			cur_req.Value = Order_Confirmed
+		}
+	case Order_Finished: // Finished requests
+		if cur_req.Value == Order_Unconfirmed || cur_req.Value == Order_Confirmed || cur_req.Value == Order_Finished {
+			cur_req.Value = Order_Finished
+			hfl.SetHeardFrom(rcd_IP, f, b)
+			if alv_list.AmIMaster() {
+				if hfl.CheckHeardFromAll(alv_list, f, b) {
+					// TODO: Channel for turning off lights
+					// TODO: Clear correct value on elevatorstate requests
+					hfl.ClearHeardFrom(f, b)
+					cur_req.Value = Order_Empty
+				}
+			}
+		}
+		
+	}
+}
+
+// TODO: Change design of fsm functions since we no longer set values of wld_view by ourselves. 
+			// Only time we set it ourselves is when we receive an order and hallrequest value is set to one. 
+			// And when we clear an order since we are finished and hallrequest value is set to three. 
