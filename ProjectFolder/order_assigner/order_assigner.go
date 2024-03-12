@@ -39,7 +39,7 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 			Behavior:    state.Behaviour,
 			Floor:       state.Floor,
 			Direction:   state.Direction,
-			CabRequests: state.CabRequests,
+			CabRequests: state.GetCabRequests(),
 		}
 	}
 
