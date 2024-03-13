@@ -18,15 +18,6 @@ import (
 // 	outputDevice = elevator_io.Elevio_getOutputDevice()
 // }
 
-func SetAllLights(lightArray [][3]bool) {
-	for floor := 0; floor < driver.N_FLOORS; floor++ {
-		for btn := 0; btn < driver.N_BUTTONS; btn++ {
-			//outputDevice.RequestButtonLight(floor, driver.ButtonType(btn), driver.IntToBool(es.Request[floor][btn]))
-			driver.SetButtonLamp(driver.ButtonType(btn), floor, lightArray[floor][btn])
-		}
-	}
-}
-
 func Fsm_onInitBetweenFloors(es *elevator.Elevator, wld_view *world_view.WorldView, myIP string) {
 	driver.SetMotorDirection(driver.MD_Down)
 	es.Dirn = driver.MD_Down

@@ -7,10 +7,13 @@ import (
 	"Sanntid/timer"
 	"Sanntid/world_view"
 	"fmt"
+	"time"
 )
 
 
 func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer, startNew chan<- bool) {
+
+	time.Sleep(2 * time.Second)
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	go peers.Receiver(55555, peerUpdateCh)
@@ -21,6 +24,11 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 	var p peers.PeerUpdate
 
 	fmt.Println("Started communications")
+
+	timeOut := make(chan bool)
+	timer.Timer_start(tmr, 3)
+	go tmr.TimeOut(timeOut)
+
 	for {
 		select {
 		case p = <-peerUpdateCh:
@@ -45,13 +53,15 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 		case recievedMsg := <-msgRx:
 			if recievedMsg.IPAddress == myIP {
 				*storedView = recievedMsg.WorldView
-			}	
-		}
-		if timer.Timer_timedOut(tmr) {
-			if len(p.Peers) > 0 {
+			}
+
+		case <-timeOut:
+			if len(p.Peers) > 0{
 				*storedView = world_view.MakeWorldView(myIP)
 			}
-			startNew <- true
+			startNew<-true
+			return
 		}
 	}
 }
+

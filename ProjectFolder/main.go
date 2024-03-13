@@ -35,17 +35,19 @@ func main() {
 
 	startNew := make(chan bool)
 
+
+
 	go process_pair.ProcessPair(alv_list.MyIP, &wld_view, &tmr, startNew)
 
 	for range startNew{
 		break
 	}
 
-	cmd := exec.Command(os.Args[0])
+	//var path string = "~/Documents/EddChris/Sanntidsprogrammering/ProjectFolder"
+	path2,_ := os.Getwd()
+	cmd := exec.Command("gnome-terminal", "--window", "--", "sh", "-c", "cd "+path2+" && go run main.go")
 
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	fmt.Printf("Path: %s", path2)
 
 	err := cmd.Start()
 	if err != nil {
@@ -55,6 +57,7 @@ func main() {
 
 	driver.Init("localhost:15657", numFloors)
 
+
 	go driver.PollButtons(drv_buttons)
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
@@ -63,7 +66,8 @@ func main() {
 	go network.StartCommunication(alv_list.MyIP, &wld_view, &alv_list, &hrd_list, &lgt_array, ord_updated, wld_updated)
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
-	fsm.SetAllLights(lgt_array)
+	world_view.InitLights(&lgt_array, alv_list.MyIP, wld_view)
+	ord_updated<-true
 
 	for {
 		select {
@@ -116,7 +120,7 @@ func main() {
 		case <-ord_updated:
 			// fmt.Println("Step 5")
 			go func() { 
-				fsm.SetAllLights(lgt_array)
+				world_view.SetAllLights(lgt_array)
 				for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
 					for button, value := range buttons {
 						if value {

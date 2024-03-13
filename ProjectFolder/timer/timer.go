@@ -29,3 +29,12 @@ func Timer_stop(tmr *Timer) {
 func Timer_timedOut(tmr *Timer) bool {
 	return (tmr.timerActive && (get_current_time() > tmr.timerEndTime))
 }
+
+func (tmr *Timer) TimeOut(timeOut chan<- bool){
+	for {
+		if Timer_timedOut(tmr){
+			timeOut<-true
+			return
+		}
+	}
+}

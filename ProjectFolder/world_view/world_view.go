@@ -295,7 +295,7 @@ func MakeAliveList() AliveList {
 	myIP, _ := localip.LocalIP()
 	nodesAlive := make([]string, 1)
 	nodesAlive[0] = myIP
-	fmt.Printf("Length of nodesAlive: %d\n", len(nodesAlive))
+	//fmt.Printf("Length of nodesAlive: %d\n", len(nodesAlive))
 	//myIP := os.Getpid()
 	return AliveList{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
 }
@@ -506,6 +506,26 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			// fmt.Print("Case 4\n")
 		}
 
+	}
+}
+
+func SetAllLights(lightArray [][3]bool) {
+	for floor := 0; floor < driver.N_FLOORS; floor++ {
+		for btn := 0; btn < driver.N_BUTTONS; btn++ {
+			//outputDevice.RequestButtonLight(floor, driver.ButtonType(btn), driver.IntToBool(es.Request[floor][btn]))
+			driver.SetButtonLamp(driver.ButtonType(btn), floor, lightArray[floor][btn])
+		}
+	}
+}
+
+func InitLights(lightArray *[][3]bool, myIP string, wld_view WorldView){
+	for floor, buttons := range wld_view.GetMyAssignedOrders(myIP) {
+		for button, value := range buttons {
+			(*lightArray)[floor][button] = value
+		}
+	}
+	for floor,value := range wld_view.GetMyCabRequests(myIP) {
+		(*lightArray)[floor][driver.BT_Cab] = value
 	}
 }
 

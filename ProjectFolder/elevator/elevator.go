@@ -1,8 +1,8 @@
 package elevator
 
 import (
-	"fmt"
 	"Sanntid/driver"
+	"fmt"
 )
 
 type ElevatorBehaviour int64 
@@ -96,3 +96,4 @@ func UpdateElevatorRequests(es *Elevator, assignedOrders [][2]bool) {
 		}
 	}
 }
+
