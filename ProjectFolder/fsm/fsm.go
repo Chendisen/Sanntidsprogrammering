@@ -94,9 +94,9 @@ func Fsm_onFloorArrival(es *elevator.Elevator, wld_view *world_view.WorldView, m
 
 			fmt.Println("We should stop")
 
-			es.Dirn = driver.MD_Stop
-			wld_view.SetDirection(myIP, driver.MD_Stop)
-			driver.SetMotorDirection(es.Dirn)
+			// es.Dirn = driver.MD_Stop
+			// wld_view.SetDirection(myIP, driver.MD_Stop)
+			driver.SetMotorDirection(driver.MD_Stop)
 			driver.SetDoorOpenLamp(true)
 
 			requests.Requests_clearAtCurrentFloor(es, wld_view, myIP)
