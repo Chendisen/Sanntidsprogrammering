@@ -125,6 +125,7 @@ func main() {
 					for button, value := range buttons {
 						if value {
 							fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, floor, driver.ButtonType(button))
+							
 						} else {
 							elev.Request[floor][button] = 0
 						}

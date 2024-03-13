@@ -160,3 +160,4 @@ func Requests_clearAtCurrentFloor(e *elevator.Elevator, wld_view *world_view.Wor
 		}
 	}
 }
+ 
