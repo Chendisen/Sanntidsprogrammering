@@ -35,10 +35,11 @@ type HeardFromList struct {
 }
 
 type ElevatorState struct {
-	Behaviour   string        `json:"behaviour"`
-	Floor       int           `json:"floor"`
-	Direction   string        `json:"direction"`
-	CabRequests []OrderStatus `json:"cabRequests"`
+	Behaviour   	string        `json:"behaviour"`
+	Floor       	int           `json:"floor"`
+	Direction   	string        `json:"direction"`
+	CabRequests 	[]OrderStatus `json:"cabRequests"`
+	ElevAvailable	bool 		  `json:"elevAvailable"`
 }
 
 type WorldView struct {
@@ -56,7 +57,7 @@ func (os OrderStatus) ToBool() bool {
 
 func MakeElevatorState() *ElevatorState {
 	newElevator := new(ElevatorState)
-	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]OrderStatus, driver.N_FLOORS)}
+	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]OrderStatus, driver.N_FLOORS), ElevAvailable: true}
 	return newElevator
 }
 
@@ -94,6 +95,14 @@ func (es *ElevatorState) FinishedCabRequestAtFloor(f int) {
 
 func (es *ElevatorState) ClearCabRequestAtFloor(f int) {
 	es.CabRequests[f] = Order_Empty
+}
+
+func (es *ElevatorState) SetAvailabilityStatus(availability_status bool) {
+	es.ElevAvailable = availability_status
+}
+
+func (es *ElevatorState) GetAvailabilityStatus() bool {
+	return es.ElevAvailable
 }
 
 //WordlView functions
@@ -173,6 +182,15 @@ func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool {
 func (wv *WorldView) GetMyCabRequests(myIP string) []bool {
 	return wv.States[myIP].GetCabRequests()
 }
+
+func (wv *WorldView) SetMyAvailabilityStatus(myIP string, availability_status bool) {
+	wv.States[myIP].SetAvailabilityStatus(availability_status)
+}
+
+func (wv *WorldView) GetMyAvailabilityStatus(myIP string) bool {
+	return wv.States[myIP].GetAvailabilityStatus()
+}
+
 
 //Nodes
 
