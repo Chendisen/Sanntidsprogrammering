@@ -9,6 +9,7 @@ import (
 	"Sanntid/process_pair"
 	"Sanntid/timer"
 	"Sanntid/world_view"
+	"Sanntid/watchdog"
 	"fmt"
 	"os"
 	"os/exec"
@@ -17,9 +18,11 @@ import (
 func main() {
  
 	const numFloors int = 4
+	const watchdogTime float64 = 10
 
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
-	var tmr timer.Timer = timer.Timer_uninitialized()
+	var tmr_door timer.Timer = timer.Timer_uninitialized()
+	var tmr_watchdog timer.Timer = timer.Timer_uninitialized()
 	var alv_list world_view.AliveList = world_view.MakeAliveList()
 	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
 	var hrd_list world_view.HeardFromList = world_view.MakeHeardFromList(alv_list.MyIP)
@@ -33,13 +36,15 @@ func main() {
 	ord_updated := make(chan bool, 10)
 	wld_updated := make(chan bool, 10)
 
-	startNew := make(chan bool)
+	elv_dead := make(chan bool)
+	elv_alive := make(chan bool)
+	start_new := make(chan bool)
 
 
 
-	go process_pair.ProcessPair(alv_list.MyIP, &wld_view, &tmr, startNew)
+	go process_pair.ProcessPair(alv_list.MyIP, &wld_view, &tmr_door, start_new)
 
-	for range startNew{
+	for range start_new{
 		break
 	}
 
@@ -62,11 +67,13 @@ func main() {
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
-	go fsm.Fsm_checkTimeOut(&elev, &wld_view, alv_list.MyIP, &tmr)
+	go fsm.Fsm_checkTimeOut(&elev, &wld_view, alv_list.MyIP, &tmr_door, &tmr_watchdog)
 	go network.StartCommunication(alv_list.MyIP, &wld_view, &alv_list, &hrd_list, &lgt_array, ord_updated, wld_updated)
+	go watchdog.Watchdog(&tmr_watchdog, &elev, elv_dead)
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
 	world_view.InitLights(&lgt_array, alv_list.MyIP, wld_view)
+	timer.Timer_start(&tmr_watchdog, watchdogTime)
 	ord_updated<-true
 
 	for {
@@ -75,31 +82,10 @@ func main() {
 
 			wld_view.SeenRequestAtFloor(alv_list.MyIP, a.Floor, a.Button)
 
-			// if a.Button == 2 {
-			// 	fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, a.Floor, a.Button)
-			// } else {
-			// 	fmt.Println("Step 1")
-			// 	wld_view.SetHallRequestAtFloor(a.Floor, int(a.Button))
-			// 	go func() {
-			// 		wld_updated <- true
-			// 	} ()
-			// }
-
-			// Press of button shall update my worldview which will then propagate out and be published that new info has been found.
-			// 		But we must seperate between cab and hall buttons since cab calls can only be handled by itself.
-			// We must then have an own function for reading in the world view and update the requests matrix of the elevator.
-			// Must find out how to make elevator only considers its requests matrix and state to make decisions.
-
-			// When we change state we also need to update the world view, this should probably happen when we arrive at new floor and update state.
-
-			// fmt.Printf("%+v\n", a)
-			// driver.SetButtonLamp(a.Button, a.Floor, true)
-			// fsm.Fsm_onRequestButtonPress(&elev, &tmr, a.Floor, a.Button)
-			// fmt.Printf("Request floor: %d\n", a.Floor)
-
 		case a := <-drv_floors:
-			// fmt.Printf("This floor polled: %d\n", a)
-			fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr, a)
+
+			timer.Timer_start(&tmr_watchdog, watchdogTime)
+			fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr_door, a)
 
 		case a := <-drv_obstr:
 			fmt.Printf("%+v\n", a)
@@ -118,13 +104,13 @@ func main() {
 			}
 
 		case <-ord_updated:
-			// fmt.Println("Step 5")
+
 			go func() { 
 				world_view.SetAllLights(lgt_array)
 				for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
 					for button, value := range buttons {
 						if value {
-							fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, floor, driver.ButtonType(button))
+							fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr_door, &tmr_watchdog, floor, driver.ButtonType(button))
 							
 						} else {
 							elev.Request[floor][button] = 0
@@ -133,7 +119,7 @@ func main() {
 				}
 				for floor,value := range wld_view.GetMyCabRequests(alv_list.MyIP) {
 					if value {
-						fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr, floor, driver.BT_Cab)
+						fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr_door, &tmr_watchdog, floor, driver.BT_Cab)
 					} else {
 						elev.Request[floor][driver.BT_Cab] = 0
 					}
@@ -141,8 +127,6 @@ func main() {
 			} ()
 			
 		case <-wld_updated:
-			
-			// fmt.Println("Step 3")
 
 			go func() {	
 				if alv_list.AmIMaster() {
@@ -150,6 +134,14 @@ func main() {
 					ord_updated <- true
 				}
 			} ()
+
+		case <-elv_dead:
+			wld_view.SetMyAvailabilityStatus(alv_list.MyIP, false)
+			fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
+			for range drv_floors{
+				wld_view.SetMyAvailabilityStatus(alv_list.MyIP, true)
+				break
+			}
 		}
 	}
 }
