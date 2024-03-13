@@ -51,7 +51,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 		}
 	}()
 
-	fmt.Println("Started")
+	fmt.Println("Started communications")
 	for {
 		select {
 		case p := <-peerUpdateCh:

@@ -230,9 +230,6 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		}
 	}
 
-	fmt.Printf("\nWorld updated: %t\n", wld_updated_flag)
-	fmt.Printf("Order updated: %t\n", ord_updated_flag)
-
 	if sendTime > currentView.LastHeard[senderIP] {
 		currentView.States[senderIP].Behaviour = newView.States[senderIP].Behaviour
 		currentView.States[senderIP].Direction = newView.States[senderIP].Direction
@@ -405,7 +402,6 @@ func (hfl *HeardFromList) GetHeardFrom(msgIP string, f int, b int) bool {
 func (hfl *HeardFromList) CheckHeardFromAll(alv_list AliveList, f int, b int) bool {
 	var heard_from_all bool = true
 	for _, alv_nodes := range alv_list.NodesAlive {
-		fmt.Printf("Alive nodes: %s", alv_nodes)
 		heard_from_all = heard_from_all && hfl.HeardFrom[alv_nodes][f][b]
 	}
 	return heard_from_all
@@ -454,7 +450,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			*ord_updated_flag = true
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Empty
-			fmt.Print("Case 1\n")
+			// fmt.Print("Case 1\n")
 		}
 	case Order_Unconfirmed: // Unconfirmed requests
 		if *cur_req == Order_Empty || *cur_req == Order_Unconfirmed {
@@ -476,10 +472,10 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 					*cur_req = Order_Confirmed
 				}
 			}
-			fmt.Print("Case 2\n")
+			// fmt.Print("Case 2\n")
 		}
 	case Order_Confirmed: // Confirmed requests
-		if *cur_req == Order_Unconfirmed {
+		if *cur_req == Order_Unconfirmed || *cur_req == Order_Empty{
 			// TODO: Channel for updating assigned orders
 			// TODO: Channel for turning on lights
 			if b == driver.BT_Cab && alv_list.MyIP == cabIP {
@@ -490,7 +486,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			*ord_updated_flag = true
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Confirmed
-			fmt.Print("Case 3\n")
+			// fmt.Print("Case 3\n")
 		}
 	case Order_Finished: // Finished requests
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Confirmed || *cur_req == Order_Finished {
@@ -509,7 +505,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 					*cur_req = Order_Empty
 				}
 			}
-			fmt.Print("Case 4\n")
+			// fmt.Print("Case 4\n")
 		}
 
 	}
