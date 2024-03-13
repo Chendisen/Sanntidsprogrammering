@@ -102,21 +102,23 @@ func main() {
 
 			go func() { 
 				world_view.SetAllLights(lgt_array)
-				for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
-					for button, value := range buttons {
-						if value {
-							fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr_door, &tmr_watchdog, floor, driver.ButtonType(button))
-							
-						} else {
-							elev.Request[floor][button] = 0
+				if wld_view.GetMyAvailabilityStatus(alv_list.MyIP){
+					for floor, buttons := range wld_view.GetMyAssignedOrders(alv_list.MyIP) {
+						for button, value := range buttons {
+							if value {
+								fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr_door, &tmr_watchdog, floor, driver.ButtonType(button))
+								
+							} else {
+								elev.Request[floor][button] = 0
+							}
 						}
 					}
-				}
-				for floor,value := range wld_view.GetMyCabRequests(alv_list.MyIP) {
-					if value {
-						fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr_door, &tmr_watchdog, floor, driver.BT_Cab)
-					} else {
-						elev.Request[floor][driver.BT_Cab] = 0
+					for floor,value := range wld_view.GetMyCabRequests(alv_list.MyIP) {
+						if value {
+							fsm.Fsm_onRequestButtonPress(&elev, &wld_view, alv_list.MyIP, &tmr_door, &tmr_watchdog, floor, driver.BT_Cab)
+						} else {
+							elev.Request[floor][driver.BT_Cab] = 0
+						}
 					}
 				}
 			} ()
@@ -136,12 +138,15 @@ func main() {
 
 			wld_view.SetMyAvailabilityStatus(alv_list.MyIP, false)
 			fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
-			for a:= range drv_floors{
-				wld_view.SetMyAvailabilityStatus(alv_list.MyIP, true)
-				tmr_watchdog.Timer_start(watchdogTime)
-				fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr_door, a)
-				break
-			}
+			
+			go func() {
+				for a:= range drv_floors{
+					wld_view.SetMyAvailabilityStatus(alv_list.MyIP, true)
+					tmr_watchdog.Timer_start(watchdogTime)
+					fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr_door, a)
+					break
+				}
+			}()
 		}
 	}
 }
