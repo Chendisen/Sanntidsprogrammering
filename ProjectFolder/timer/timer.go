@@ -1,6 +1,7 @@
 package timer
 
 import (
+	"math"
 	"time"
 )
 
@@ -18,7 +19,7 @@ func get_current_time() float64 {
 }
 
 func Timer_start(tmr *Timer, duration float64) {
-	tmr.timerEndTime = get_current_time() + duration
+	tmr.timerEndTime = math.Mod((get_current_time() + duration), 60.0)
 	tmr.timerActive = true
 }
 
@@ -27,7 +28,7 @@ func Timer_stop(tmr *Timer) {
 }
 
 func Timer_timedOut(tmr *Timer) bool {
-	return (tmr.timerActive && (get_current_time() > tmr.timerEndTime))
+	return (tmr.timerActive && (get_current_time() > tmr.timerEndTime) && !(tmr.timerEndTime < 3.0 && get_current_time() > 57))
 }
 
 func (tmr *Timer) TimeOut(timeOut chan<- bool){
