@@ -35,10 +35,11 @@ type HeardFromList struct {
 }
 
 type ElevatorState struct {
-	Behaviour   string        `json:"behaviour"`
-	Floor       int           `json:"floor"`
-	Direction   string        `json:"direction"`
-	CabRequests []OrderStatus `json:"cabRequests"`
+	Behaviour   	string        `json:"behaviour"`
+	Floor       	int           `json:"floor"`
+	Direction   	string        `json:"direction"`
+	CabRequests 	[]OrderStatus `json:"cabRequests"`
+	Available	bool 		  `json:"Available"`
 }
 
 type WorldView struct {
@@ -56,7 +57,7 @@ func (os OrderStatus) ToBool() bool {
 
 func MakeElevatorState() *ElevatorState {
 	newElevator := new(ElevatorState)
-	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]OrderStatus, driver.N_FLOORS)}
+	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]OrderStatus, driver.N_FLOORS), Available: true}
 	return newElevator
 }
 
@@ -94,6 +95,14 @@ func (es *ElevatorState) FinishedCabRequestAtFloor(f int) {
 
 func (es *ElevatorState) ClearCabRequestAtFloor(f int) {
 	es.CabRequests[f] = Order_Empty
+}
+
+func (es *ElevatorState) SetAvailabilityStatus(availability_status bool) {
+	es.Available = availability_status
+}
+
+func (es *ElevatorState) GetAvailabilityStatus() bool {
+	return es.Available
 }
 
 //WordlView functions
@@ -174,6 +183,15 @@ func (wv *WorldView) GetMyCabRequests(myIP string) []bool {
 	return wv.States[myIP].GetCabRequests()
 }
 
+func (wv *WorldView) SetMyAvailabilityStatus(myIP string, availability_status bool) {
+	wv.States[myIP].SetAvailabilityStatus(availability_status)
+}
+
+func (wv *WorldView) GetMyAvailabilityStatus(myIP string) bool {
+	return wv.States[myIP].GetAvailabilityStatus()
+}
+
+
 //Nodes
 
 func (wv *WorldView) ShouldAddNode(IP string) bool {
@@ -234,6 +252,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		currentView.States[senderIP].Behaviour = newView.States[senderIP].Behaviour
 		currentView.States[senderIP].Direction = newView.States[senderIP].Direction
 		currentView.States[senderIP].Floor = newView.States[senderIP].Floor
+		currentView.States[senderIP].Available = newView.States[senderIP].Available
 	}
 
 	if wld_updated_flag {
