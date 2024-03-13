@@ -4,7 +4,6 @@ import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
 	"Sanntid/world_view"
-	"fmt"
 )
 
 type DirnBehaviourPair struct {
@@ -67,7 +66,7 @@ func Requests_chooseDirection(e elevator.Elevator) DirnBehaviourPair {
 			return DirnBehaviourPair{driver.MD_Up, elevator.EB_Moving}
 		}
 		return DirnBehaviourPair{driver.MD_Stop, elevator.EB_Idle}
-	case driver.MD_Stop: // There should only be one request in the Stop case. Checking up or down first is arbitrary
+	case driver.MD_Stop: 
 		if driver.IntToBool(requests_here(e)) {
 			return DirnBehaviourPair{driver.MD_Stop, elevator.EB_DoorOpen}
 		}
@@ -116,21 +115,17 @@ func Requests_shouldClearImmediately(e elevator.Elevator, btn_floor int, btn_typ
 }
 
 func Requests_clearAtCurrentFloor(e *elevator.Elevator, wld_view *world_view.WorldView, myIP string) {
-	fmt.Println("In request clear at current floor")
 	switch e.Config.ClearRequestVariant {
 	case elevator.CV_all:
-		fmt.Println("In clear all")
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			e.Request[e.Floor][btn] = 0
 			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.ButtonType(btn))
 		}
 	case elevator.CV_InDirn:
-		fmt.Println("In clear in direction")
 		e.Request[e.Floor][driver.BT_Cab] = 0
 		wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_Cab)
 		switch e.Dirn {
 		case driver.MD_Up:
-			fmt.Println("In up")
 			if !driver.IntToBool(requests_above(*e)) && !driver.IntToBool(e.Request[e.Floor][driver.BT_HallUp]) {
 				e.Request[e.Floor][driver.BT_HallDown] = 0
 				wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
@@ -138,7 +133,6 @@ func Requests_clearAtCurrentFloor(e *elevator.Elevator, wld_view *world_view.Wor
 			e.Request[e.Floor][driver.BT_HallUp] = 0
 			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
 		case driver.MD_Down:
-			fmt.Println("In down")
 			if !driver.IntToBool(requests_below(*e)) && !driver.IntToBool(e.Request[e.Floor][driver.BT_HallDown]) {
 				e.Request[e.Floor][driver.BT_HallUp] = 0
 				wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
@@ -146,13 +140,11 @@ func Requests_clearAtCurrentFloor(e *elevator.Elevator, wld_view *world_view.Wor
 			e.Request[e.Floor][driver.BT_HallDown] = 0
 			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
 		case driver.MD_Stop:
-			fmt.Println("In stop")
 			e.Request[e.Floor][driver.BT_HallUp] = 0
 			e.Request[e.Floor][driver.BT_HallDown] = 0
 			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
 			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
 		default:
-			fmt.Println("In default")
 			e.Request[e.Floor][driver.BT_HallUp] = 0
 			e.Request[e.Floor][driver.BT_HallDown] = 0
 			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)

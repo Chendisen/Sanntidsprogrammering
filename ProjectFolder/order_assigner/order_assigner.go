@@ -34,13 +34,19 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 
 	var states map[string]HRAElevState = make(map[string]HRAElevState)
 	for _, alive_elevator := range alv_list.NodesAlive {
-		state := wld_view.States[alive_elevator]
-		states[alive_elevator] = HRAElevState{
-			Behavior:    state.Behaviour,
-			Floor:       state.Floor,
-			Direction:   state.Direction,
-			CabRequests: state.GetCabRequests(),
+		if wld_view.States[alive_elevator].GetAvailabilityStatus(){
+			state := wld_view.States[alive_elevator]
+			states[alive_elevator] = HRAElevState{
+				Behavior:    state.Behaviour,
+				Floor:       state.Floor,
+				Direction:   state.Direction,
+				CabRequests: state.GetCabRequests(),
+			}
 		}
+	}
+
+	if len(states) == 0{
+		return
 	}
 
 	input := HRAInput{
@@ -52,9 +58,6 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 	if err != nil {
 		panic(err)
 	}
-
-	// wld_view.PrintWorldView()
-	// input.PrintInput()
 
 	ret, err := exec.Command(hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
 	if err != nil {
@@ -68,7 +71,6 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 	}
 
 	wld_view.AssignedOrders = *output
-	fmt.Println("Step 4")
 }
 
 func (inp HRAInput) PrintInput() {

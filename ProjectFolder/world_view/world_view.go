@@ -6,14 +6,7 @@ import (
 	"Sanntid/network/localip"
 	"Sanntid/network/peers"
 	"fmt"
-	//"os"
 )
-
-// TODO: Have structs that is similar to the ones we send in messages
-// 			They will correspond to our world view and act as a middleman
-// 			for fault checking messages before taking decisions.
-// 			Must therefore have functions that compares the received
-// 			messages and the ones of our world view.
 
 type AliveList struct {
 	MyIP       string
@@ -133,18 +126,6 @@ func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b driver.ButtonType)
 	}
 }
 
-/*func (wv *WorldView) SetRequestAtFloor(myIP string, f int, b driver.ButtonType) {
-	if b == driver.BT_Cab {
-		if wv.States[myIP].CabRequests[f] != Order_Empty{
-			wv.States[myIP].FinishedCabRequestAtFloor(f)
-		}
-	} else {
-		if wv.HallRequests[f][b] != Order_Empty{
-			wv.HallRequests[f][b] = Order_Finished
-		}
-	}
-}*/
-
 func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b driver.ButtonType) {
 	if b == driver.BT_Cab {
 		if wv.States[myIP].CabRequests[f] != Order_Empty {
@@ -156,14 +137,6 @@ func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b driver.ButtonT
 		}
 	}
 }
-
-/*func (wv *WorldView) ClearRequestAtFloor(myIP string, f int, b driver.ButtonType) {
-	if b == driver.BT_Cab {
-		wv.States[myIP].ClearCabRequestAtFloor(f)
-	} else {
-		wv.HallRequests[f][b] = Order_Empty
-	}
-}*/
 
 func (wv WorldView) GetHallRequests() [][2]bool {
 	var hall_requests [][2]bool = make([][2]bool, len(wv.HallRequests))
@@ -230,11 +203,6 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 
 	var wld_updated_flag bool = false
 	var ord_updated_flag bool = false
-
-	// fmt.Println("New view:")
-	// newView.PrintWorldView()
-	// fmt.Println("\nCurrent view:")
-	// currentView.PrintWorldView()
 
 	for f, floor := range newView.HallRequests {
 		for b, buttonStatus := range floor {
@@ -314,8 +282,6 @@ func MakeAliveList() AliveList {
 	myIP, _ := localip.LocalIP()
 	nodesAlive := make([]string, 1)
 	nodesAlive[0] = myIP
-	//fmt.Printf("Length of nodesAlive: %d\n", len(nodesAlive))
-	//myIP := os.Getpid()
 	return AliveList{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
 }
 
@@ -469,7 +435,6 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			*ord_updated_flag = true
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Empty
-			// fmt.Print("Case 1\n")
 		}
 	case Order_Unconfirmed: // Unconfirmed requests
 		if *cur_req == Order_Empty || *cur_req == Order_Unconfirmed {
@@ -489,7 +454,6 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 					*cur_req = Order_Confirmed
 				}
 			}
-			// fmt.Print("Case 2\n")
 		}
 	case Order_Confirmed: // Confirmed requests
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Empty{
@@ -503,7 +467,6 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			*ord_updated_flag = true
 			hfl.ClearHeardFrom(f, b)
 			*cur_req = Order_Confirmed
-			// fmt.Print("Case 3\n")
 		}
 	case Order_Finished: // Finished requests
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Confirmed || *cur_req == Order_Finished {
@@ -522,23 +485,20 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 					*cur_req = Order_Empty
 				}
 			}
-			// fmt.Print("Case 4\n")
 		}
-
 	}
 }
 
 func SetAllLights(lightArray [][3]bool) {
 	for floor := 0; floor < driver.N_FLOORS; floor++ {
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
-			//outputDevice.RequestButtonLight(floor, driver.ButtonType(btn), driver.IntToBool(es.Request[floor][btn]))
 			driver.SetButtonLamp(driver.ButtonType(btn), floor, lightArray[floor][btn])
 		}
 	}
 }
 
 func InitLights(lightArray *[][3]bool, myIP string, wld_view WorldView){
-	for floor, buttons := range wld_view.GetMyAssignedOrders(myIP) {
+	for floor, buttons := range wld_view.GetHallRequests() {
 		for button, value := range buttons {
 			(*lightArray)[floor][button] = value
 		}
@@ -547,7 +507,3 @@ func InitLights(lightArray *[][3]bool, myIP string, wld_view WorldView){
 		(*lightArray)[floor][driver.BT_Cab] = value
 	}
 }
-
-// TODO: Change design of fsm functions since we no longer set values of wld_view by ourselves.
-// Only time we set it ourselves is when we receive an order and hallrequest value is set to one.
-// And when we clear an order since we are finished and hallrequest value is set to three.

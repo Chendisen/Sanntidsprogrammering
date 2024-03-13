@@ -18,7 +18,7 @@ import (
 func main() {
  
 	const numFloors int = 4
-	const watchdogTime float64 = 10
+	const watchdogTime float64 = 3
 
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
 	var tmr_door timer.Timer = timer.Timer_uninitialized()
@@ -37,7 +37,6 @@ func main() {
 	wld_updated := make(chan bool, 10)
 
 	elv_dead := make(chan bool)
-	elv_alive := make(chan bool)
 	start_new := make(chan bool)
 
 
@@ -48,7 +47,6 @@ func main() {
 		break
 	}
 
-	//var path string = "~/Documents/EddChris/Sanntidsprogrammering/ProjectFolder"
 	path2,_ := os.Getwd()
 	cmd := exec.Command("gnome-terminal", "--window", "--", "sh", "-c", "cd "+path2+" && go run main.go")
 
@@ -73,7 +71,6 @@ func main() {
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
 	world_view.InitLights(&lgt_array, alv_list.MyIP, wld_view)
-	timer.Timer_start(&tmr_watchdog, watchdogTime)
 	ord_updated<-true
 
 	for {
@@ -84,16 +81,14 @@ func main() {
 
 		case a := <-drv_floors:
 
-			timer.Timer_start(&tmr_watchdog, watchdogTime)
+			tmr_watchdog.Timer_start(watchdogTime)
 			fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr_door, a)
 
 		case a := <-drv_obstr:
-			fmt.Printf("%+v\n", a)
-			if a && elev.Behaviour == elevator.EB_DoorOpen {
-				elev.DoorObstructed = true
-			} else {
-				elev.DoorObstructed = false
-			}
+			fmt.Printf("DOOR OBSTRUCTED: %t\n", a)
+			elev.DoorObstructed = a
+			wld_view.SetMyAvailabilityStatus(alv_list.MyIP, !a)
+			fmt.Printf("MY AVAILABILITY IS NOW: %t\n", wld_view.States[alv_list.MyIP].Available)
 
 		case a := <-drv_stop:
 			fmt.Printf("%+v\n", a)
@@ -136,10 +131,15 @@ func main() {
 			} ()
 
 		case <-elv_dead:
+
+			fmt.Println("THE ELEVATOR IS DEAD")
+
 			wld_view.SetMyAvailabilityStatus(alv_list.MyIP, false)
 			fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
-			for range drv_floors{
+			for a:= range drv_floors{
 				wld_view.SetMyAvailabilityStatus(alv_list.MyIP, true)
+				tmr_watchdog.Timer_start(watchdogTime)
+				fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr_door, a)
 				break
 			}
 		}
