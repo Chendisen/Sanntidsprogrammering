@@ -50,6 +50,8 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 			}
 			myView.LastHeard[p.New] = time.Now().String()[11:19]
 
+			wld_updated<-true
+			
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)

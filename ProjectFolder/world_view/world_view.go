@@ -220,6 +220,9 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		currentView.States[senderIP].Behaviour = newView.States[senderIP].Behaviour
 		currentView.States[senderIP].Direction = newView.States[senderIP].Direction
 		currentView.States[senderIP].Floor = newView.States[senderIP].Floor
+		if currentView.States[senderIP].Available != newView.States[senderIP].Available {
+			wld_updated_flag = true
+		}
 		currentView.States[senderIP].Available = newView.States[senderIP].Available
 	}
 
