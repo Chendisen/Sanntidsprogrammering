@@ -6,15 +6,17 @@ import (
 	"Sanntid/fsm"
 	"Sanntid/network"
 	"Sanntid/order_assigner"
+	"Sanntid/process_pair"
 	"Sanntid/timer"
 	"Sanntid/world_view"
 	"fmt"
+	"os"
+	"os/exec"
 )
 
 func main() {
  
 	const numFloors int = 4
-	driver.Init("localhost:15657", numFloors)
 
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
 	var tmr timer.Timer = timer.Timer_uninitialized()
@@ -30,6 +32,28 @@ func main() {
 	drv_stop := make(chan bool)
 	ord_updated := make(chan bool, 10)
 	wld_updated := make(chan bool, 10)
+
+	startNew := make(chan bool)
+
+	go process_pair.ProcessPair(alv_list.MyIP, &wld_view, &tmr, startNew)
+
+	for range startNew{
+		break
+	}
+
+	cmd := exec.Command(os.Args[0])
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Start()
+	if err != nil {
+		fmt.Println("Failed to start myself")
+		panic(err)
+	}
+
+	driver.Init("localhost:15657", numFloors)
 
 	go driver.PollButtons(drv_buttons)
 	go driver.PollFloorSensor(drv_floors)
