@@ -457,8 +457,6 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 			*cur_req = Order_Unconfirmed
 			hfl.SetHeardFrom(rcd_IP, f, b)
 			if alv_list.AmIMaster() {
-				alv_list.Print()
-				hfl.Print()
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for assigning orders
 					// TODO: Channel for turning on the lights

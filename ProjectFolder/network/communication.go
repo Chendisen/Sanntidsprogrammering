@@ -56,8 +56,6 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 		select {
 		case p := <-peerUpdateCh:
 
-			hfl.Print()
-
 			al.UpdateAliveList(p)
 			if myView.ShouldAddNode(p.New){
 				myView.AddNodeToWorldView(p.New)
@@ -72,8 +70,6 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			fmt.Printf((" Am i master?:  %t\n"), (*al).AmIMaster())
-
-			hfl.Print()
 
 		case recievedMsg := <-msgRx:
 			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, al.MyIP, *al, hfl, lgt_array, ord_updated, wld_updated)

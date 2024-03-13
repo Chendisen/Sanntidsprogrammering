@@ -53,8 +53,8 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 		panic(err)
 	}
 
-	wld_view.PrintWorldView()
-	input.PrintInput()
+	// wld_view.PrintWorldView()
+	// input.PrintInput()
 
 	ret, err := exec.Command(hraExecutable, "-i", string(jsonBytes)).CombinedOutput()
 	if err != nil {
