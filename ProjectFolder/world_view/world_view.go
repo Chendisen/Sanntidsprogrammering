@@ -39,7 +39,7 @@ type ElevatorState struct {
 	Floor       	int           `json:"floor"`
 	Direction   	string        `json:"direction"`
 	CabRequests 	[]OrderStatus `json:"cabRequests"`
-	ElevAvailable	bool 		  `json:"elevAvailable"`
+	Available	bool 		  `json:"Available"`
 }
 
 type WorldView struct {
@@ -57,7 +57,7 @@ func (os OrderStatus) ToBool() bool {
 
 func MakeElevatorState() *ElevatorState {
 	newElevator := new(ElevatorState)
-	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]OrderStatus, driver.N_FLOORS), ElevAvailable: true}
+	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]OrderStatus, driver.N_FLOORS), Available: true}
 	return newElevator
 }
 
@@ -98,11 +98,11 @@ func (es *ElevatorState) ClearCabRequestAtFloor(f int) {
 }
 
 func (es *ElevatorState) SetAvailabilityStatus(availability_status bool) {
-	es.ElevAvailable = availability_status
+	es.Available = availability_status
 }
 
 func (es *ElevatorState) GetAvailabilityStatus() bool {
-	return es.ElevAvailable
+	return es.Available
 }
 
 //WordlView functions
@@ -252,6 +252,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		currentView.States[senderIP].Behaviour = newView.States[senderIP].Behaviour
 		currentView.States[senderIP].Direction = newView.States[senderIP].Direction
 		currentView.States[senderIP].Floor = newView.States[senderIP].Floor
+		currentView.States[senderIP].Available = newView.States[senderIP].Available
 	}
 
 	if wld_updated_flag {
