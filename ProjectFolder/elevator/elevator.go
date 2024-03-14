@@ -13,20 +13,7 @@ const (
 	EB_Moving		
 )
 
-type ClearRequestVariant int64
-
-const (
-	// Assume everyone waiting for the elevator gets on the elevator, 
-	// they will be traveling in the "wrong" direction for a while
-	CV_all		
-
-	// Assume only those that want to travel in the current direction
-	// enter the elevator, and keep waiting outside otherwise
-	CV_InDirn	ClearRequestVariant = iota
-)
-
 type Configuration struct {
-	ClearRequestVariant 	ClearRequestVariant
 	DoorOpenDuration_s 		float64
 }
 
@@ -64,7 +51,7 @@ func Elevator_print(es Elevator) {
 				(floor == 0 && btn == int(driver.BT_HallDown))) {
 				fmt.Println("|     ")
 			} else {
-				switch es.Request[floor][btn] {
+				switch es.GetElevatorRequest(floor, btn) {
 				case 1:
 					fmt.Println("|  #  ")
 				case 0:
@@ -82,24 +69,15 @@ func Elevator_uninitialized() Elevator {
 		Floor: 			-1, 
 		Dirn: 			driver.MD_Stop,
 		Behaviour: 		EB_Idle,
-		Config: 		Configuration 	{ClearRequestVariant: 	CV_InDirn,
-					 					DoorOpenDuration_s: 	3.0},
+		Config: 		Configuration 	{DoorOpenDuration_s: 	3.0},
 		DoorObstructed: false,
 	}
 }
 
-
-func UpdateElevatorRequests(es *Elevator, assignedOrders [][2]bool) {
-	for floor, buttons := range assignedOrders{
-		for button, value := range buttons{
-			es.Request[floor][button] = boolToInt(value)
-		}
-	}
+func (es *Elevator) GetElevatorRequest(floor int, button int) int {
+	return (*es).Request[floor][button]
 }
 
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
+func (es *Elevator) SetElevatorRequest(floor int, button int, value int) {
+	(*es).Request[floor][button] = value
 }

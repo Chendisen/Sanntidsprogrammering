@@ -41,15 +41,15 @@ func Fsm_onRequestButtonPress(es *elevator.Elevator, wld_view *world_view.WorldV
 			tmr.Timer_start(es.Config.DoorOpenDuration_s)
 			wld_view.FinishedRequestAtFloor(myIP, btn_floor, btn_type)
 		} else {
-			es.Request[btn_floor][int(btn_type)] = 1
+			es.SetElevatorRequest(btn_floor, int(btn_type), 1)
 		}
 
 	case elevator.EB_Moving:
-		es.Request[btn_floor][int(btn_type)] = 1
+		es.SetElevatorRequest(btn_floor, int(btn_type), 1)
 
 	case elevator.EB_Idle:
 
-		es.Request[btn_floor][int(btn_type)] = 1
+		es.SetElevatorRequest(btn_floor, int(btn_type), 1)
 		pair := requests.Requests_chooseDirection(*es)
 		es.Dirn = pair.Dirn
 		wld_view.SetDirection(myIP, pair.Dirn)

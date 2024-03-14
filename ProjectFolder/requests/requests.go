@@ -99,59 +99,45 @@ func Requests_shouldStop(e elevator.Elevator) bool {
 	}
 }
 
-func Requests_shouldClearImmediately(e elevator.Elevator, btn_floor int, btn_type driver.ButtonType) bool {
-	switch e.Config.ClearRequestVariant {
-	case elevator.CV_all:
-		return e.Floor == btn_floor
-	case elevator.CV_InDirn:
-		return (e.Floor == btn_floor &&
-			((e.Dirn == driver.MD_Up && btn_type == driver.BT_HallUp) ||
-				(e.Dirn == driver.MD_Down && btn_type == driver.BT_HallDown) ||
-				(e.Dirn == driver.MD_Stop) ||
-				(btn_type == driver.BT_Cab)))
+func Requests_shouldClearImmediately(elev elevator.Elevator, btn_floor int, btn_type driver.ButtonType) bool {
+	return (elev.Floor == btn_floor &&
+			((elev.Dirn == driver.MD_Up && btn_type == driver.BT_HallUp) ||
+			(elev.Dirn == driver.MD_Down && btn_type == driver.BT_HallDown) ||
+			(elev.Dirn == driver.MD_Stop) ||
+			(btn_type == driver.BT_Cab)))
+}
+
+func Requests_clearAtCurrentFloor(elev *elevator.Elevator, wld_view *world_view.WorldView, myIP string) {
+	elev.SetElevatorRequest(elev.Floor, driver.BT_Cab, 0)
+	wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_Cab)
+	switch elev.Dirn {
+	case driver.MD_Up:
+		if !intToBool(requests_above(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallUp))) {
+			elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
+			wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallDown)
+		}
+		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
+		wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallUp)
+	case driver.MD_Down:
+		if !intToBool(requests_below(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallUp))) {
+			elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
+			wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallUp)
+		}
+		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
+		wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallDown)
+	case driver.MD_Stop:
+		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
+		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
+		wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallUp)
+		wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallDown)
 	default:
-		return false
+		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
+		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
+		wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallUp)
+		wld_view.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallDown)
 	}
 }
 
-func Requests_clearAtCurrentFloor(e *elevator.Elevator, wld_view *world_view.WorldView, myIP string) {
-	switch e.Config.ClearRequestVariant {
-	case elevator.CV_all:
-		for btn := 0; btn < driver.N_BUTTONS; btn++ {
-			e.Request[e.Floor][btn] = 0
-			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.ButtonType(btn))
-		}
-	case elevator.CV_InDirn:
-		e.Request[e.Floor][driver.BT_Cab] = 0
-		wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_Cab)
-		switch e.Dirn {
-		case driver.MD_Up:
-			if !intToBool(requests_above(*e)) && !intToBool(e.Request[e.Floor][driver.BT_HallUp]) {
-				e.Request[e.Floor][driver.BT_HallDown] = 0
-				wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
-			}
-			e.Request[e.Floor][driver.BT_HallUp] = 0
-			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
-		case driver.MD_Down:
-			if !intToBool(requests_below(*e)) && !intToBool(e.Request[e.Floor][driver.BT_HallDown]) {
-				e.Request[e.Floor][driver.BT_HallUp] = 0
-				wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
-			}
-			e.Request[e.Floor][driver.BT_HallDown] = 0
-			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
-		case driver.MD_Stop:
-			e.Request[e.Floor][driver.BT_HallUp] = 0
-			e.Request[e.Floor][driver.BT_HallDown] = 0
-			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
-			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
-		default:
-			e.Request[e.Floor][driver.BT_HallUp] = 0
-			e.Request[e.Floor][driver.BT_HallDown] = 0
-			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallUp)
-			wld_view.FinishedRequestAtFloor(myIP, e.Floor, driver.BT_HallDown)
-		}
-	}
-}
- func intToBool(a int) bool {
+func intToBool(a int) bool {
 	return a != 0
 }
