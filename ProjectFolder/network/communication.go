@@ -60,7 +60,6 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 			fmt.Printf((" Am i master?:  %t\n"), (*al).AmIMaster())
 
 		case recievedMsg := <-msgRx:
-			myView.LastHeard[recievedMsg.IPAddress] = time.Now().String()[11:19]
 			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, al.MyIP, *al, hfl, lgt_array, ord_updated, wld_updated)
 		}
 	}

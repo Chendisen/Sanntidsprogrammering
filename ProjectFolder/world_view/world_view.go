@@ -5,6 +5,7 @@ import (
 	"Sanntid/elevator"
 	"Sanntid/network/localip"
 	"Sanntid/network/peers"
+	"time"
 	"fmt"
 )
 
@@ -238,6 +239,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 
 	}
 
+	currentView.LastHeard[senderIP] = time.Now().String()[11:19]
 }
 
 func MakeWorldView(myIP string) WorldView {
