@@ -308,12 +308,24 @@ func MakeNetworkOverview() NetworkOverview {
 	return NetworkOverview{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
 }
 
+func (networkOverview NetworkOverview) GetMyIP() string {
+	return networkOverview.MyIP
+}
+
 func (networkOverview NetworkOverview) AmIMaster() bool {
 	if networkOverview.Master == networkOverview.MyIP {
 		return true
 	} else {
 		return false
 	}
+}
+
+func (networkOverview NetworkOverview) AmIAlive(myIP string) bool {
+	var amIAlive bool = false
+	for _, aliveNode := range networkOverview.NodesAlive {
+		amIAlive = amIAlive || myIP == aliveNode
+	}
+	return amIAlive
 }
 
 func (networkOverview *NetworkOverview) ShouldUpdateList(p peers.PeerUpdate) bool {
@@ -351,6 +363,14 @@ func (networkOverview *NetworkOverview) ShouldUpdateMaster(p peers.PeerUpdate) (
 
 func (networkOverview *NetworkOverview) UpdateMaster(newMaster string) {
 	networkOverview.Master = newMaster
+}
+
+func (networkOverview NetworkOverview) NetworkLost (p peers.PeerUpdate) bool {
+	var networkGoing bool = false
+	for _, aliveNode := range p.Peers {
+		networkGoing = networkGoing || networkOverview.MyIP == aliveNode
+	}
+	return !networkGoing
 }
 
 func (networkOverview *NetworkOverview) UpdateNetworkOverview(p peers.PeerUpdate) {

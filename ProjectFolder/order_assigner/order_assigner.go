@@ -34,7 +34,7 @@ func AssignOrders(worldView *world_view.WorldView, networkOverview *world_view.N
 
 	var states map[string]HRAElevState = make(map[string]HRAElevState)
 	for _, alive_elevator := range networkOverview.NodesAlive {
-		if worldView.States[alive_elevator].GetAvailabilityStatus(){
+		if worldView.States[alive_elevator].GetAvailabilityStatus() {
 			state := worldView.States[alive_elevator]
 			states[alive_elevator] = HRAElevState{
 				Behavior:    state.Behaviour,
@@ -45,7 +45,7 @@ func AssignOrders(worldView *world_view.WorldView, networkOverview *world_view.N
 		}
 	}
 
-	if len(states) == 0{
+	if len(states) == 0 {
 		return
 	}
 
@@ -56,7 +56,6 @@ func AssignOrders(worldView *world_view.WorldView, networkOverview *world_view.N
 
 	// input.PrintInput()
 	// worldView.PrintWorldView()
-
 
 	jsonBytes, err := json.Marshal(input)
 	if err != nil {
