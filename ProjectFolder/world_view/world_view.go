@@ -226,6 +226,10 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		currentView.States[senderIP].Available = newView.States[senderIP].Available
 	}
 
+	if (senderIP == al.Master && sendTime > currentView.LastHeard[senderIP]) {
+		currentView.AssignedOrders = newView.AssignedOrders
+	}
+
 	if wld_updated_flag {
 		wld_updated <- true
 	} else if ord_updated_flag {
@@ -250,7 +254,7 @@ func MakeWorldView(myIP string) WorldView {
 }
 
 func (wv WorldView) PrintWorldView() {
-	for IP, states := range wv.States {
+	/*for IP, states := range wv.States {
 
 		fmt.Printf("State of %s: \n", IP)
 		fmt.Printf("		Floor: %d\n", states.Floor)
@@ -258,7 +262,7 @@ func (wv WorldView) PrintWorldView() {
 		fmt.Printf("	Direction: %s\n", states.Direction)
 		fmt.Println("")
 
-	}
+	}*/
 
 	/*fmt.Println("Hall requests: ")
 	for f, floor := range wv.HallRequests {
@@ -276,6 +280,18 @@ func (wv WorldView) PrintWorldView() {
 		}
 		fmt.Println("")
 	}*/
+
+	fmt.Println("Assigned orders: ")
+	for IP, orders := range wv.AssignedOrders {
+		fmt.Printf("	Elevator: %s\n", IP)
+		for f, buttons := range orders {
+			fmt.Printf("		Floor: %d", f)
+			for b, value := range buttons {
+				fmt.Printf("		Button: %d, Value: %t", b, value)
+			}
+			fmt.Print("\n")
+		}
+	}
 
 }
 

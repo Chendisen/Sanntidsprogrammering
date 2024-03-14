@@ -71,6 +71,7 @@ func main() {
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
 	world_view.InitLights(&lgt_array, alv_list.MyIP, wld_view)
+	tmr_watchdog.Timer_start(watchdogTime)
 	ord_updated<-true
 
 	for {
@@ -83,11 +84,17 @@ func main() {
 
 			tmr_watchdog.Timer_start(watchdogTime)
 			fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr_door, a)
+			wld_view.PrintWorldView()
 
 		case a := <-drv_obstr:
 			fmt.Printf("DOOR OBSTRUCTED: %t\n", a)
 			elev.DoorObstructed = a
 			wld_view.SetMyAvailabilityStatus(alv_list.MyIP, !a)
+			go func() {
+				if alv_list.AmIMaster() {
+					wld_updated<-true
+				}
+			}()
 			fmt.Printf("MY AVAILABILITY IS NOW: %t\n", wld_view.States[alv_list.MyIP].Available)
 
 		case a := <-drv_stop:
@@ -128,25 +135,29 @@ func main() {
 			go func() {	
 				if alv_list.AmIMaster() {
 					order_assigner.AssignOrders(&wld_view, &alv_list)
-					ord_updated <- true
 				}
+				ord_updated <- true
 			} ()
 
 		case <-elv_dead:
 
-			fmt.Println("THE ELEVATOR IS DEAD")
+			// fmt.Println("THE ELEVATOR IS DEAD")
+			panic("ELEVATOR DEAD")
 
-			wld_view.SetMyAvailabilityStatus(alv_list.MyIP, false)
+			/*wld_view.SetMyAvailabilityStatus(alv_list.MyIP, false)
 			fsm.Fsm_onInitBetweenFloors(&elev, &wld_view, alv_list.MyIP)
 			
 			go func() {
+				if alv_list.AmIMaster() {
+					wld_updated<-true
+				}
 				for a:= range drv_floors{
 					wld_view.SetMyAvailabilityStatus(alv_list.MyIP, true)
 					tmr_watchdog.Timer_start(watchdogTime)
 					fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr_door, a)
 					break
 				}
-			}()
+			}()*/
 		}
 	}
 }
