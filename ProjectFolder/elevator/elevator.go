@@ -18,11 +18,11 @@ type ClearRequestVariant int64
 const (
 	// Assume everyone waiting for the elevator gets on the elevator, 
 	// they will be traveling in the "wrong" direction for a while
-	CV_all		ClearRequestVariant = iota
+	CV_all		
 
 	// Assume only those that want to travel in the current direction
 	// enter the elevator, and keep waiting outside otherwise
-	CV_InDirn
+	CV_InDirn	ClearRequestVariant = iota
 )
 
 type Configuration struct {
@@ -92,8 +92,14 @@ func Elevator_uninitialized() Elevator {
 func UpdateElevatorRequests(es *Elevator, assignedOrders [][2]bool) {
 	for floor, buttons := range assignedOrders{
 		for button, value := range buttons{
-			es.Request[floor][button] = driver.BoolToInt(value)
+			es.Request[floor][button] = boolToInt(value)
 		}
 	}
 }
 
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}

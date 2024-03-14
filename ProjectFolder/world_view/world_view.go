@@ -5,8 +5,9 @@ import (
 	"Sanntid/elevator"
 	"Sanntid/network/localip"
 	"Sanntid/network/peers"
-	"time"
 	"fmt"
+	// "os"
+	"time"
 )
 
 type AliveList struct {
@@ -301,6 +302,7 @@ func (wv WorldView) PrintWorldView() {
 
 func MakeAliveList() AliveList {
 	myIP, _ := localip.LocalIP()
+	//myIP := fmt.Sprintf("%d", os.Getpid())
 	nodesAlive := make([]string, 1)
 	nodesAlive[0] = myIP
 	return AliveList{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
@@ -397,12 +399,22 @@ func (hfl HeardFromList) ShouldAddNode(ip string) bool {
 	return check
 }
 
-func (hfl *HeardFromList) SetHeardFrom(msgIP string, f int, b int) {
-	hfl.HeardFrom[msgIP][f][b] = true
+func (hfl *HeardFromList) SetHeardFrom(alv_list AliveList, msgIP string, f int, b int) {
+	for _,id := range alv_list.NodesAlive {
+		if id == msgIP{
+			hfl.HeardFrom[msgIP][f][b] = true
+			return
+		}
+	}
 }
 
-func (hfl *HeardFromList) GetHeardFrom(msgIP string, f int, b int) bool {
-	return hfl.HeardFrom[msgIP][f][b]
+func (hfl *HeardFromList) GetHeardFrom(alv_list AliveList, msgIP string, f int, b int) bool {
+	for _,id := range alv_list.NodesAlive {
+		if id == msgIP{
+			return hfl.HeardFrom[msgIP][f][b]
+		}
+	}
+	return false
 }
 
 func (hfl *HeardFromList) CheckHeardFromAll(alv_list AliveList, f int, b int) bool {
@@ -460,7 +472,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 	case Order_Unconfirmed: // Unconfirmed requests
 		if *cur_req == Order_Empty || *cur_req == Order_Unconfirmed {
 			*cur_req = Order_Unconfirmed
-			hfl.SetHeardFrom(rcd_IP, f, b)
+			hfl.SetHeardFrom(alv_list, rcd_IP, f, b)
 			if alv_list.AmIMaster() {
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for assigning orders
@@ -492,7 +504,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 	case Order_Finished: // Finished requests
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Confirmed || *cur_req == Order_Finished {
 			*cur_req = Order_Finished
-			hfl.SetHeardFrom(rcd_IP, f, b)
+			hfl.SetHeardFrom(alv_list, rcd_IP, f, b)
 			if alv_list.AmIMaster() {
 				if hfl.CheckHeardFromAll(alv_list, f, b) {
 					// TODO: Channel for turning off lights

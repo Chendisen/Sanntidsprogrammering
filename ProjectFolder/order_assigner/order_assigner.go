@@ -54,8 +54,8 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 		States:       states,
 	}
 
-	input.PrintInput()
-	wld_view.PrintWorldView()
+	// input.PrintInput()
+	// wld_view.PrintWorldView()
 
 
 	jsonBytes, err := json.Marshal(input)
@@ -75,7 +75,7 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 	}
 
 	wld_view.AssignedOrders = *output
-	wld_view.PrintWorldView()
+	// wld_view.PrintWorldView()
 }
 
 func (inp HRAInput) PrintInput() {

@@ -8,15 +8,16 @@ import (
 	"Sanntid/order_assigner"
 	"Sanntid/process_pair"
 	"Sanntid/timer"
-	"Sanntid/world_view"
 	"Sanntid/watchdog"
+	"Sanntid/world_view"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 )
 
 func main() {
- 
+
 	const numFloors int = 4
 	const watchdogTime float64 = 3
 
@@ -24,6 +25,14 @@ func main() {
 	var tmr_door timer.Timer = timer.Timer_uninitialized()
 	var tmr_watchdog timer.Timer = timer.Timer_uninitialized()
 	var alv_list world_view.AliveList = world_view.MakeAliveList()
+
+	idFlag := flag.Int("id", 1, "Specifies ID of terminal")
+	flag.Parse()
+	myID := *idFlag
+	alv_list.MyIP = fmt.Sprintf("%d", myID)
+	alv_list.Master = fmt.Sprintf("%d", myID)
+	alv_list.NodesAlive[0] = fmt.Sprintf("%d", myID)
+
 	var wld_view world_view.WorldView = world_view.MakeWorldView(alv_list.MyIP)
 	var hrd_list world_view.HeardFromList = world_view.MakeHeardFromList(alv_list.MyIP)
 	
@@ -58,7 +67,11 @@ func main() {
 		panic(err)
 	}
 
-	driver.Init("localhost:15657", numFloors)
+	serverPort := 15656 + myID 
+	serverPortString := fmt.Sprintf("%d", serverPort)
+	driver.Init("localhost:"+serverPortString, numFloors)
+
+	// driver.Init("localhost:15657", numFloors)
 
 
 	go driver.PollButtons(drv_buttons)
@@ -78,13 +91,15 @@ func main() {
 		select {
 		case a := <-drv_buttons:
 
+			fmt.Println("A button pressed")
+
 			wld_view.SeenRequestAtFloor(alv_list.MyIP, a.Floor, a.Button)
 
 		case a := <-drv_floors:
 
 			tmr_watchdog.Timer_start(watchdogTime)
 			fsm.Fsm_onFloorArrival(&elev, &wld_view, alv_list.MyIP, &tmr_door, a)
-			wld_view.PrintWorldView()
+			// wld_view.PrintWorldView()
 
 		case a := <-drv_obstr:
 			fmt.Printf("DOOR OBSTRUCTED: %t\n", a)

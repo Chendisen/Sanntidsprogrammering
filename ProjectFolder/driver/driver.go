@@ -193,17 +193,6 @@ func toBool(a byte) bool {
 	return b
 }
 
-func IntToBool(a int) bool {
-	return a != 0
-}
-
-func BoolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
-}
-
 func Driver_dirn_toString(d MotorDirection) string {
 	switch d {
 	case MD_Up:
