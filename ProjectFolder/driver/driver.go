@@ -193,7 +193,7 @@ func toBool(a byte) bool {
 	return b
 }
 
-func Driver_dirn_toString(d MotorDirection) string {
+func DriverDirectionToString(d MotorDirection) string {
 	switch d {
 	case MD_Up:
 		return "up"

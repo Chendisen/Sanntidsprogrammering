@@ -26,8 +26,8 @@ type Elevator struct {
 	DoorObstructed											bool
 }
 
-func Eb_toString(eb ElevatorBehaviour) string {
-	switch eb {
+func ElevatorBehaviourToString(elevatorBehaviour ElevatorBehaviour) string {
+	switch elevatorBehaviour {
 	case EB_Idle:
 		return "idle"
 	case EB_DoorOpen:
@@ -39,9 +39,9 @@ func Eb_toString(eb ElevatorBehaviour) string {
 	}
 }
 
-func Elevator_print(es Elevator) {
+func Elevator_print(elev Elevator) {
 	fmt.Println("  +-----------------------+")
-	fmt.Printf("  |floor = %2d          |\n  |dirn  = %12s|\n  |behav = %12s|\n", es.Floor, driver.Driver_dirn_toString(es.Dirn),Eb_toString(es.Behaviour))
+	fmt.Printf("  |floor = %2d          |\n  |dirn  = %12s|\n  |behav = %12s|\n", elev.Floor, driver.DriverDirectionToString(elev.Dirn), ElevatorBehaviourToString(elev.Behaviour))
 	fmt.Println("  +-----------------------+")
 	fmt.Println("  | up | dn | cab |")
 	for floor := driver.N_FLOORS - 1; floor >= 0; floor -- {
@@ -51,7 +51,7 @@ func Elevator_print(es Elevator) {
 				(floor == 0 && btn == int(driver.BT_HallDown))) {
 				fmt.Println("|     ")
 			} else {
-				switch es.GetElevatorRequest(floor, btn) {
+				switch elev.GetElevatorRequest(floor, btn) {
 				case 1:
 					fmt.Println("|  #  ")
 				case 0:
@@ -74,10 +74,10 @@ func Elevator_uninitialized() Elevator {
 	}
 }
 
-func (es *Elevator) GetElevatorRequest(floor int, button int) int {
-	return (*es).Request[floor][button]
+func (elev *Elevator) GetElevatorRequest(floor int, button int) int {
+	return (*elev).Request[floor][button]
 }
 
-func (es *Elevator) SetElevatorRequest(floor int, button int, value int) {
-	(*es).Request[floor][button] = value
+func (elev *Elevator) SetElevatorRequest(floor int, button int, value int) {
+	(*elev).Request[floor][button] = value
 }

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type AliveList struct {
+type NetworkOverview struct {
 	MyIP       string
 	NodesAlive []string
 	Master     string
@@ -44,8 +44,8 @@ type WorldView struct {
 	LastHeard      map[string]string         `json:"lastHeard"`
 }
 
-func (os OrderStatus) ToBool() bool {
-	return os == Order_Confirmed || os == Order_Finished
+func (orderStatus OrderStatus) ToBool() bool {
+	return orderStatus == Order_Confirmed || orderStatus == Order_Finished
 }
 
 //ElevatorState functions
@@ -56,93 +56,93 @@ func MakeElevatorState() *ElevatorState {
 	return newElevator
 }
 
-func (es ElevatorState) GetCabRequests() []bool {
+func (elevatorState ElevatorState) GetCabRequests() []bool {
 	cabRequests := make([]bool, driver.N_FLOORS)
-	for i, val := range es.CabRequests {
+	for i, val := range elevatorState.CabRequests {
 		cabRequests[i] = val.ToBool()
 	}
 	return cabRequests
 }
 
-func (es *ElevatorState) SetBehaviour(b string) {
-	es.Behaviour = b
+func (elevatorState *ElevatorState) SetBehaviour(behaviour string) {
+	elevatorState.Behaviour = behaviour
 }
 
-func (es *ElevatorState) SetFloor(f int) {
-	es.Floor = f
+func (elevatorState *ElevatorState) SetFloor(floor int) {
+	elevatorState.Floor = floor
 }
 
-func (es *ElevatorState) SetDirection(d string) {
-	es.Direction = d
+func (elevatorState *ElevatorState) SetDirection(direction string) {
+	elevatorState.Direction = direction
 }
 
-func (es *ElevatorState) SeenCabRequestAtFloor(f int) {
-	es.CabRequests[f] = Order_Unconfirmed
+func (elevatorState *ElevatorState) SeenCabRequestAtFloor(floor int) {
+	elevatorState.CabRequests[floor] = Order_Unconfirmed
 }
 
-func (es *ElevatorState) SetCabRequestAtFloor(f int) {
-	es.CabRequests[f] = Order_Confirmed
+func (elevatorState *ElevatorState) SetCabRequestAtFloor(floor int) {
+	elevatorState.CabRequests[floor] = Order_Confirmed
 }
 
-func (es *ElevatorState) FinishedCabRequestAtFloor(f int) {
-	es.CabRequests[f] = Order_Finished
+func (elevatorState *ElevatorState) FinishedCabRequestAtFloor(floor int) {
+	elevatorState.CabRequests[floor] = Order_Finished
 }
 
-func (es *ElevatorState) ClearCabRequestAtFloor(f int) {
-	es.CabRequests[f] = Order_Empty
+func (elevatorState *ElevatorState) ClearCabRequestAtFloor(floor int) {
+	elevatorState.CabRequests[floor] = Order_Empty
 }
 
-func (es *ElevatorState) SetAvailabilityStatus(availability_status bool) {
-	es.Available = availability_status
+func (elevatorState *ElevatorState) SetAvailabilityStatus(availabilityStatus bool) {
+	elevatorState.Available = availabilityStatus
 }
 
-func (es *ElevatorState) GetAvailabilityStatus() bool {
-	return es.Available
+func (elevatorState *ElevatorState) GetAvailabilityStatus() bool {
+	return elevatorState.Available
 }
 
 //WordlView functions
 
 //Requests
 
-func (wv *WorldView) SetBehaviour(myIP string, eb elevator.ElevatorBehaviour) {
-	wv.States[myIP].SetBehaviour(elevator.Eb_toString(eb))
+func (worldView *WorldView) SetBehaviour(myIP string, elevatorBehaviour elevator.ElevatorBehaviour) {
+	worldView.States[myIP].SetBehaviour(elevator.ElevatorBehaviourToString(elevatorBehaviour))
 }
 
-func (wv *WorldView) SetFloor(myIP string, f int) {
-	wv.States[myIP].SetFloor(f)
+func (worldView *WorldView) SetFloor(myIP string, floor int) {
+	worldView.States[myIP].SetFloor(floor)
 }
 
-func (wv *WorldView) SetDirection(myIP string, md driver.MotorDirection) {
-	wv.States[myIP].SetDirection(driver.Driver_dirn_toString(md))
+func (worldView *WorldView) SetDirection(myIP string, motorDirection driver.MotorDirection) {
+	worldView.States[myIP].SetDirection(driver.DriverDirectionToString(motorDirection))
 }
 
-func (wv *WorldView) SeenRequestAtFloor(myIP string, f int, b driver.ButtonType) {
-	if b == driver.BT_Cab {
-		if wv.States[myIP].CabRequests[f] == Order_Empty {
-			wv.States[myIP].SeenCabRequestAtFloor(f)
+func (worldView *WorldView) SeenRequestAtFloor(myIP string, floor int, button driver.ButtonType) {
+	if button == driver.BT_Cab {
+		if worldView.States[myIP].CabRequests[floor] == Order_Empty {
+			worldView.States[myIP].SeenCabRequestAtFloor(floor)
 		}
 	} else {
-		if wv.HallRequests[f][b] == Order_Empty {
-			wv.HallRequests[f][b] = Order_Unconfirmed
+		if worldView.HallRequests[floor][button] == Order_Empty {
+			worldView.HallRequests[floor][button] = Order_Unconfirmed
 		}
 	}
 }
 
-func (wv *WorldView) FinishedRequestAtFloor(myIP string, f int, b driver.ButtonType) {
-	if b == driver.BT_Cab {
-		if wv.States[myIP].CabRequests[f] != Order_Empty {
-			wv.States[myIP].FinishedCabRequestAtFloor(f)
+func (worldView *WorldView) FinishedRequestAtFloor(myIP string, floor int, button driver.ButtonType) {
+	if button == driver.BT_Cab {
+		if worldView.States[myIP].CabRequests[floor] != Order_Empty {
+			worldView.States[myIP].FinishedCabRequestAtFloor(floor)
 		}
 	} else {
-		if wv.HallRequests[f][b] != Order_Empty {
-			wv.HallRequests[f][b] = Order_Finished
+		if worldView.HallRequests[floor][button] != Order_Empty {
+			worldView.HallRequests[floor][button] = Order_Finished
 		}
 	}
 }
 
-func (wv WorldView) GetHallRequests() [][2]bool {
-	var hall_requests [][2]bool = make([][2]bool, len(wv.HallRequests))
-	for floor, buttons := range wv.HallRequests {
+func (worldView WorldView) GetHallRequests() [][2]bool {
+	var hall_requests [][2]bool = make([][2]bool, len(worldView.HallRequests))
+	for floor, buttons := range worldView.HallRequests {
 		for button, value := range buttons {
 			hall_requests[floor][button] = value.ToBool()
 		}
@@ -150,52 +150,52 @@ func (wv WorldView) GetHallRequests() [][2]bool {
 	return hall_requests
 }
 
-func (wv *WorldView) GetMyAssignedOrders(myIP string) [][2]bool {
-	return wv.AssignedOrders[myIP]
+func (worldView *WorldView) GetMyAssignedOrders(myIP string) [][2]bool {
+	return worldView.AssignedOrders[myIP]
 }
 
-func (wv *WorldView) GetMyCabRequests(myIP string) []bool {
-	return wv.States[myIP].GetCabRequests()
+func (worldView *WorldView) GetMyCabRequests(myIP string) []bool {
+	return worldView.States[myIP].GetCabRequests()
 }
 
-func (wv *WorldView) SetMyAvailabilityStatus(myIP string, availability_status bool) {
-	wv.States[myIP].SetAvailabilityStatus(availability_status)
+func (worldView *WorldView) SetMyAvailabilityStatus(myIP string, availabilityStatus bool) {
+	worldView.States[myIP].SetAvailabilityStatus(availabilityStatus)
 }
 
-func (wv *WorldView) GetMyAvailabilityStatus(myIP string) bool {
-	return wv.States[myIP].GetAvailabilityStatus()
+func (worldView *WorldView) GetMyAvailabilityStatus(myIP string) bool {
+	return worldView.States[myIP].GetAvailabilityStatus()
 }
 
 
 //Nodes
 
-func (wv *WorldView) ShouldAddNode(IP string) bool {
-	if _, isPresent := wv.States[IP]; !isPresent {
+func (worldView *WorldView) ShouldAddNode(IP string) bool {
+	if _, isPresent := worldView.States[IP]; !isPresent {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (wv *WorldView) AddNodeToWorldView(IP string) {
-	wv.States[IP] = MakeElevatorState()
-	wv.AssignedOrders[IP] = make([][2]bool, driver.N_FLOORS)
+func (worldView *WorldView) AddNodeToWorldView(IP string) {
+	worldView.States[IP] = MakeElevatorState()
+	worldView.AssignedOrders[IP] = make([][2]bool, driver.N_FLOORS)
 }
 
-func (wv *WorldView) AddNewNodes(newView WorldView) {
+func (worldView *WorldView) AddNewNodes(newView WorldView) {
 	for IP := range newView.States {
-		if wv.ShouldAddNode(IP) {
-			wv.AddNodeToWorldView(IP)
+		if worldView.ShouldAddNode(IP) {
+			worldView.AddNodeToWorldView(IP)
 		}
 	}
 }
 
 //Updates
 
-func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, sendTime string, myIP string, al AliveList, hfl *HeardFromList, lightArray *[][3]bool, ord_updated chan<- bool, wld_updated chan<- bool) {
+func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, sendTime string, myIP string, networkOverview NetworkOverview, heardFromList *HeardFromList, lightArray *[][3]bool, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	if senderIP == myIP {
-		if !al.AmIMaster() {
+		if !networkOverview.AmIMaster() {
 			return
 		}
 	}
@@ -206,15 +206,15 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	var wld_updated_flag bool = false
 	var ord_updated_flag bool = false
 
-	for f, floor := range newView.HallRequests {
-		for b, buttonStatus := range floor {
-			UpdateSynchronisedRequests(&currentView.HallRequests[f][b], buttonStatus, hfl, al, lightArray, f, b, senderIP, &wld_updated_flag, &ord_updated_flag, "")
+	for floor, buttons := range newView.HallRequests {
+		for button, buttonStatus := range buttons {
+			UpdateSynchronisedRequests(&currentView.HallRequests[floor][button], buttonStatus, heardFromList, networkOverview, lightArray, floor, button, senderIP, &wld_updated_flag, &ord_updated_flag, "")
 		}
 	}
 
 	for IP, state := range newView.States {
-		for f, floorStatus := range state.CabRequests {
-			UpdateSynchronisedRequests(&currentView.States[IP].CabRequests[f], floorStatus, hfl, al, lightArray, f, driver.BT_Cab, senderIP, &wld_updated_flag, &ord_updated_flag, IP)
+		for floor, floorStatus := range state.CabRequests {
+			UpdateSynchronisedRequests(&currentView.States[IP].CabRequests[floor], floorStatus, heardFromList, networkOverview, lightArray, floor, driver.BT_Cab, senderIP, &wld_updated_flag, &ord_updated_flag, IP)
 		}
 	}
 
@@ -228,7 +228,7 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 		currentView.States[senderIP].Available = newView.States[senderIP].Available
 	}
 
-	if (senderIP == al.Master && sendTime > currentView.LastHeard[senderIP]) {
+	if (senderIP == networkOverview.Master && sendTime > currentView.LastHeard[senderIP]) {
 		currentView.AssignedOrders = newView.AssignedOrders
 	}
 
@@ -244,20 +244,20 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 }
 
 func MakeWorldView(myIP string) WorldView {
-	var wv WorldView = WorldView{States: make(map[string]*ElevatorState), AssignedOrders: make(map[string][][2]bool), LastHeard: make(map[string]string)}
+	var worldView WorldView = WorldView{States: make(map[string]*ElevatorState), AssignedOrders: make(map[string][][2]bool), LastHeard: make(map[string]string)}
 
 	for i := 0; i < driver.N_FLOORS; i++ {
-		wv.HallRequests = append(wv.HallRequests, [2]OrderStatus{Order_Empty, Order_Empty})
+		worldView.HallRequests = append(worldView.HallRequests, [2]OrderStatus{Order_Empty, Order_Empty})
 	}
 
-	wv.States[myIP] = MakeElevatorState()
-	wv.AssignedOrders[myIP] = make([][2]bool, driver.N_FLOORS)
+	worldView.States[myIP] = MakeElevatorState()
+	worldView.AssignedOrders[myIP] = make([][2]bool, driver.N_FLOORS)
 
-	return wv
+	return worldView
 }
 
-func (wv WorldView) PrintWorldView() {
-	/*for IP, states := range wv.States {
+func (worldView WorldView) PrintWorldView() {
+	/*for IP, states := range worldView.States {
 
 		fmt.Printf("State of %s: \n", IP)
 		fmt.Printf("		Floor: %d\n", states.Floor)
@@ -268,29 +268,29 @@ func (wv WorldView) PrintWorldView() {
 	}*/
 
 	/*fmt.Println("Hall requests: ")
-	for f, floor := range wv.HallRequests {
-		fmt.Printf("Floor: %d\n", f)
-		for b, buttonStatus := range floor {
-			fmt.Printf("	Button: %d, Status: %d\n", b, buttonStatus)
+	for floor, floor := range worldView.HallRequests {
+		fmt.Printf("Floor: %d\n", floor)
+		for button, buttonStatus := range floor {
+			fmt.Printf("	Button: %d, Status: %d\n", button, buttonStatus)
 		}
 	}
 
 	fmt.Println("Cab requests: ")
-	for IP,state := range wv.States {
+	for IP,state := range worldView.States {
 		fmt.Printf("	Elevator: %s\n", IP)
-		for f,buttonStatus := range state.CabRequests {
-			fmt.Printf("		Floor: %d, Status: %d\n", f, buttonStatus)
+		for floor,buttonStatus := range state.CabRequests {
+			fmt.Printf("		Floor: %d, Status: %d\n", floor, buttonStatus)
 		}
 		fmt.Println("")
 	}*/
 
 	fmt.Println("Assigned orders: ")
-	for IP, orders := range wv.AssignedOrders {
+	for IP, orders := range worldView.AssignedOrders {
 		fmt.Printf("	Elevator: %s\n", IP)
-		for f, buttons := range orders {
-			fmt.Printf("		Floor: %d", f)
-			for b, value := range buttons {
-				fmt.Printf("		Button: %d, Value: %t", b, value)
+		for floor, buttons := range orders {
+			fmt.Printf("		Floor: %d", floor)
+			for button, value := range buttons {
+				fmt.Printf("		Button: %d, Value: %t", button, value)
 			}
 			fmt.Print("\n")
 		}
@@ -298,25 +298,25 @@ func (wv WorldView) PrintWorldView() {
 
 }
 
-//AliveList funcitons
+//NetworkOverview funcitons
 
-func MakeAliveList() AliveList {
+func MakeNetworkOverview() NetworkOverview {
 	myIP, _ := localip.LocalIP()
 	//myIP := fmt.Sprintf("%d", os.Getpid())
 	nodesAlive := make([]string, 1)
 	nodesAlive[0] = myIP
-	return AliveList{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
+	return NetworkOverview{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
 }
 
-func (al AliveList) AmIMaster() bool {
-	if al.Master == al.MyIP {
+func (networkOverview NetworkOverview) AmIMaster() bool {
+	if networkOverview.Master == networkOverview.MyIP {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (al *AliveList) ShouldUpdateList(p peers.PeerUpdate) bool {
+func (networkOverview *NetworkOverview) ShouldUpdateList(p peers.PeerUpdate) bool {
 	if len(p.Lost) != 0 {
 		return true
 	} else if len(p.New) != 0 {
@@ -326,12 +326,12 @@ func (al *AliveList) ShouldUpdateList(p peers.PeerUpdate) bool {
 	}
 }
 
-func (al *AliveList) ShouldUpdateMaster(p peers.PeerUpdate) (bool, string) {
+func (networkOverview *NetworkOverview) ShouldUpdateMaster(p peers.PeerUpdate) (bool, string) {
 	var shouldUpdate bool = false
 	var newMaster string = ""
 	if len(p.Lost) != 0 {
 		for _, lostNode := range p.Lost {
-			if lostNode == al.Master {
+			if lostNode == networkOverview.Master {
 				shouldUpdate = true
 				for _, candidate := range p.Peers {
 					if candidate > newMaster {
@@ -341,7 +341,7 @@ func (al *AliveList) ShouldUpdateMaster(p peers.PeerUpdate) (bool, string) {
 				return shouldUpdate, newMaster
 			}
 		}
-	} else if p.New > al.Master {
+	} else if p.New > networkOverview.Master {
 		newMaster = p.New
 		shouldUpdate = true
 		return shouldUpdate, newMaster
@@ -349,22 +349,22 @@ func (al *AliveList) ShouldUpdateMaster(p peers.PeerUpdate) (bool, string) {
 	return shouldUpdate, newMaster
 }
 
-func (al *AliveList) UpdateMaster(newMaster string) {
-	al.Master = newMaster
+func (networkOverview *NetworkOverview) UpdateMaster(newMaster string) {
+	networkOverview.Master = newMaster
 }
 
-func (al *AliveList) UpdateAliveList(p peers.PeerUpdate) {
-	al.NodesAlive = p.Peers
-	shouldUpdateMaster, newMaster := al.ShouldUpdateMaster(p)
+func (networkOverview *NetworkOverview) UpdateNetworkOverview(p peers.PeerUpdate) {
+	networkOverview.NodesAlive = p.Peers
+	shouldUpdateMaster, newMaster := networkOverview.ShouldUpdateMaster(p)
 
 	if shouldUpdateMaster {
-		al.UpdateMaster(newMaster)
+		networkOverview.UpdateMaster(newMaster)
 	}
 }
 
-func (al AliveList) Print() {
+func (networkOverview NetworkOverview) Print() {
 	fmt.Printf("Current alive nodes: \n")
-	for _, IP := range al.NodesAlive {
+	for _, IP := range networkOverview.NodesAlive {
 		fmt.Printf("A node	%s\n", IP)
 	}
 	fmt.Println("")
@@ -378,19 +378,19 @@ func MakeHeardFromList(myIP string) HeardFromList {
 	return heardFromList
 }
 
-func (hfl HeardFromList) ShouldResetAtFloorButton(f int, b int, al AliveList) bool {
+func (heardFromList HeardFromList) ShouldResetAtFloorButton(floor int, button int, networkOverview NetworkOverview) bool {
 	var count int = 0
-	for _, buttonArray := range hfl.HeardFrom {
-		if buttonArray[f][b] {
+	for _, buttonArray := range heardFromList.HeardFrom {
+		if buttonArray[floor][button] {
 			count++
 		}
 	}
-	return count == len(al.NodesAlive)
+	return count == len(networkOverview.NodesAlive)
 }
 
-func (hfl HeardFromList) ShouldAddNode(ip string) bool {
+func (heardFromList HeardFromList) ShouldAddNode(ip string) bool {
 	var check bool = true
-	for IP := range hfl.HeardFrom {
+	for IP := range heardFromList.HeardFrom {
 		if IP == ip {
 			check = false
 			return check
@@ -399,55 +399,55 @@ func (hfl HeardFromList) ShouldAddNode(ip string) bool {
 	return check
 }
 
-func (hfl *HeardFromList) SetHeardFrom(alv_list AliveList, msgIP string, f int, b int) {
-	for _,id := range alv_list.NodesAlive {
+func (heardFromList *HeardFromList) SetHeardFrom(networkOverview NetworkOverview, msgIP string, floor int, button int) {
+	for _,id := range networkOverview.NodesAlive {
 		if id == msgIP{
-			hfl.HeardFrom[msgIP][f][b] = true
+			heardFromList.HeardFrom[msgIP][floor][button] = true
 			return
 		}
 	}
 }
 
-func (hfl *HeardFromList) GetHeardFrom(alv_list AliveList, msgIP string, f int, b int) bool {
-	for _,id := range alv_list.NodesAlive {
+func (heardFromList *HeardFromList) GetHeardFrom(networkOverview NetworkOverview, msgIP string, floor int, button int) bool {
+	for _,id := range networkOverview.NodesAlive {
 		if id == msgIP{
-			return hfl.HeardFrom[msgIP][f][b]
+			return heardFromList.HeardFrom[msgIP][floor][button]
 		}
 	}
 	return false
 }
 
-func (hfl *HeardFromList) CheckHeardFromAll(alv_list AliveList, f int, b int) bool {
+func (heardFromList *HeardFromList) CheckHeardFromAll(networkOverview NetworkOverview, floor int, button int) bool {
 	var heard_from_all bool = true
-	for _, alv_nodes := range alv_list.NodesAlive {
-		heard_from_all = heard_from_all && hfl.HeardFrom[alv_nodes][f][b]
+	for _, alv_nodes := range networkOverview.NodesAlive {
+		heard_from_all = heard_from_all && heardFromList.HeardFrom[alv_nodes][floor][button]
 	}
 	return heard_from_all
 }
 
-func (hfl *HeardFromList) ClearHeardFrom(f int, b int) {
-	for _, hfl_buttons := range hfl.HeardFrom {
-		hfl_buttons[f][b] = false
+func (heardFromList *HeardFromList) ClearHeardFrom(floor int, button int) {
+	for _, hfl_buttons := range heardFromList.HeardFrom {
+		hfl_buttons[floor][button] = false
 	}
 }
 
-func (hfl *HeardFromList) AddNodeToList(newIP string) {
-	hfl.HeardFrom[newIP] = make([][3]bool, driver.N_FLOORS)
+func (heardFromList *HeardFromList) AddNodeToList(newIP string) {
+	heardFromList.HeardFrom[newIP] = make([][3]bool, driver.N_FLOORS)
 }
 
-func (hfl HeardFromList) Print() {
+func (heardFromList HeardFromList) Print() {
 	fmt.Println("We have heard from: ")
-	for IP := range hfl.HeardFrom {
+	for IP := range heardFromList.HeardFrom {
 		fmt.Printf("	%s\n", IP)
 	}
 	fmt.Printf("")
 
-	for IP, table := range hfl.HeardFrom {
+	for IP, table := range heardFromList.HeardFrom {
 		fmt.Printf("Elevator: %s \n", IP)
-		for f, buttons := range table {
-			fmt.Printf("	Floor: %d", f)
-			for b := range buttons {
-				fmt.Printf("	Button: %d", b)
+		for floor, buttons := range table {
+			fmt.Printf("	Floor: %d", floor)
+			for button := range buttons {
+				fmt.Printf("	Button: %d", button)
 			}
 			fmt.Print("\n")
 		}
@@ -455,35 +455,35 @@ func (hfl HeardFromList) Print() {
 }
 
 // Big switch case for update world view
-func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *HeardFromList, alv_list AliveList, light_array *[][3]bool, f int, b int, rcd_IP string, wld_updated_flag *bool, ord_updated_flag *bool, cabIP string) {
+func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, heardFromList *HeardFromList, networkOverview NetworkOverview, lightArray *[][3]bool, floor int, button int, rcd_IP string, wld_updated_flag *bool, ord_updated_flag *bool, cabIP string) {
 	switch rcd_req {
 	case Order_Empty: // No requests
 		if *cur_req == Order_Finished {
 			// TODO: Channel that turns off the lights
-			if b == driver.BT_Cab && alv_list.MyIP == cabIP {
-				(*light_array)[f][b] = false
-			} else if b != driver.BT_Cab {
-				(*light_array)[f][b] = false
+			if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
+				(*lightArray)[floor][button] = false
+			} else if button != driver.BT_Cab {
+				(*lightArray)[floor][button] = false
 			}
 			*ord_updated_flag = true
-			hfl.ClearHeardFrom(f, b)
+			heardFromList.ClearHeardFrom(floor, button)
 			*cur_req = Order_Empty
 		}
 	case Order_Unconfirmed: // Unconfirmed requests
 		if *cur_req == Order_Empty || *cur_req == Order_Unconfirmed {
 			*cur_req = Order_Unconfirmed
-			hfl.SetHeardFrom(alv_list, rcd_IP, f, b)
-			if alv_list.AmIMaster() {
-				if hfl.CheckHeardFromAll(alv_list, f, b) {
+			heardFromList.SetHeardFrom(networkOverview, rcd_IP, floor, button)
+			if networkOverview.AmIMaster() {
+				if heardFromList.CheckHeardFromAll(networkOverview, floor, button) {
 					// TODO: Channel for assigning orders
 					// TODO: Channel for turning on the lights
-					if b == driver.BT_Cab && alv_list.MyIP == cabIP {
-						(*light_array)[f][b] = true
-					} else if b != driver.BT_Cab {
-						(*light_array)[f][b] = true
+					if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
+						(*lightArray)[floor][button] = true
+					} else if button != driver.BT_Cab {
+						(*lightArray)[floor][button] = true
 					}
 					*wld_updated_flag = true
-					hfl.ClearHeardFrom(f, b)
+					heardFromList.ClearHeardFrom(floor, button)
 					*cur_req = Order_Confirmed
 				}
 			}
@@ -492,29 +492,29 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, hfl *
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Empty{
 			// TODO: Channel for updating assigned orders
 			// TODO: Channel for turning on lights
-			if b == driver.BT_Cab && alv_list.MyIP == cabIP {
-				(*light_array)[f][b] = true
-			} else if b != driver.BT_Cab {
-				(*light_array)[f][b] = true
+			if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
+				(*lightArray)[floor][button] = true
+			} else if button != driver.BT_Cab {
+				(*lightArray)[floor][button] = true
 			}
 			*ord_updated_flag = true
-			hfl.ClearHeardFrom(f, b)
+			heardFromList.ClearHeardFrom(floor, button)
 			*cur_req = Order_Confirmed
 		}
 	case Order_Finished: // Finished requests
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Confirmed || *cur_req == Order_Finished {
 			*cur_req = Order_Finished
-			hfl.SetHeardFrom(alv_list, rcd_IP, f, b)
-			if alv_list.AmIMaster() {
-				if hfl.CheckHeardFromAll(alv_list, f, b) {
+			heardFromList.SetHeardFrom(networkOverview, rcd_IP, floor, button)
+			if networkOverview.AmIMaster() {
+				if heardFromList.CheckHeardFromAll(networkOverview, floor, button) {
 					// TODO: Channel for turning off lights
-					if b == driver.BT_Cab && alv_list.MyIP == cabIP {
-						(*light_array)[f][b] = false
-					} else if b != driver.BT_Cab {
-						(*light_array)[f][b] = false
+					if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
+						(*lightArray)[floor][button] = false
+					} else if button != driver.BT_Cab {
+						(*lightArray)[floor][button] = false
 					}
 					*wld_updated_flag = true
-					hfl.ClearHeardFrom(f, b)
+					heardFromList.ClearHeardFrom(floor, button)
 					*cur_req = Order_Empty
 				}
 			}
@@ -530,13 +530,13 @@ func SetAllLights(lightArray [][3]bool) {
 	}
 }
 
-func InitLights(lightArray *[][3]bool, myIP string, wld_view WorldView){
-	for floor, buttons := range wld_view.GetHallRequests() {
+func InitLights(lightArray *[][3]bool, myIP string, worldView WorldView){
+	for floor, buttons := range worldView.GetHallRequests() {
 		for button, value := range buttons {
 			(*lightArray)[floor][button] = value
 		}
 	}
-	for floor,value := range wld_view.GetMyCabRequests(myIP) {
+	for floor,value := range worldView.GetMyCabRequests(myIP) {
 		(*lightArray)[floor][driver.BT_Cab] = value
 	}
 }

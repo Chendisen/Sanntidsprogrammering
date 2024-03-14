@@ -20,7 +20,7 @@ type HRAInput struct {
 	States       map[string]HRAElevState `json:"states"`
 }
 
-func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList) {
+func AssignOrders(worldView *world_view.WorldView, networkOverview *world_view.NetworkOverview) {
 
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -33,9 +33,9 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 	}
 
 	var states map[string]HRAElevState = make(map[string]HRAElevState)
-	for _, alive_elevator := range alv_list.NodesAlive {
-		if wld_view.States[alive_elevator].GetAvailabilityStatus(){
-			state := wld_view.States[alive_elevator]
+	for _, alive_elevator := range networkOverview.NodesAlive {
+		if worldView.States[alive_elevator].GetAvailabilityStatus(){
+			state := worldView.States[alive_elevator]
 			states[alive_elevator] = HRAElevState{
 				Behavior:    state.Behaviour,
 				Floor:       state.Floor,
@@ -50,12 +50,12 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 	}
 
 	input := HRAInput{
-		HallRequests: wld_view.GetHallRequests(),
+		HallRequests: worldView.GetHallRequests(),
 		States:       states,
 	}
 
 	// input.PrintInput()
-	// wld_view.PrintWorldView()
+	// worldView.PrintWorldView()
 
 
 	jsonBytes, err := json.Marshal(input)
@@ -74,8 +74,8 @@ func AssignOrders(wld_view *world_view.WorldView, alv_list *world_view.AliveList
 		panic(err)
 	}
 
-	wld_view.AssignedOrders = *output
-	// wld_view.PrintWorldView()
+	worldView.AssignedOrders = *output
+	// worldView.PrintWorldView()
 }
 
 func (inp HRAInput) PrintInput() {

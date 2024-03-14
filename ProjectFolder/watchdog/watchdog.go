@@ -5,17 +5,15 @@ import (
 	"Sanntid/timer"
 )
 
-const watchdogTime float64 = 5
-
-func Watchdog(tmr *timer.Timer, es *elevator.Elevator, dead chan<- bool) {
+func Watchdog(tmr *timer.Timer, elevState *elevator.Elevator, dead chan<- bool) {
 	
 	for {
-		if tmr.Timer_timedOut(watchdogTime) {
-			if es.Behaviour == elevator.EB_Moving && !es.DoorObstructed{
+		if tmr.Timer_timedOut(timer.WATCHDOG_TimeoutTime) {
+			if elevState.Behaviour == elevator.EB_Moving && !elevState.DoorObstructed{
 				tmr.Timer_stop()
 				dead <- true
 			} else {
-				tmr.Timer_start(watchdogTime)
+				tmr.Timer_start(timer.WATCHDOG_TimeoutTime)
 			}
 		}
 	}

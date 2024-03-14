@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const DOOR_OPEN_TimeoutTime float64 = 3
+const WATCHDOG_TimeoutTime float64 = 5
+const PROCESS_PAIR_TimeoutTime float64 = 3
+
 type Timer struct {
 	timerEndTime float64
 	timerActive  bool

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func StartCommunication(myIP string, myView *world_view.WorldView, al *world_view.AliveList, hfl *world_view.HeardFromList, lgt_array *[][3]bool, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication(myIP string, myView *world_view.WorldView, al *world_view.NetworkOverview, hfl *world_view.HeardFromList, lightArray *[][3]bool, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	time.Sleep(2 * time.Second)
 
@@ -41,7 +41,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 		select {
 		case p := <-peerUpdateCh:
 
-			al.UpdateAliveList(p)
+			al.UpdateNetworkOverview(p)
 			if len(p.New) > 0 {
 				if myView.ShouldAddNode(p.New){
 					myView.AddNodeToWorldView(p.New)
@@ -60,7 +60,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, al *world_vie
 			fmt.Printf((" Am i master?:  %t\n"), (*al).AmIMaster())
 
 		case recievedMsg := <-msgRx:
-			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, al.MyIP, *al, hfl, lgt_array, ord_updated, wld_updated)
+			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, al.MyIP, *al, hfl, lightArray, ord_updated, wld_updated)
 		}
 	}
 }

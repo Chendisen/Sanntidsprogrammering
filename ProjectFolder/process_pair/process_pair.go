@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-const ProcessPairDuration float64 = 3
-
 func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer, startNew chan<- bool) {
 
 	time.Sleep(2 * time.Second)
@@ -27,8 +25,8 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 	fmt.Println("Started listening to primary")
 
 	timeOut := make(chan bool)
-	tmr.Timer_start(ProcessPairDuration)
-	go tmr.TimeOut(ProcessPairDuration, timeOut)
+	tmr.Timer_start(timer.PROCESS_PAIR_TimeoutTime)
+	go tmr.TimeOut(timer.PROCESS_PAIR_TimeoutTime, timeOut)
 
 	for {
 		select {
@@ -37,7 +35,7 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 			if len(p.Lost) > 0  {
 				for _,IP := range p.Lost {
 					if IP == myIP {
-						tmr.Timer_start(ProcessPairDuration)
+						tmr.Timer_start(timer.PROCESS_PAIR_TimeoutTime)
 						break
 					}
 				}
