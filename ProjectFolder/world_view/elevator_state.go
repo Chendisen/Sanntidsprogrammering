@@ -56,6 +56,6 @@ func (elevatorState *ElevatorState) SetAvailabilityStatus(availabilityStatus boo
 	elevatorState.Available = availabilityStatus
 }
 
-func (elevatorState *ElevatorState) GetAvailabilityStatus() bool {
+func (elevatorState ElevatorState) GetAvailabilityStatus() bool {
 	return elevatorState.Available
 }

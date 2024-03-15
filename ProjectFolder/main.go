@@ -1,15 +1,16 @@
 package main
 
 import (
+	"Sanntid/communication"
 	"Sanntid/driver"
 	"Sanntid/elevator"
 	"Sanntid/fsm"
-	"Sanntid/communication"
 	"Sanntid/order_assigner"
 	"Sanntid/process_pair"
+	. "Sanntid/resources"
 	"Sanntid/timer"
-	"Sanntid/timer/watchdog"
 	"Sanntid/timer/door_open_timer"
+	"Sanntid/timer/watchdog"
 	"Sanntid/world_view"
 	"flag"
 	"fmt"
@@ -85,7 +86,7 @@ func main() {
 	*/
 
 	inc_message := make(chan world_view.StandardMessage, 10)
-	upd_request := make(chan world_view.UpdateRequest, 20)
+	upd_request := make(chan UpdateRequest, 20)
 
 
 	go driver.PollButtons(drv_buttons)
@@ -111,7 +112,7 @@ func main() {
 			fmt.Println("A button pressed")
 
 			// see_request<- a
-			upd_request <- world_view.GenerateUpdateRequest(world_view.SeenRequestAtFloor, a)
+			upd_request <- GenerateUpdateRequest(SeenRequestAtFloor, a)
 			// worldView.SeenRequestAtFloor(networkOverview.MyIP, a.Floor, a.Button)
 			
 
@@ -125,7 +126,7 @@ func main() {
 			fmt.Printf("DOOR OBSTRUCTED: %t\n", a)
 			elev.DoorObstructed = a
 			// set_availability<- !a
-			upd_request <- world_view.GenerateUpdateRequest(world_view.SetMyAvailabilityStatus, !a)
+			upd_request <- GenerateUpdateRequest(SetMyAvailabilityStatus, !a)
 			// worldView.SetMyAvailabilityStatus(networkOverview.MyIP, !a)
 			go func() {
 				if networkOverview.AmIMaster() {
@@ -171,7 +172,7 @@ func main() {
 
 			go func() {	
 				if networkOverview.AmIMaster() {
-					order_assigner.AssignOrders(&worldView, &networkOverview)
+					order_assigner.AssignOrders(worldView, networkOverview, upd_request)
 				}
 				ord_updated <- true
 			} ()

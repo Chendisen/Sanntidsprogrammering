@@ -5,6 +5,31 @@ import (
 	"time"
 )
 
+type RequestType int 
+type TimerType int
+
+const (
+	Start RequestType = iota
+	Stop
+	TimedOut
+)
+
+const (
+	DoorTimer TimerType = iota
+	NetworkTimer
+	ProcessPairTimer
+	WatchdogTimer
+)
+
+type TimerRequest struct{
+	RequestType RequestType
+	TimerType TimerType
+}
+
+func GenerateTimerRequest(reqType RequestType, tmrType TimerType) TimerRequest{
+	return TimerRequest{RequestType: reqType, TimerType: tmrType}
+}
+
 const DOOR_OPEN_TimeoutTime float64 = 3
 const WATCHDOG_TimeoutTime float64 = 5
 const PROCESS_PAIR_TimeoutTime float64 = 3

@@ -3,6 +3,7 @@ package world_view
 import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
+	. "Sanntid/resources"
 	//"Sanntid/message_handler"
 	"fmt"
 
@@ -93,6 +94,10 @@ func (worldView WorldView) GetHallRequests() [][2]bool {
 	return hall_requests
 }
 
+func (worldView *WorldView) SetAssignedOrders(assignedOrders map[string][][2]bool) {
+	worldView.AssignedOrders = assignedOrders
+}
+
 func (worldView WorldView) GetMyAssignedOrders(myIP string) [][2]bool {
 	return worldView.AssignedOrders[myIP]
 }
@@ -108,7 +113,6 @@ func (worldView *WorldView) SetMyAvailabilityStatus(myIP string, availabilitySta
 func (worldView WorldView) GetMyAvailabilityStatus(myIP string) bool {
 	return worldView.States[myIP].GetAvailabilityStatus()
 }
-
 
 //Nodes
 
@@ -348,6 +352,8 @@ func (worldView *WorldView) UpdateWorldView2(upd_request chan UpdateRequest, inc
 				worldView.SeenRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
 			case FinishedRequestAtFloor:
 				worldView.FinishedRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
+			case SetAssignedOrders:
+				worldView.SetAssignedOrders(request.Value.(map[string][][2]bool))
 			}
 		case incomingMessage := <-inc_message:
 			worldView.UpdateWorldViewOnIncomingMessage(incomingMessage, myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)

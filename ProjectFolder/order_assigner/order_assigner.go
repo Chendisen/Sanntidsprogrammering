@@ -3,6 +3,7 @@ package order_assigner
 import (
 	"Sanntid/world_view"
 	"encoding/json"
+	. "Sanntid/resources"
 	"fmt"
 	"os/exec"
 	"runtime"
@@ -20,7 +21,7 @@ type HRAInput struct {
 	States       map[string]HRAElevState `json:"states"`
 }
 
-func AssignOrders(worldView *world_view.WorldView, networkOverview *world_view.NetworkOverview) {
+func AssignOrders(worldView world_view.WorldView, networkOverview world_view.NetworkOverview, upd_request chan UpdateRequest) {
 
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -73,7 +74,7 @@ func AssignOrders(worldView *world_view.WorldView, networkOverview *world_view.N
 		panic(err)
 	}
 
-	worldView.AssignedOrders = *output
+	upd_request <- GenerateUpdateRequest(SetAssignedOrders, *output)
 	// worldView.PrintWorldView()
 }
 
