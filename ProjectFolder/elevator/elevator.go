@@ -81,3 +81,4 @@ func (elev *Elevator) GetElevatorRequest(floor int, button int) int {
 func (elev *Elevator) SetElevatorRequest(floor int, button int, value int) {
 	(*elev).Request[floor][button] = value
 }
+

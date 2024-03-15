@@ -181,21 +181,6 @@ func main() {
 
 			// fmt.Println("THE ELEVATOR IS DEAD")
 			panic("ELEVATOR DEAD")
-
-			/*worldView.SetMyAvailabilityStatus(networkOverview.MyIP, false)
-			fsm.Fsm_onInitBetweenFloors(&elev, &worldView, networkOverview.MyIP)
-			
-			go func() {
-				if networkOverview.AmIMaster() {
-					wld_updated<-true
-				}
-				for a:= range drv_floors{
-					worldView.SetMyAvailabilityStatus(networkOverview.MyIP, true)
-					timerWatchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
-					fsm.Fsm_onFloorArrival(&elev, &worldView, networkOverview.MyIP, &timerDoor, a)
-					break
-				}
-			}()*/
 		}
 	}
 }
