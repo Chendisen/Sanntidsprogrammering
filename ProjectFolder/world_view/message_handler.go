@@ -1,14 +1,14 @@
-package message_handler
+package world_view
 
 import (
 	"encoding/json"
 	"fmt"
-	"Sanntid/world_view"
+	//"Sanntid/world_view"
 )
 
 type StandardMessage struct {
 	IPAddress string               `json:"IPAddress"`
-	WorldView world_view.WorldView `json:"worldView"`
+	WorldView WorldView `json:"worldView"`
 	SendTime  string               `json:"sendTime"`
 }
 
@@ -20,7 +20,7 @@ func GetSenderIP(message StandardMessage) string {
 	return message.IPAddress
 }
 
-func GetWorldView(message StandardMessage) world_view.WorldView {
+func GetWorldView(message StandardMessage) WorldView {
 	return message.WorldView
 }
 
@@ -28,7 +28,7 @@ func GetSendTime(message StandardMessage) string {
 	return message.SendTime
 }
 
-func CreateStandardMessage(a_world_view world_view.WorldView, ip_address string, send_time string) StandardMessage {
+func CreateStandardMessage(a_world_view WorldView, ip_address string, send_time string) StandardMessage {
 	return StandardMessage{
 		IPAddress: ip_address,
 		WorldView: a_world_view,

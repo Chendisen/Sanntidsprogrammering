@@ -1,7 +1,7 @@
 package process_pair
 
 import (
-	"Sanntid/message_handler"
+	//"Sanntid/message_handler"
 	"Sanntid/communication/bcast"
 	"Sanntid/communication/peers"
 	"Sanntid/timer"
@@ -18,7 +18,7 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	go peers.Receiver(55555, peerUpdateCh)
 
-	msgRx := make(chan message_handler.StandardMessage, 10)
+	msgRx := make(chan world_view.StandardMessage, 10)
 	go bcast.Receiver(11111, msgRx)
 
 	var p peers.PeerUpdate

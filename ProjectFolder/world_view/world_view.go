@@ -3,7 +3,9 @@ package world_view
 import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
+	//"Sanntid/message_handler"
 	"fmt"
+
 	// "os"
 	"time"
 )
@@ -91,11 +93,11 @@ func (worldView WorldView) GetHallRequests() [][2]bool {
 	return hall_requests
 }
 
-func (worldView *WorldView) GetMyAssignedOrders(myIP string) [][2]bool {
+func (worldView WorldView) GetMyAssignedOrders(myIP string) [][2]bool {
 	return worldView.AssignedOrders[myIP]
 }
 
-func (worldView *WorldView) GetMyCabRequests(myIP string) []bool {
+func (worldView WorldView) GetMyCabRequests(myIP string) []bool {
 	return worldView.States[myIP].GetCabRequests()
 }
 
@@ -103,14 +105,14 @@ func (worldView *WorldView) SetMyAvailabilityStatus(myIP string, availabilitySta
 	worldView.States[myIP].SetAvailabilityStatus(availabilityStatus)
 }
 
-func (worldView *WorldView) GetMyAvailabilityStatus(myIP string) bool {
+func (worldView WorldView) GetMyAvailabilityStatus(myIP string) bool {
 	return worldView.States[myIP].GetAvailabilityStatus()
 }
 
 
 //Nodes
 
-func (worldView *WorldView) ShouldAddNode(IP string) bool {
+func (worldView WorldView) ShouldAddNode(IP string) bool {
 	if _, isPresent := worldView.States[IP]; !isPresent {
 		return true
 	} else {
@@ -133,7 +135,7 @@ func (worldView *WorldView) AddNewNodes(newView WorldView) {
 
 //Updates
 
-func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string, sendTime string, myIP string, networkOverview NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
+func (currentView *WorldView) UpdateWorldViewOnIncomingMessage(newView WorldView, senderIP string, sendTime string, myIP string, networkOverview NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	if senderIP == myIP {
 		if !networkOverview.AmIMaster() {
@@ -294,4 +296,28 @@ func (worldView WorldView) PrintWorldView() {
 		}
 	}
 
+}
+
+func UpdateWorldView(worldView *WorldView, networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan bool, wld_updated chan bool, setBehaviour chan elevator.ElevatorBehaviour, setFloor chan int, setDirection chan driver.MotorDirection, seenRequestAtFloor chan driver.ButtonEvent, finishedRequestAtFloor chan driver.ButtonEvent, setMyAvailabilityStatus chan bool, updateWorldViewOnIncomingMessage chan StandardMessage) {
+	myIP := networkOverview.MyIP
+	
+	for{
+		select {
+		case behaviour := <-setBehaviour:
+			worldView.SetBehaviour(myIP, behaviour)
+		case newFloor := <-setFloor:
+			worldView.SetFloor(myIP, newFloor)
+		case newDirection := <-setDirection:
+			worldView.SetDirection(myIP, newDirection)
+		case newRequest := <-seenRequestAtFloor:
+			worldView.SeenRequestAtFloor(myIP, newRequest.Floor, newRequest.Button)
+		case finishedRequest := <-finishedRequestAtFloor:
+			worldView.FinishedRequestAtFloor(myIP, finishedRequest.Floor, finishedRequest.Button)
+		case availabilityStatus := <-setMyAvailabilityStatus:
+			worldView.SetMyAvailabilityStatus(myIP, availabilityStatus)
+		case incomingMessage := <-updateWorldViewOnIncomingMessage:
+			worldView.UpdateWorldViewOnIncomingMessage(incomingMessage.WorldView, incomingMessage.IPAddress, incomingMessage.SendTime, myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
+
+		}
+	}
 }

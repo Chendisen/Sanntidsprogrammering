@@ -1,7 +1,7 @@
 package communication
 
 import (
-	"Sanntid/message_handler"
+	//"Sanntid/message_handler"
 	"Sanntid/communication/bcast"
 	"Sanntid/communication/peers"
 	"Sanntid/timer"
@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func StartCommunication(myIP string, myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, hfl *world_view.HeardFromList, lightArray *world_view.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication(myIP string, myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, IncomingMessage chan<- world_view.StandardMessage, hfl *world_view.HeardFromList, lightArray *world_view.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	time.Sleep(2 * time.Second)
 
@@ -21,13 +21,13 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 	go peers.Transmitter(55555, myIP, peerTxEnable)
 	go peers.Receiver(55555, peerUpdateCh)
 
-	msgTx := make(chan message_handler.StandardMessage, 10)
-	msgRx := make(chan message_handler.StandardMessage, 10)
+	msgTx := make(chan world_view.StandardMessage, 10)
+	msgRx := make(chan world_view.StandardMessage, 10)
 
 	go bcast.Transmitter(11111, msgTx)
 	go bcast.Receiver(11111, msgRx)
 
-	var sm message_handler.StandardMessage = message_handler.CreateStandardMessage(*myView, myIP, time.Now().String()[11:19])
+	var sm world_view.StandardMessage = world_view.CreateStandardMessage(*myView, myIP, time.Now().String()[11:19])
 
 	var timerNetwork timer.Timer = timer.Timer_uninitialized()
 	net_lost := make(chan bool)
@@ -86,7 +86,8 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 			// }
 
 		case recievedMsg := <-msgRx:
-			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, hfl, lightArray, ord_updated, wld_updated)
+			//myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, hfl, lightArray, ord_updated, wld_updated)
+			IncomingMessage <- recievedMsg
 		case networkLost := <-net_lost:
 			if networkLost {
 				timerNetwork.Timer_start(timer.NETWORK_TIMER_TimoutTime)
