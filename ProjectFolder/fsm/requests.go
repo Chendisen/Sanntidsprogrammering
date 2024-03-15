@@ -3,6 +3,7 @@ package fsm
 import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
+	"Sanntid/world_view"
 )
 
 type DirnBehaviourPair struct {
@@ -106,46 +107,46 @@ func Requests_shouldClearImmediately(elev elevator.Elevator, btn_floor int, btn_
 			(btn_type == driver.BT_Cab)))
 }
 
-func Requests_clearAtCurrentFloor(elev *elevator.Elevator, myIP string, finished_request_at_floor chan<- driver.ButtonEvent) {
+func Requests_clearAtCurrentFloor(elev *elevator.Elevator, myIP string, upd_request chan<- world_view.UpdateRequest) {
 	
 	elev.SetElevatorRequest(elev.Floor, driver.BT_Cab, 0)
-	finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_Cab}
+	upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_Cab})
 
 	switch elev.Dirn {
 	case driver.MD_Up:
 
 		if !intToBool(requests_above(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallUp))) {
 			elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
-			finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallDown}
+			upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallDown})
 		}
 		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
-		finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp}
+		upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp})
 
 
 	case driver.MD_Down:
 
 		if !intToBool(requests_below(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallUp))) {
 			elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
-			finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp}
+			upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp})
 		}
 		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
-		finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallDown}
+		upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallDown})
 
 
 	case driver.MD_Stop:
 
 		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
 		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
-		finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp}
-		finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallDown}
+		upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp})
+		upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallDown})
 
 
 	default:
 
 		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
 		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
-		finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp}
-		finished_request_at_floor<- driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallDown}
+		upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp})
+		upd_request<- world_view.GenerateUpdateRequest(world_view.FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallDown})
 	}
 }
 

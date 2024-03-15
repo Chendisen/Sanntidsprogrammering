@@ -11,14 +11,14 @@ import (
 	"time"
 )
 
-func StartCommunication(myIP string, myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, IncomingMessage chan<- world_view.StandardMessage, hfl *world_view.HeardFromList, lightArray *world_view.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication(myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, inc_message chan world_view.StandardMessage, hfl *world_view.HeardFromList, lightArray *world_view.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	time.Sleep(2 * time.Second)
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
 
-	go peers.Transmitter(55555, myIP, peerTxEnable)
+	go peers.Transmitter(55555, networkOverview.GetMyIP(), peerTxEnable)
 	go peers.Receiver(55555, peerUpdateCh)
 
 	msgTx := make(chan world_view.StandardMessage, 10)
@@ -27,17 +27,17 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 	go bcast.Transmitter(11111, msgTx)
 	go bcast.Receiver(11111, msgRx)
 
-	var sm world_view.StandardMessage = world_view.CreateStandardMessage(*myView, myIP, time.Now().String()[11:19])
+	var standardMessage world_view.StandardMessage = world_view.CreateStandardMessage(*myView, networkOverview.GetMyIP(), time.Now().String()[11:19])
 
 	var timerNetwork timer.Timer = timer.Timer_uninitialized()
 	net_lost := make(chan bool)
-	go network_timer.CheckNetworkTimeout(&timerNetwork, myView, networkOverview.MyIP, msgRx, net_lost)
+	go network_timer.CheckNetworkTimeout(&timerNetwork, myView, networkOverview.GetMyIP(), msgRx, net_lost)
 
 	go func() {
 		for {
-			sm.WorldView = *myView
-			sm.SendTime = time.Now().String()[11:19]
-			msgTx <- sm
+			standardMessage.WorldView = *myView
+			standardMessage.SendTime = time.Now().String()[11:19]
+			msgTx <- standardMessage
 			time.Sleep(100 * time.Millisecond)
 		}
 	}()
@@ -56,7 +56,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 		case p := <-peerUpdateCh:
 
 			if networkOverview.NetworkLost(p) {
-				p.Peers = append(p.Peers, networkOverview.MyIP)
+				p.Peers = append(p.Peers, networkOverview.GetMyIP())
 				timerNetwork.Timer_start(timer.NETWORK_TIMER_TimoutTime)
 			} else {
 				timerNetwork.Timer_stop()
@@ -79,7 +79,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 
 		case recievedMsg := <-msgRx:
 			//myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, hfl, lightArray, ord_updated, wld_updated)
-			IncomingMessage <- recievedMsg
+			inc_message <- recievedMsg
 		case networkLost := <-net_lost:
 			if networkLost {
 				timerNetwork.Timer_start(timer.NETWORK_TIMER_TimoutTime)

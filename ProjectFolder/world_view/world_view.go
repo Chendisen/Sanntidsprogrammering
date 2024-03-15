@@ -330,23 +330,27 @@ func (worldView *WorldView) UpdateWorldView(networkOverview *NetworkOverview, he
 
 
 
-func (worldView *WorldView) UpdateWorldView2(updateRequest chan UpdateRequest, networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan bool, wld_updated chan bool) {
+func (worldView *WorldView) UpdateWorldView2(upd_request chan UpdateRequest, inc_message chan StandardMessage, networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan bool, wld_updated chan bool) {
 	myIP := networkOverview.MyIP
 	
-	for request := range updateRequest {
-		switch request.Type{
-		case SetBehaviour:
-			worldView.SetBehaviour(myIP, request.Value.(elevator.ElevatorBehaviour))
-		case SetFloor:
-			worldView.SetFloor(myIP, request.Value.(int))
-		case SetDirection:
-			worldView.SetDirection(myIP, request.Value.(driver.MotorDirection))
-		case SeenRequestAtFloor:
-			worldView.SeenRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
-		case FinishedRequestAtFloor:
-			worldView.FinishedRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
-		case UpdateOnIncomingMessage:
-			worldView.UpdateWorldViewOnIncomingMessage(request.Value.(StandardMessage), myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
-		}
+	for {
+		select{
+		case request := <-upd_request:	
+			switch request.Type{
+			case SetBehaviour:
+				worldView.SetBehaviour(myIP, request.Value.(elevator.ElevatorBehaviour))
+			case SetFloor:
+				worldView.SetFloor(myIP, request.Value.(int))
+			case SetDirection:
+				fmt.Println("Trying to set direction")
+				worldView.SetDirection(myIP, request.Value.(driver.MotorDirection))
+			case SeenRequestAtFloor:
+				worldView.SeenRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
+			case FinishedRequestAtFloor:
+				worldView.FinishedRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
+			}
+		case incomingMessage := <-inc_message:
+			worldView.UpdateWorldViewOnIncomingMessage(incomingMessage, myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
+	}
 	}
 }

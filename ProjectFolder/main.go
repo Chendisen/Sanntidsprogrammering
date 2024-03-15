@@ -27,12 +27,15 @@ func main() {
 	idFlag := flag.Int("id", 1, "Specifies ID of terminal")
 	flag.Parse()
 	myID := *idFlag
-	networkOverview.MyIP = fmt.Sprintf("%d", myID)
+	/*networkOverview.MyIP = fmt.Sprintf("%d", myID)
 	networkOverview.Master = fmt.Sprintf("%d", myID)
-	networkOverview.NodesAlive[0] = fmt.Sprintf("%d", myID)
+	networkOverview.NodesAlive[0] = fmt.Sprintf("%d", myID)*/
+	networkOverview.SetMyIP(fmt.Sprintf("%d", myID))
+	networkOverview.SetMaster(fmt.Sprintf("%d", myID))
+	networkOverview.InitNodesAlive(fmt.Sprintf("%d", myID))
 
-	var worldView world_view.WorldView = world_view.MakeWorldView(networkOverview.MyIP)
-	var heardFromList world_view.HeardFromList = world_view.MakeHeardFromList(networkOverview.MyIP)
+	var worldView world_view.WorldView = world_view.MakeWorldView(networkOverview.GetMyIP())
+	var heardFromList world_view.HeardFromList = world_view.MakeHeardFromList(networkOverview.GetMyIP())
 	
 	lightArray := world_view.MakeLightArray()
 
@@ -48,7 +51,7 @@ func main() {
 
 
 
-	go process_pair.ProcessPair(networkOverview.MyIP, &worldView, &timerDoor, start_new)
+	go process_pair.ProcessPair(networkOverview.GetMyIP(), &worldView, &timerDoor, start_new)
 
 	for range start_new{
 		break
@@ -72,30 +75,31 @@ func main() {
 	// driver.Init("localhost:15657", driver.N_FLOORS)
 
 	
+	/*
 	set_behaviour := make(chan elevator.ElevatorBehaviour)
 	set_floor := make(chan int)
 	set_direction := make(chan driver.MotorDirection)
 	see_request := make(chan driver.ButtonEvent)
 	fin_request := make(chan driver.ButtonEvent)
 	set_availability := make(chan bool)
-	upd_worldview := make(chan world_view.StandardMessage, 10)
+	*/
 
-
-	upd_request := make(chan world_view.UpdateRequest)
+	inc_message := make(chan world_view.StandardMessage, 10)
+	upd_request := make(chan world_view.UpdateRequest, 20)
 
 
 	go driver.PollButtons(drv_buttons)
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
-	go door_open_timer.CheckDoorOpenTimeout(&elev, networkOverview.MyIP, &timerDoor, &timerWatchdog, set_behaviour, set_direction, fin_request)
-	go communication.StartCommunication(networkOverview.MyIP, &worldView, &networkOverview, upd_worldview, &heardFromList, &lightArray, ord_updated, wld_updated)
+	go door_open_timer.CheckDoorOpenTimeout(&elev, networkOverview.GetMyIP(), &timerDoor, &timerWatchdog, upd_request)
+	go communication.StartCommunication(&worldView, &networkOverview, inc_message, &heardFromList, &lightArray, ord_updated, wld_updated)
 	go watchdog.CheckWatchdogTimeout(&timerWatchdog, &elev, elev_dead)
 	//go worldView.UpdateWorldView(&networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated, set_behaviour, set_floor, set_direction, see_request, fin_request, set_availability, upd_worldview)
-	go worldView.UpdateWorldView2(upd_request, &networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated)
+	go worldView.UpdateWorldView2(upd_request, inc_message, &networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated)
 
 
-	fsm.Fsm_onInitBetweenFloors(&elev, networkOverview.MyIP, set_behaviour, set_direction)
+	fsm.Fsm_onInitBetweenFloors(&elev, networkOverview.MyIP, upd_request)
 	lightArray.InitLights(networkOverview.MyIP, worldView)
 	timerWatchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
 	ord_updated<-true
@@ -106,21 +110,23 @@ func main() {
 
 			fmt.Println("A button pressed")
 
-			see_request<- a
+			// see_request<- a
+			upd_request <- world_view.GenerateUpdateRequest(world_view.SeenRequestAtFloor, a)
 			// worldView.SeenRequestAtFloor(networkOverview.MyIP, a.Floor, a.Button)
 			
 
 		case a := <-drv_floors:
 
 			timerWatchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
-			fsm.Fsm_onFloorArrival(&elev, networkOverview.MyIP, &timerDoor, a, set_behaviour, set_floor, fin_request)
+			fsm.Fsm_onFloorArrival(&elev, networkOverview.MyIP, &timerDoor, a, upd_request)
 			// worldView.PrintWorldView()
 
 		case a := <-drv_obstr:
 			fmt.Printf("DOOR OBSTRUCTED: %t\n", a)
 			elev.DoorObstructed = a
-			set_availability<- !a
-			//worldView.SetMyAvailabilityStatus(networkOverview.MyIP, !a)
+			// set_availability<- !a
+			upd_request <- world_view.GenerateUpdateRequest(world_view.SetMyAvailabilityStatus, !a)
+			// worldView.SetMyAvailabilityStatus(networkOverview.MyIP, !a)
 			go func() {
 				if networkOverview.AmIMaster() {
 					wld_updated<-true
@@ -144,7 +150,7 @@ func main() {
 					for floor, buttons := range worldView.GetMyAssignedOrders(networkOverview.MyIP) {
 						for button, value := range buttons {
 							if value {
-								fsm.Fsm_onRequestButtonPress(&elev, networkOverview.MyIP, &timerDoor, &timerWatchdog, floor, driver.ButtonType(button), set_behaviour, set_direction, fin_request)
+								fsm.Fsm_onRequestButtonPress(&elev, networkOverview.MyIP, &timerDoor, &timerWatchdog, floor, driver.ButtonType(button), upd_request)
 								
 							} else {
 								elev.Request[floor][button] = 0
@@ -153,7 +159,7 @@ func main() {
 					}
 					for floor,value := range worldView.GetMyCabRequests(networkOverview.MyIP) {
 						if value {
-							fsm.Fsm_onRequestButtonPress(&elev, networkOverview.MyIP, &timerDoor, &timerWatchdog, floor, driver.BT_Cab, set_behaviour, set_direction, fin_request)
+							fsm.Fsm_onRequestButtonPress(&elev, networkOverview.MyIP, &timerDoor, &timerWatchdog, floor, driver.BT_Cab, upd_request)
 						} else {
 							elev.Request[floor][driver.BT_Cab] = 0
 						}

@@ -8,7 +8,6 @@ const(
 	SeenRequestAtFloor
 	FinishedRequestAtFloor
 	SetMyAvailabilityStatus
-	UpdateOnIncomingMessage	
 )
 
 type UpdateRequest struct {
