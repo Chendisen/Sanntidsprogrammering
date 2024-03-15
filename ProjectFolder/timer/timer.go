@@ -35,12 +35,3 @@ func (tmr *Timer) Timer_stop() {
 func (tmr *Timer) Timer_timedOut(timer_duration float64) bool {
 	return (tmr.timerActive && (get_current_time() > tmr.timerEndTime) && !(tmr.timerEndTime < timer_duration && get_current_time() > (60 - timer_duration)))
 }
-
-func (tmr *Timer) TimeOut(timer_duration float64, timeout chan<- bool){
-	for {
-		if tmr.Timer_timedOut(timer_duration){
-			timeout<-true
-			return
-		}
-	}
-}

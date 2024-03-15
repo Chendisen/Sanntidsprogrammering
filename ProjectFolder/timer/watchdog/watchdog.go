@@ -5,7 +5,7 @@ import (
 	"Sanntid/timer"
 )
 
-func Watchdog(tmr *timer.Timer, elevState *elevator.Elevator, dead chan<- bool) {
+func CheckWatchdogTimeout(tmr *timer.Timer, elevState *elevator.Elevator, dead chan<- bool) {
 	
 	for {
 		if tmr.Timer_timedOut(timer.WATCHDOG_TimeoutTime) {

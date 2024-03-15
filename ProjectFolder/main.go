@@ -8,7 +8,8 @@ import (
 	"Sanntid/order_assigner"
 	"Sanntid/process_pair"
 	"Sanntid/timer"
-	"Sanntid/watchdog"
+	"Sanntid/timer/watchdog"
+	"Sanntid/timer/door_open_timer"
 	"Sanntid/world_view"
 	"flag"
 	"fmt"
@@ -33,7 +34,7 @@ func main() {
 	var worldView world_view.WorldView = world_view.MakeWorldView(networkOverview.MyIP)
 	var heardFromList world_view.HeardFromList = world_view.MakeHeardFromList(networkOverview.MyIP)
 	
-	lightArray := make([][3]bool, driver.N_FLOORS)
+	lightArray := world_view.MakeLightArray()
 
 	drv_buttons := make(chan driver.ButtonEvent)
 	drv_floors := make(chan int)
@@ -75,12 +76,12 @@ func main() {
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
-	go fsm.Fsm_checkTimeOut(&elev, &worldView, networkOverview.MyIP, &timerDoor, &timerWatchdog)
+	go door_open_timer.CheckDoorOpenTimeout(&elev, &worldView, networkOverview.MyIP, &timerDoor, &timerWatchdog)
 	go network.StartCommunication(networkOverview.MyIP, &worldView, &networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated)
-	go watchdog.Watchdog(&timerWatchdog, &elev, elev_dead)
+	go watchdog.CheckWatchdogTimeout(&timerWatchdog, &elev, elev_dead)
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &worldView, networkOverview.MyIP)
-	world_view.InitLights(&lightArray, networkOverview.MyIP, worldView)
+	lightArray.InitLights(networkOverview.MyIP, worldView)
 	timerWatchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
 	ord_updated<-true
 
@@ -120,7 +121,7 @@ func main() {
 		case <-ord_updated:
 
 			go func() { 
-				world_view.SetAllLights(lightArray)
+				lightArray.SetAllLights()
 				if worldView.GetMyAvailabilityStatus(networkOverview.MyIP){
 					for floor, buttons := range worldView.GetMyAssignedOrders(networkOverview.MyIP) {
 						for button, value := range buttons {

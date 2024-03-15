@@ -6,12 +6,12 @@ import (
 	"Sanntid/network/peers"
 	"Sanntid/world_view"
 	"Sanntid/timer"
-	"Sanntid/network_timer"
+	"Sanntid/timer/network_timer"
 	"fmt"
 	"time"
 )
 
-func StartCommunication(myIP string, myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, hfl *world_view.HeardFromList, lightArray *[][3]bool, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication(myIP string, myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, hfl *world_view.HeardFromList, lightArray *world_view.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	time.Sleep(2 * time.Second)
 
@@ -31,7 +31,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 
 	var timerNetwork timer.Timer = timer.Timer_uninitialized()
 	net_lost := make(chan bool)
-	go network_timer.NetworkTimer(&timerNetwork, myView, networkOverview.MyIP, msgRx, net_lost)
+	go network_timer.CheckNetworkTimeout(&timerNetwork, myView, networkOverview.MyIP, msgRx, net_lost)
 
 
 	go func() {

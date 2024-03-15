@@ -5,6 +5,7 @@ import (
 	"Sanntid/network/bcast"
 	"Sanntid/network/peers"
 	"Sanntid/timer"
+	"Sanntid/timer/process_pair_timer"
 	"Sanntid/world_view"
 	"fmt"
 	"time"
@@ -26,7 +27,7 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 
 	timeOut := make(chan bool)
 	tmr.Timer_start(timer.PROCESS_PAIR_TimeoutTime)
-	go tmr.TimeOut(timer.PROCESS_PAIR_TimeoutTime, timeOut)
+	go process_pair_timer.CheckProcessPairTimeout(tmr, timer.PROCESS_PAIR_TimeoutTime, timeOut)
 
 	for {
 		select {
