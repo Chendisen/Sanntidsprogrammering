@@ -1,7 +1,7 @@
 package elevator
 
 import (
-	"Sanntid/driver"
+	"Sanntid/resources/driver"
 	"fmt"
 )
 

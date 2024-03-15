@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func StartCommunication(myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, inc_message chan world_view.StandardMessage, hfl *world_view.HeardFromList, lightArray *world_view.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication(myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, msg_received chan world_view.StandardMessage, hfl *world_view.HeardFromList, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	time.Sleep(2 * time.Second)
 
@@ -42,15 +42,15 @@ func StartCommunication(myView *world_view.WorldView, networkOverview *world_vie
 		}
 	}()
 
+	go func () {peerUpdateCh <- peers.PeerUpdate{
+		Peers: make([]string, 0),
+		New: "",
+		Lost: make([]string, 0),
+	}
+	} ()
+	
 	fmt.Println("Started communications")
-	// go func () {peerUpdateCh <- peers.PeerUpdate{
-	// 		Peers: make([]),
-	// 		New: "",
-	// 		Lost: make([]string, 1),
-	// 	}
-	// } ()
-	// fmt.Println("Are we past here?")
-
+	
 	for {
 		select {
 		case p := <-peerUpdateCh:
@@ -79,7 +79,7 @@ func StartCommunication(myView *world_view.WorldView, networkOverview *world_vie
 
 		case recievedMsg := <-msgRx:
 			//myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, hfl, lightArray, ord_updated, wld_updated)
-			inc_message <- recievedMsg
+			msg_received <- recievedMsg
 		case networkLost := <-net_lost:
 			if networkLost {
 				timerNetwork.Timer_start(timer.NETWORK_TIMER_TimoutTime)

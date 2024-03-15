@@ -206,7 +206,7 @@ func DriverDirectionToString(d MotorDirection) string {
 	}
 }
 
-func Driver_button_toString(b ButtonType) string {
+func DriverButtonToString(b ButtonType) string {
 	switch b {
 	case BT_HallUp:
 		return "hallUp"

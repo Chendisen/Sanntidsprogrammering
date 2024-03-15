@@ -1,7 +1,7 @@
-package world_view
+package elevator
 
 import(
-	"Sanntid/driver"
+	"Sanntid/resources/driver"
 )
 
 type LightArray [][3]bool
@@ -18,13 +18,21 @@ func (lightArray LightArray) SetAllLights() {
 	}
 }
 
-func (lightArray *LightArray) InitLights(myIP string, worldView WorldView){
-	for floor, buttons := range worldView.GetHallRequests() {
+func (lightArray *LightArray) InitLights(hallRequests [][2]bool, cabRequests []bool){
+	for floor, buttons := range hallRequests {
 		for button, value := range buttons {
 			(*lightArray)[floor][button] = value
 		}
 	}
-	for floor,value := range worldView.GetMyCabRequests(myIP) {
+	for floor,value := range cabRequests {
 		(*lightArray)[floor][driver.BT_Cab] = value
 	}
+}
+
+func (lightArray *LightArray) SetElevatorLight(floor int, button int) {
+	(*lightArray)[floor][button] = true
+}
+
+func (lightArray *LightArray) ClearElevatorLight(floor int, button int) {
+	(*lightArray)[floor][button] = false
 }
