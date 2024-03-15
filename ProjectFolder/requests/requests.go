@@ -108,29 +108,41 @@ func Requests_shouldClearImmediately(elev elevator.Elevator, btn_floor int, btn_
 }
 
 func Requests_clearAtCurrentFloor(elev *elevator.Elevator, worldView *world_view.WorldView, myIP string) {
+
 	elev.SetElevatorRequest(elev.Floor, driver.BT_Cab, 0)
 	worldView.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_Cab)
+
 	switch elev.Dirn {
 	case driver.MD_Up:
+
 		if !intToBool(requests_above(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallUp))) {
 			elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
 			worldView.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallDown)
 		}
 		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
 		worldView.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallUp)
+
+
 	case driver.MD_Down:
+
 		if !intToBool(requests_below(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallUp))) {
 			elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
 			worldView.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallUp)
 		}
 		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
 		worldView.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallDown)
+
+
 	case driver.MD_Stop:
+
 		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
 		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
 		worldView.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallUp)
 		worldView.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallDown)
+
+
 	default:
+		
 		elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
 		elev.SetElevatorRequest(elev.Floor, driver.BT_HallDown, 0)
 		worldView.FinishedRequestAtFloor(myIP, elev.Floor, driver.BT_HallUp)
