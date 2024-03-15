@@ -87,7 +87,7 @@ func main() {
 	*/
 
 	inc_message := make(chan world_view.StandardMessage, 10)
-	upd_request := make(chan UpdateRequest, 20)
+	upd_request := make(chan UpdateRequest, 10)
 
 
 	go driver.PollButtons(drv_buttons)
