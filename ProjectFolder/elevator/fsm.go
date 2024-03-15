@@ -76,6 +76,33 @@ func Fsm_onRequestButtonPress(elev *Elevator, myIP string, tmr *timer.Timer, wat
 	}
 }
 
+func Fsm_setAssignedOrders(assignedOrders [][2]bool, elev *Elevator, myIP string, timerDoor *timer.Timer, timerWatchdog *timer.Timer, upd_request chan UpdateRequest) {
+	for floor, buttons := range assignedOrders {
+		for button, value := range buttons {
+			if value {
+				Fsm_onRequestButtonPress(elev, myIP, timerDoor, timerWatchdog, floor, driver.ButtonType(button), upd_request)
+
+			} else {
+				elev.Request[floor][button] = 0
+			}
+		}
+	}
+}
+
+func Fsm_setCabOrders(cabRequests []bool, elev *Elevator, myIP string, timerDoor *timer.Timer, timerWatchdog *timer.Timer, upd_request chan UpdateRequest) {
+	for floor, value := range cabRequests {
+		if value {
+			Fsm_onRequestButtonPress(elev, myIP, timerDoor, timerWatchdog, floor, driver.BT_Cab, upd_request)
+		} else {
+			elev.Request[floor][driver.BT_Cab] = 0
+		}
+	}
+}
+
+func Fsm_initAllOrders(ord_updated chan<- bool) {
+	ord_updated<- true
+}
+
 func Fsm_onFloorArrival(elev *Elevator, myIP string, tmr *timer.Timer, newFloor int, upd_request chan UpdateRequest) {
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()

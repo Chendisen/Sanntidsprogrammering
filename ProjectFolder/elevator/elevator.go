@@ -74,11 +74,14 @@ func Elevator_uninitialized() Elevator {
 	}
 }
 
-func (elev *Elevator) GetElevatorRequest(floor int, button int) int {
-	return (*elev).Request[floor][button]
+func (elev Elevator) GetElevatorRequest(floor int, button int) int {
+	return (elev).Request[floor][button]
 }
 
 func (elev *Elevator) SetElevatorRequest(floor int, button int, value int) {
 	(*elev).Request[floor][button] = value
 }
 
+func (elev *Elevator) ClearElevatorLight(floor int, button int) {
+	(*elev).Request[floor][button] = 0
+}
