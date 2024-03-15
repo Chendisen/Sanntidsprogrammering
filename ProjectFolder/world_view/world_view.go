@@ -298,7 +298,7 @@ func (worldView WorldView) PrintWorldView() {
 
 }
 
-func UpdateWorldView(worldView *WorldView, networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan bool, wld_updated chan bool, setBehaviour chan elevator.ElevatorBehaviour, setFloor chan int, setDirection chan driver.MotorDirection, seenRequestAtFloor chan driver.ButtonEvent, finishedRequestAtFloor chan driver.ButtonEvent, setMyAvailabilityStatus chan bool, updateWorldViewOnIncomingMessage chan StandardMessage) {
+func (worldView *WorldView) UpdateWorldView(networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan bool, wld_updated chan bool, setBehaviour chan elevator.ElevatorBehaviour, setFloor chan int, setDirection chan driver.MotorDirection, seenRequestAtFloor chan driver.ButtonEvent, finishedRequestAtFloor chan driver.ButtonEvent, setMyAvailabilityStatus chan bool, updateWorldViewOnIncomingMessage chan StandardMessage) {
 	myIP := networkOverview.MyIP
 	
 	for{

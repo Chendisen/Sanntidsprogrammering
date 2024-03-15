@@ -64,9 +64,6 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 
 			networkOverview.UpdateNetworkOverview(p)
 			if len(p.New) > 0 {
-				if myView.ShouldAddNode(p.New) {
-					myView.AddNodeToWorldView(p.New)
-				}
 				hfl.AddNodeToList(p.New)
 			}
 
@@ -79,11 +76,6 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			fmt.Printf((" Am i master?:  %t\n"), networkOverview.AmIMaster())
-
-			// // Safe to assume that you are always online even if network fails
-			// if !networkOverview.AmIAlive(networkOverview.GetMyIP()) {
-			// 	myView.AddNodeToWorldView(networkOverview.GetMyIP())
-			// }
 
 		case recievedMsg := <-msgRx:
 			//myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, hfl, lightArray, ord_updated, wld_updated)
