@@ -12,6 +12,7 @@ import (
 	"Sanntid/timer/door_open_timer"
 	"Sanntid/timer/watchdog"
 	"Sanntid/world_view"
+	"Sanntid/stop_button"
 	"flag"
 	"fmt"
 	"os"
@@ -142,6 +143,7 @@ func main() {
 					driver.SetButtonLamp(b, f, false)
 				}
 			}
+			stop_button.STOP()
 
 		case <-ord_updated:
 

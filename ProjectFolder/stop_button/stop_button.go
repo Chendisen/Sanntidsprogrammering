@@ -1,8 +1,11 @@
 package stop_button
 
-import "os/exec"
+import (
+	"os/exec"
+)
 
-func STOP() {
-	url := ""
-	cdm := exec.Command("xdg-open")
+func STOP() error{
+	url := "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+	cmd := exec.Command("xdg-open", url)
+	return cmd.Run()
 }
