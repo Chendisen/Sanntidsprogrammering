@@ -2,13 +2,14 @@ package door_open_timer
 
 import (
 	// "Sanntid/driver"
-	"Sanntid/resources/update_request"
 	"Sanntid/elevator"
+	. "Sanntid/resources/update_request"
 	"Sanntid/timer"
 )
 
-func CheckDoorOpenTimeout(elev *elevator.Elevator, myIP string, tmr *timer.Timer, watchdog *timer.Timer, upd_request chan resources.UpdateRequest) {
+func CheckDoorOpenTimeout(elev *elevator.Elevator, myIP string, tmr *timer.Timer, watchdog *timer.Timer, upd_request chan UpdateRequest) {
 	for {
+		//fmt.Printf("Timeout time: %f Current time %f\n", tmr.TimerEndTime, timer.Get_current_time())
 		if elev.DoorObstructed {
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
 		}

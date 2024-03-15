@@ -53,7 +53,7 @@ func main() {
 	}
 
 	path, _ := os.Getwd()
-	cmd := exec.Command("gnome-terminal", "--window", "--", "sh", "-c", "cd "+path+" && go run main.go")
+	cmd := exec.Command("gnome-terminal", "--window", "--", "sh", "-c", "cd "+path+" && go run main.go -id "+fmt.Sprintf("%d",myID))
 	err := cmd.Start()
 	if err != nil {
 		fmt.Println("Failed to start myself")
@@ -67,6 +67,8 @@ func main() {
 	serverPortString := fmt.Sprintf("%d", serverPort)
 	driver.Init("localhost:"+serverPortString, driver.N_FLOORS)
 
+
+	// ELEVATORPROGRAM
 
 	go driver.PollButtons(drv_buttons)
 	go driver.PollFloorSensor(drv_floors)
@@ -85,32 +87,23 @@ func main() {
 	for {
 		select {
 		case a := <-drv_buttons:
-
-			fmt.Println("A button pressed")
 			upd_request <- GenerateUpdateRequest(SeenRequestAtFloor, a)
-			// worldView.SeenRequestAtFloor(networkOverview.MyIP, a.Floor, a.Button)
 
 		case a := <-drv_floors:
-
-			timerWatchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
 			elevator.Fsm_onFloorArrival(&elev, networkOverview.MyIP, &timerDoor, a, upd_request)
-			// worldView.PrintWorldView()
+			timerWatchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
 
 		case a := <-drv_obstr:
-			fmt.Printf("DOOR OBSTRUCTED: %t\n", a)
 			elev.DoorObstructed = a
-			// set_availability<- !a
 			upd_request <- GenerateUpdateRequest(SetMyAvailabilityStatus, !a)
-			// worldView.SetMyAvailabilityStatus(networkOverview.MyIP, !a)
+			// Redistribute orders
 			go func() {
 				if networkOverview.AmIMaster() {
 					wld_updated <- true
 				}
 			}()
-			fmt.Printf("MY AVAILABILITY IS NOW: %t\n", worldView.States[networkOverview.MyIP].Available)
 
-		case a := <-drv_stop:
-			fmt.Printf("%+v\n", a)
+		case <-drv_stop:
 			for f := 0; f < driver.N_FLOORS; f++ {
 				for b := driver.ButtonType(0); b < 3; b++ {
 					driver.SetButtonLamp(b, f, false)
@@ -119,7 +112,7 @@ func main() {
 			stop_button.STOP()
 
 		case <-ord_updated:
-
+			elev.PrintRequest()
 			go func() {
 				lightArray.SetAllLights()
 				if worldView.GetMyAvailabilityStatus(networkOverview.MyIP) {
@@ -129,7 +122,6 @@ func main() {
 			}()
 
 		case <-wld_updated:
-
 			go func() {
 				if networkOverview.AmIMaster() {
 					order_assigner.AssignOrders(worldView, networkOverview, upd_request)
@@ -138,7 +130,6 @@ func main() {
 			}()
 
 		case <-elev_dead:
-
 			panic("ELEVATOR DEAD")
 		}
 	}

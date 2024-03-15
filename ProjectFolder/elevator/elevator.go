@@ -79,9 +79,19 @@ func (elev Elevator) GetElevatorRequest(floor int, button int) int {
 }
 
 func (elev *Elevator) SetElevatorRequest(floor int, button int, value int) {
-	(*elev).Request[floor][button] = value
+	elev.Request[floor][button] = value
 }
 
 func (elev *Elevator) ClearElevatorLight(floor int, button int) {
-	(*elev).Request[floor][button] = 0
+	elev.Request[floor][button] = 0
+}
+
+func (elev Elevator) PrintRequest() {
+	for floor,buttons := range elev.Request {
+		fmt.Printf("Floor: %d\n", floor)
+		for button,value := range buttons {
+			fmt.Printf("Button: %d, is pressed: %d\n", button, value)
+		}
+		fmt.Println("")
+	}
 }

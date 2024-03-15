@@ -124,7 +124,7 @@ func Requests_clearAtCurrentFloor(elev *Elevator, myIP string, upd_request chan<
 
 	case driver.MD_Down:
 
-		if !intToBool(requests_below(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallUp))) {
+		if !intToBool(requests_below(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallDown))) {
 			elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
 			upd_request<- GenerateUpdateRequest(FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp})
 		}
