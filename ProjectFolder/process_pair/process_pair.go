@@ -2,8 +2,8 @@ package process_pair
 
 import (
 	"Sanntid/message_handler"
-	"Sanntid/network/bcast"
-	"Sanntid/network/peers"
+	"Sanntid/communication/bcast"
+	"Sanntid/communication/peers"
 	"Sanntid/timer"
 	"Sanntid/timer/process_pair_timer"
 	"Sanntid/world_view"

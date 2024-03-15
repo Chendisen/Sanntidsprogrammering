@@ -3,7 +3,6 @@ package fsm
 import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
-	"Sanntid/requests"
 	"Sanntid/timer"
 	"Sanntid/world_view"
 	"fmt"
@@ -11,7 +10,7 @@ import (
 )
 
 func Fsm_onInitBetweenFloors(elev *elevator.Elevator, worldView *world_view.WorldView, myIP string) {
-	if(elev.Floor == 0){
+	if elev.Floor == 0 {
 		driver.SetMotorDirection(driver.MD_Up)
 		elev.Dirn = driver.MD_Up
 		worldView.SetDirection(myIP, driver.MD_Up)
@@ -20,7 +19,7 @@ func Fsm_onInitBetweenFloors(elev *elevator.Elevator, worldView *world_view.Worl
 		elev.Dirn = driver.MD_Down
 		worldView.SetDirection(myIP, driver.MD_Down)
 	}
-	
+
 	elev.Behaviour = elevator.EB_Moving
 	worldView.SetBehaviour(myIP, elevator.EB_Moving)
 }
@@ -35,7 +34,7 @@ func Fsm_onRequestButtonPress(elev *elevator.Elevator, worldView *world_view.Wor
 	switch elev.Behaviour {
 
 	case elevator.EB_DoorOpen:
-		if requests.Requests_shouldClearImmediately(*elev, btn_floor, btn_type) {
+		if Requests_shouldClearImmediately(*elev, btn_floor, btn_type) {
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
 			worldView.FinishedRequestAtFloor(myIP, btn_floor, btn_type)
 		} else {
@@ -48,7 +47,7 @@ func Fsm_onRequestButtonPress(elev *elevator.Elevator, worldView *world_view.Wor
 	case elevator.EB_Idle:
 
 		elev.SetElevatorRequest(btn_floor, int(btn_type), 1)
-		pair := requests.Requests_chooseDirection(*elev)
+		pair := Requests_chooseDirection(*elev)
 		elev.Dirn = pair.Dirn
 		worldView.SetDirection(myIP, pair.Dirn)
 		elev.Behaviour = pair.Behaviour
@@ -59,7 +58,7 @@ func Fsm_onRequestButtonPress(elev *elevator.Elevator, worldView *world_view.Wor
 		case elevator.EB_DoorOpen:
 			driver.SetDoorOpenLamp(true)
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
-			requests.Requests_clearAtCurrentFloor(elev, worldView, myIP)
+			Requests_clearAtCurrentFloor(elev, worldView, myIP)
 
 		case elevator.EB_Moving:
 			driver.SetMotorDirection(elev.Dirn)
@@ -83,12 +82,12 @@ func Fsm_onFloorArrival(elev *elevator.Elevator, worldView *world_view.WorldView
 
 	switch elev.Behaviour {
 	case elevator.EB_Moving:
-		if requests.Requests_shouldStop(*elev) {
+		if Requests_shouldStop(*elev) {
 
 			driver.SetMotorDirection(driver.MD_Stop)
 			driver.SetDoorOpenLamp(true)
 
-			requests.Requests_clearAtCurrentFloor(elev, worldView, myIP)
+			Requests_clearAtCurrentFloor(elev, worldView, myIP)
 
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
 
@@ -107,7 +106,7 @@ func Fsm_onDoorTimeout(elev *elevator.Elevator, worldView *world_view.WorldView,
 
 	switch elev.Behaviour {
 	case elevator.EB_DoorOpen:
-		pair := requests.Requests_chooseDirection(*elev)
+		pair := Requests_chooseDirection(*elev)
 		elev.Dirn = pair.Dirn
 		worldView.SetDirection(myIP, pair.Dirn)
 		elev.Behaviour = pair.Behaviour
@@ -116,7 +115,7 @@ func Fsm_onDoorTimeout(elev *elevator.Elevator, worldView *world_view.WorldView,
 		switch elev.Behaviour {
 		case elevator.EB_DoorOpen:
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
-			requests.Requests_clearAtCurrentFloor(elev, worldView, myIP)
+			Requests_clearAtCurrentFloor(elev, worldView, myIP)
 
 		case elevator.EB_Moving:
 			driver.SetDoorOpenLamp(false)
@@ -131,4 +130,3 @@ func Fsm_onDoorTimeout(elev *elevator.Elevator, worldView *world_view.WorldView,
 	default:
 	}
 }
-

@@ -1,7 +1,7 @@
 package peers
 
 import (
-	"Sanntid/network/conn"
+	"Sanntid/communication/conn"
 	"fmt"
 	"net"
 	"sort"

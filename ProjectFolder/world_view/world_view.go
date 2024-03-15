@@ -184,50 +184,6 @@ func (currentView *WorldView) UpdateWorldView(newView WorldView, senderIP string
 	currentView.LastHeard[senderIP] = time.Now().String()[11:19]
 }
 
-
-func (worldView WorldView) PrintWorldView() {
-	/*for IP, states := range worldView.States {
-
-		fmt.Printf("State of %s: \n", IP)
-		fmt.Printf("		Floor: %d\n", states.Floor)
-		fmt.Printf("	Behaviour: %s\n", states.Behaviour)
-		fmt.Printf("	Direction: %s\n", states.Direction)
-		fmt.Println("")
-
-	}*/
-
-	/*fmt.Println("Hall requests: ")
-	for floor, floor := range worldView.HallRequests {
-		fmt.Printf("Floor: %d\n", floor)
-		for button, buttonStatus := range floor {
-			fmt.Printf("	Button: %d, Status: %d\n", button, buttonStatus)
-		}
-	}
-
-	fmt.Println("Cab requests: ")
-	for IP,state := range worldView.States {
-		fmt.Printf("	Elevator: %s\n", IP)
-		for floor,buttonStatus := range state.CabRequests {
-			fmt.Printf("		Floor: %d, Status: %d\n", floor, buttonStatus)
-		}
-		fmt.Println("")
-	}*/
-
-	fmt.Println("Assigned orders: ")
-	for IP, orders := range worldView.AssignedOrders {
-		fmt.Printf("	Elevator: %s\n", IP)
-		for floor, buttons := range orders {
-			fmt.Printf("		Floor: %d", floor)
-			for button, value := range buttons {
-				fmt.Printf("		Button: %d, Value: %t", button, value)
-			}
-			fmt.Print("\n")
-		}
-	}
-
-}
-
-
 // Big switch case for update world view
 func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, heardFromList *HeardFromList, networkOverview NetworkOverview, lightArray *LightArray, floor int, button int, rcd_IP string, wld_updated_flag *bool, ord_updated_flag *bool, cabIP string) {
 	switch rcd_req {
@@ -294,4 +250,48 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, heard
 			}
 		}
 	}
+}
+
+
+
+func (worldView WorldView) PrintWorldView() {
+	/*for IP, states := range worldView.States {
+
+		fmt.Printf("State of %s: \n", IP)
+		fmt.Printf("		Floor: %d\n", states.Floor)
+		fmt.Printf("	Behaviour: %s\n", states.Behaviour)
+		fmt.Printf("	Direction: %s\n", states.Direction)
+		fmt.Println("")
+
+	}*/
+
+	/*fmt.Println("Hall requests: ")
+	for floor, floor := range worldView.HallRequests {
+		fmt.Printf("Floor: %d\n", floor)
+		for button, buttonStatus := range floor {
+			fmt.Printf("	Button: %d, Status: %d\n", button, buttonStatus)
+		}
+	}
+
+	fmt.Println("Cab requests: ")
+	for IP,state := range worldView.States {
+		fmt.Printf("	Elevator: %s\n", IP)
+		for floor,buttonStatus := range state.CabRequests {
+			fmt.Printf("		Floor: %d, Status: %d\n", floor, buttonStatus)
+		}
+		fmt.Println("")
+	}*/
+
+	fmt.Println("Assigned orders: ")
+	for IP, orders := range worldView.AssignedOrders {
+		fmt.Printf("	Elevator: %s\n", IP)
+		for floor, buttons := range orders {
+			fmt.Printf("		Floor: %d", floor)
+			for button, value := range buttons {
+				fmt.Printf("		Button: %d, Value: %t", button, value)
+			}
+			fmt.Print("\n")
+		}
+	}
+
 }
