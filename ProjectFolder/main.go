@@ -4,7 +4,7 @@ import (
 	"Sanntid/driver"
 	"Sanntid/elevator"
 	"Sanntid/fsm"
-	"Sanntid/network"
+	"Sanntid/communication"
 	"Sanntid/order_assigner"
 	"Sanntid/process_pair"
 	"Sanntid/timer"
@@ -77,7 +77,7 @@ func main() {
 	go driver.PollObstructionSwitch(drv_obstr)
 	go driver.PollStopButton(drv_stop)
 	go door_open_timer.CheckDoorOpenTimeout(&elev, &worldView, networkOverview.MyIP, &timerDoor, &timerWatchdog)
-	go network.StartCommunication(networkOverview.MyIP, &worldView, &networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated)
+	go communication.StartCommunication(networkOverview.MyIP, &worldView, &networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated)
 	go watchdog.CheckWatchdogTimeout(&timerWatchdog, &elev, elev_dead)
 
 	fsm.Fsm_onInitBetweenFloors(&elev, &worldView, networkOverview.MyIP)

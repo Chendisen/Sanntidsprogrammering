@@ -1,12 +1,12 @@
-package network
+package communication
 
 import (
 	"Sanntid/message_handler"
-	"Sanntid/network/bcast"
-	"Sanntid/network/peers"
-	"Sanntid/world_view"
+	"Sanntid/communication/bcast"
+	"Sanntid/communication/peers"
 	"Sanntid/timer"
 	"Sanntid/timer/network_timer"
+	"Sanntid/world_view"
 	"fmt"
 	"time"
 )
@@ -33,7 +33,6 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 	net_lost := make(chan bool)
 	go network_timer.CheckNetworkTimeout(&timerNetwork, myView, networkOverview.MyIP, msgRx, net_lost)
 
-
 	go func() {
 		for {
 			sm.WorldView = *myView
@@ -48,7 +47,7 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 	// 		Peers: make([]),
 	// 		New: "",
 	// 		Lost: make([]string, 1),
-	// 	} 
+	// 	}
 	// } ()
 	// fmt.Println("Are we past here?")
 
@@ -65,14 +64,14 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 
 			networkOverview.UpdateNetworkOverview(p)
 			if len(p.New) > 0 {
-				if myView.ShouldAddNode(p.New){
+				if myView.ShouldAddNode(p.New) {
 					myView.AddNodeToWorldView(p.New)
 				}
 				hfl.AddNodeToList(p.New)
 			}
 
 			if len(p.Lost) > 0 {
-				wld_updated<-true
+				wld_updated <- true
 			}
 
 			fmt.Printf("Peer update:\n")
@@ -88,8 +87,8 @@ func StartCommunication(myIP string, myView *world_view.WorldView, networkOvervi
 
 		case recievedMsg := <-msgRx:
 			myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, hfl, lightArray, ord_updated, wld_updated)
-		case networkLost := <- net_lost:
-			if (networkLost) {
+		case networkLost := <-net_lost:
+			if networkLost {
 				timerNetwork.Timer_start(timer.NETWORK_TIMER_TimoutTime)
 			} else {
 				timerNetwork.Timer_stop()

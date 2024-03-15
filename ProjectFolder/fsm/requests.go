@@ -1,4 +1,4 @@
-package requests
+package fsm
 
 import (
 	"Sanntid/driver"
@@ -66,7 +66,7 @@ func Requests_chooseDirection(e elevator.Elevator) DirnBehaviourPair {
 			return DirnBehaviourPair{driver.MD_Up, elevator.EB_Moving}
 		}
 		return DirnBehaviourPair{driver.MD_Stop, elevator.EB_Idle}
-	case driver.MD_Stop: 
+	case driver.MD_Stop:
 		if intToBool(requests_here(e)) {
 			return DirnBehaviourPair{driver.MD_Stop, elevator.EB_DoorOpen}
 		}
@@ -101,7 +101,7 @@ func Requests_shouldStop(e elevator.Elevator) bool {
 
 func Requests_shouldClearImmediately(elev elevator.Elevator, btn_floor int, btn_type driver.ButtonType) bool {
 	return (elev.Floor == btn_floor &&
-			((elev.Dirn == driver.MD_Up && btn_type == driver.BT_HallUp) ||
+		((elev.Dirn == driver.MD_Up && btn_type == driver.BT_HallUp) ||
 			(elev.Dirn == driver.MD_Down && btn_type == driver.BT_HallDown) ||
 			(elev.Dirn == driver.MD_Stop) ||
 			(btn_type == driver.BT_Cab)))

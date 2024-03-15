@@ -1,8 +1,8 @@
 package world_view
 
 import (
-	"Sanntid/network/localip"
-	"Sanntid/network/peers"
+	"Sanntid/communication/localip"
+	"Sanntid/communication/peers"
 	"fmt"
 )
 

@@ -1,7 +1,7 @@
 package bcast
 
 import (
-	"Sanntid/network/conn"
+	"Sanntid/communication/conn"
 	"encoding/json"
 	"fmt"
 	"net"
