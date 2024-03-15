@@ -71,6 +71,7 @@ func main() {
 
 	// driver.Init("localhost:15657", driver.N_FLOORS)
 
+	
 	set_behaviour := make(chan elevator.ElevatorBehaviour)
 	set_floor := make(chan int)
 	set_direction := make(chan driver.MotorDirection)
@@ -80,6 +81,9 @@ func main() {
 	upd_worldview := make(chan world_view.StandardMessage, 10)
 
 
+	upd_request := make(chan world_view.UpdateRequest)
+
+
 	go driver.PollButtons(drv_buttons)
 	go driver.PollFloorSensor(drv_floors)
 	go driver.PollObstructionSwitch(drv_obstr)
@@ -87,7 +91,9 @@ func main() {
 	go door_open_timer.CheckDoorOpenTimeout(&elev, networkOverview.MyIP, &timerDoor, &timerWatchdog, set_behaviour, set_direction, fin_request)
 	go communication.StartCommunication(networkOverview.MyIP, &worldView, &networkOverview, upd_worldview, &heardFromList, &lightArray, ord_updated, wld_updated)
 	go watchdog.CheckWatchdogTimeout(&timerWatchdog, &elev, elev_dead)
-	go worldView.UpdateWorldView(&networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated, set_behaviour, set_floor, set_direction, see_request, fin_request, set_availability, upd_worldview)
+	//go worldView.UpdateWorldView(&networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated, set_behaviour, set_floor, set_direction, see_request, fin_request, set_availability, upd_worldview)
+	go worldView.UpdateWorldView2(upd_request, &networkOverview, &heardFromList, &lightArray, ord_updated, wld_updated)
+
 
 	fsm.Fsm_onInitBetweenFloors(&elev, networkOverview.MyIP, set_behaviour, set_direction)
 	lightArray.InitLights(networkOverview.MyIP, worldView)

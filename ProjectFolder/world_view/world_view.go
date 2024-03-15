@@ -135,7 +135,13 @@ func (worldView *WorldView) AddNewNodes(newView WorldView) {
 
 //Updates
 
-func (currentView *WorldView) UpdateWorldViewOnIncomingMessage(newView WorldView, senderIP string, sendTime string, myIP string, networkOverview NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
+func (currentView *WorldView) UpdateWorldViewOnIncomingMessage(incomingMessage StandardMessage, myIP string, networkOverview NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
+
+	
+	newView := incomingMessage.WorldView
+	senderIP := incomingMessage.IPAddress
+	sendTime := incomingMessage.SendTime
+	
 
 	if senderIP == myIP {
 		if !networkOverview.AmIMaster() {
@@ -316,8 +322,31 @@ func (worldView *WorldView) UpdateWorldView(networkOverview *NetworkOverview, he
 		case availabilityStatus := <-setMyAvailabilityStatus:
 			worldView.SetMyAvailabilityStatus(myIP, availabilityStatus)
 		case incomingMessage := <-updateWorldViewOnIncomingMessage:
-			worldView.UpdateWorldViewOnIncomingMessage(incomingMessage.WorldView, incomingMessage.IPAddress, incomingMessage.SendTime, myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
+			worldView.UpdateWorldViewOnIncomingMessage(incomingMessage, myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
 
+		}
+	}
+}
+
+
+
+func (worldView *WorldView) UpdateWorldView2(updateRequest chan UpdateRequest, networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan bool, wld_updated chan bool) {
+	myIP := networkOverview.MyIP
+	
+	for request := range updateRequest {
+		switch request.Type{
+		case SetBehaviour:
+			worldView.SetBehaviour(myIP, request.Value.(elevator.ElevatorBehaviour))
+		case SetFloor:
+			worldView.SetFloor(myIP, request.Value.(int))
+		case SetDirection:
+			worldView.SetDirection(myIP, request.Value.(driver.MotorDirection))
+		case SeenRequestAtFloor:
+			worldView.SeenRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
+		case FinishedRequestAtFloor:
+			worldView.FinishedRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
+		case UpdateOnIncomingMessage:
+			worldView.UpdateWorldViewOnIncomingMessage(request.Value.(StandardMessage), myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
 		}
 	}
 }
