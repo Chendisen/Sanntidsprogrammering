@@ -3,7 +3,7 @@ package order_assigner
 import (
 	"Sanntid/world_view"
 	"encoding/json"
-	. "Sanntid/resources"
+	. "Sanntid/resources/update_request"
 	"fmt"
 	"os/exec"
 	"runtime"

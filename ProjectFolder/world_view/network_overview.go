@@ -20,6 +20,12 @@ func MakeNetworkOverview() NetworkOverview {
 	return NetworkOverview{MyIP: myIP, NodesAlive: nodesAlive, Master: myIP}
 }
 
+func MakeNetworkOverviewWithIDFlag(onlyAliveNode string) NetworkOverview {
+	nodesAlive := make([]string, 1)
+	nodesAlive[0] = onlyAliveNode
+	return NetworkOverview{MyIP: onlyAliveNode, NodesAlive: nodesAlive, Master: onlyAliveNode}
+}
+
 func (networkOverview NetworkOverview) GetMyIP() string {
 	return networkOverview.MyIP
 }

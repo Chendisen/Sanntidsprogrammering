@@ -1,23 +1,13 @@
 package world_view
 
 import (
-	"Sanntid/driver"
+	"Sanntid/resources/driver"
 	"Sanntid/elevator"
-	. "Sanntid/resources"
-	//"Sanntid/message_handler"
+	. "Sanntid/resources/update_request"
 	"fmt"
-
-	// "os"
 	"time"
 )
 
-
-type WorldView struct {
-	HallRequests   [][2]OrderStatus          `json:"hallRequests"`
-	States         map[string]*ElevatorState `json:"states"`
-	AssignedOrders map[string][][2]bool      `json:"assignedOrders"`
-	LastHeard      map[string]string         `json:"lastHeard"`
-}
 
 type OrderStatus int
 
@@ -33,7 +23,12 @@ func (orderStatus OrderStatus) ToBool() bool {
 }
 
 
-//WordlView functions
+type WorldView struct {
+	HallRequests   [][2]OrderStatus          `json:"hallRequests"`
+	States         map[string]*ElevatorState `json:"states"`
+	AssignedOrders map[string][][2]bool      `json:"assignedOrders"`
+	LastHeard      map[string]string         `json:"lastHeard"`
+}
 
 func MakeWorldView(myIP string) WorldView {
 	var worldView WorldView = WorldView{States: make(map[string]*ElevatorState), AssignedOrders: make(map[string][][2]bool), LastHeard: make(map[string]string)}
@@ -48,22 +43,22 @@ func MakeWorldView(myIP string) WorldView {
 	return worldView
 }
 
-func (worldView *WorldView) SetBehaviour(myIP string, elevatorBehaviour elevator.ElevatorBehaviour) {
-	worldView.States[myIP].SetBehaviour(elevator.ElevatorBehaviourToString(elevatorBehaviour))
+func (worldView *WorldView) SetBehaviour(myIP string, elevatorBehaviour elevator.ElevatorBehaviour, elv_update chan UpdateRequest) {
+	elv_update<- GenerateUpdateRequest(SetBehaviour, elevator.ElevatorBehaviourToString(elevatorBehaviour))
 }
 
-func (worldView *WorldView) SetFloor(myIP string, floor int) {
-	worldView.States[myIP].SetFloor(floor)
+func (worldView *WorldView) SetFloor(myIP string, floor int, elv_update chan<- UpdateRequest) {
+	elv_update<- GenerateUpdateRequest(SetFloor, floor)
 }
 
-func (worldView *WorldView) SetDirection(myIP string, motorDirection driver.MotorDirection) {
-	worldView.States[myIP].SetDirection(driver.DriverDirectionToString(motorDirection))
+func (worldView *WorldView) SetDirection(myIP string, motorDirection driver.MotorDirection, elv_update chan<- UpdateRequest) {
+	elv_update<- GenerateUpdateRequest(SetDirection, driver.DriverDirectionToString(motorDirection)) 
 }
 
-func (worldView *WorldView) SeenRequestAtFloor(myIP string, floor int, button driver.ButtonType) {
+func (worldView *WorldView) SeenRequestAtFloor(myIP string, floor int, button driver.ButtonType, elv_update chan<- UpdateRequest) {
 	if button == driver.BT_Cab {
 		if worldView.States[myIP].CabRequests[floor] == Order_Empty {
-			worldView.States[myIP].SeenCabRequestAtFloor(floor)
+			elv_update<- GenerateUpdateRequest(SeenRequestAtFloor, floor)
 		}
 	} else {
 		if worldView.HallRequests[floor][button] == Order_Empty {
@@ -72,10 +67,10 @@ func (worldView *WorldView) SeenRequestAtFloor(myIP string, floor int, button dr
 	}
 }
 
-func (worldView *WorldView) FinishedRequestAtFloor(myIP string, floor int, button driver.ButtonType) {
+func (worldView *WorldView) FinishedRequestAtFloor(myIP string, floor int, button driver.ButtonType, elv_update chan<- UpdateRequest) {
 	if button == driver.BT_Cab {
 		if worldView.States[myIP].CabRequests[floor] != Order_Empty {
-			worldView.States[myIP].FinishedCabRequestAtFloor(floor)
+			elv_update<- GenerateUpdateRequest(FinishedRequestAtFloor, floor)
 		}
 	} else {
 		if worldView.HallRequests[floor][button] != Order_Empty {
@@ -106,15 +101,16 @@ func (worldView WorldView) GetMyCabRequests(myIP string) []bool {
 	return worldView.States[myIP].GetCabRequests()
 }
 
-func (worldView *WorldView) SetMyAvailabilityStatus(myIP string, availabilityStatus bool) {
-	worldView.States[myIP].SetAvailabilityStatus(availabilityStatus)
+func (worldView *WorldView) SetMyAvailabilityStatus(myIP string, availabilityStatus bool, elv_update chan<- UpdateRequest) {
+	elv_update<- GenerateUpdateRequest(SetMyAvailabilityStatus, availabilityStatus)
 }
 
 func (worldView WorldView) GetMyAvailabilityStatus(myIP string) bool {
 	return worldView.States[myIP].GetAvailabilityStatus()
 }
 
-//Nodes
+
+//ElevatorState Nodes
 
 func (worldView WorldView) ShouldAddNode(IP string) bool {
 	if _, isPresent := worldView.States[IP]; !isPresent {
@@ -137,16 +133,15 @@ func (worldView *WorldView) AddNewNodes(newView WorldView) {
 	}
 }
 
-//Updates
 
-func (currentView *WorldView) UpdateWorldViewOnIncomingMessage(incomingMessage StandardMessage, myIP string, networkOverview NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
+// Updates
 
+func (currentView *WorldView) UpdateWorldViewOnReceivedMessage(receivedMessage StandardMessage, myIP string, networkOverview NetworkOverview, heardFromList *HeardFromList, lightArray *elevator.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
+
+	newView := receivedMessage.WorldView
+	senderIP := receivedMessage.IPAddress
+	sendTime := receivedMessage.SendTime
 	
-	newView := incomingMessage.WorldView
-	senderIP := incomingMessage.IPAddress
-	sendTime := incomingMessage.SendTime
-	
-
 	if senderIP == myIP {
 		if !networkOverview.AmIMaster() {
 			return
@@ -197,15 +192,14 @@ func (currentView *WorldView) UpdateWorldViewOnIncomingMessage(incomingMessage S
 }
 
 // Big switch case for update world view
-func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, heardFromList *HeardFromList, networkOverview NetworkOverview, lightArray *LightArray, floor int, button int, rcd_IP string, wld_updated_flag *bool, ord_updated_flag *bool, cabIP string) {
+func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, heardFromList *HeardFromList, networkOverview NetworkOverview, lightArray *elevator.LightArray, floor int, button int, rcd_IP string, wld_updated_flag *bool, ord_updated_flag *bool, cabIP string) {
 	switch rcd_req {
 	case Order_Empty: // No requests
 		if *cur_req == Order_Finished {
-			// TODO: Channel that turns off the lights
 			if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
-				(*lightArray)[floor][button] = false
+				lightArray.ClearElevatorLight(floor, button)
 			} else if button != driver.BT_Cab {
-				(*lightArray)[floor][button] = false
+				lightArray.ClearElevatorLight(floor, button)
 			}
 			*ord_updated_flag = true
 			heardFromList.ClearHeardFrom(floor, button)
@@ -215,29 +209,23 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, heard
 		if *cur_req == Order_Empty || *cur_req == Order_Unconfirmed {
 			*cur_req = Order_Unconfirmed
 			heardFromList.SetHeardFrom(networkOverview, rcd_IP, floor, button)
-			if networkOverview.AmIMaster() {
-				if heardFromList.CheckHeardFromAll(networkOverview, floor, button) {
-					// TODO: Channel for assigning orders
-					// TODO: Channel for turning on the lights
-					if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
-						(*lightArray)[floor][button] = true
-					} else if button != driver.BT_Cab {
-						(*lightArray)[floor][button] = true
-					}
-					*wld_updated_flag = true
-					heardFromList.ClearHeardFrom(floor, button)
-					*cur_req = Order_Confirmed
+			if networkOverview.AmIMaster() || heardFromList.CheckHeardFromAll(networkOverview, floor, button){
+				if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
+					lightArray.SetElevatorLight(floor, button)
+				} else if button != driver.BT_Cab {
+					lightArray.SetElevatorLight(floor, button)
 				}
+				*wld_updated_flag = true
+				heardFromList.ClearHeardFrom(floor, button)
+				*cur_req = Order_Confirmed
 			}
 		}
 	case Order_Confirmed: // Confirmed requests
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Empty{
-			// TODO: Channel for updating assigned orders
-			// TODO: Channel for turning on lights
 			if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
-				(*lightArray)[floor][button] = true
+				lightArray.SetElevatorLight(floor, button)
 			} else if button != driver.BT_Cab {
-				(*lightArray)[floor][button] = true
+				lightArray.SetElevatorLight(floor, button)
 			}
 			*ord_updated_flag = true
 			heardFromList.ClearHeardFrom(floor, button)
@@ -247,24 +235,19 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, heard
 		if *cur_req == Order_Unconfirmed || *cur_req == Order_Confirmed || *cur_req == Order_Finished {
 			*cur_req = Order_Finished
 			heardFromList.SetHeardFrom(networkOverview, rcd_IP, floor, button)
-			if networkOverview.AmIMaster() {
-				if heardFromList.CheckHeardFromAll(networkOverview, floor, button) {
-					// TODO: Channel for turning off lights
-					if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
-						(*lightArray)[floor][button] = false
-					} else if button != driver.BT_Cab {
-						(*lightArray)[floor][button] = false
-					}
-					*wld_updated_flag = true
-					heardFromList.ClearHeardFrom(floor, button)
-					*cur_req = Order_Empty
+			if networkOverview.AmIMaster() || heardFromList.CheckHeardFromAll(networkOverview, floor, button){
+				if button == driver.BT_Cab && networkOverview.MyIP == cabIP {
+					lightArray.ClearElevatorLight(floor, button)
+				} else if button != driver.BT_Cab {
+					lightArray.ClearElevatorLight(floor, button)
 				}
+				*wld_updated_flag = true
+				heardFromList.ClearHeardFrom(floor, button)
+				*cur_req = Order_Empty
 			}
 		}
 	}
 }
-
-
 
 func (worldView WorldView) PrintWorldView() {
 	/*for IP, states := range worldView.States {
@@ -308,55 +291,33 @@ func (worldView WorldView) PrintWorldView() {
 
 }
 
-func (worldView *WorldView) UpdateWorldView(networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan bool, wld_updated chan bool, setBehaviour chan elevator.ElevatorBehaviour, setFloor chan int, setDirection chan driver.MotorDirection, seenRequestAtFloor chan driver.ButtonEvent, finishedRequestAtFloor chan driver.ButtonEvent, setMyAvailabilityStatus chan bool, updateWorldViewOnIncomingMessage chan StandardMessage) {
+func (worldView *WorldView) UpdateWorldView(upd_request chan UpdateRequest, msg_received chan StandardMessage, networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *elevator.LightArray, ord_updated chan bool, wld_updated chan bool) {
 	myIP := networkOverview.MyIP
 	
-	for{
-		select {
-		case behaviour := <-setBehaviour:
-			worldView.SetBehaviour(myIP, behaviour)
-		case newFloor := <-setFloor:
-			worldView.SetFloor(myIP, newFloor)
-		case newDirection := <-setDirection:
-			worldView.SetDirection(myIP, newDirection)
-		case newRequest := <-seenRequestAtFloor:
-			worldView.SeenRequestAtFloor(myIP, newRequest.Floor, newRequest.Button)
-		case finishedRequest := <-finishedRequestAtFloor:
-			worldView.FinishedRequestAtFloor(myIP, finishedRequest.Floor, finishedRequest.Button)
-		case availabilityStatus := <-setMyAvailabilityStatus:
-			worldView.SetMyAvailabilityStatus(myIP, availabilityStatus)
-		case incomingMessage := <-updateWorldViewOnIncomingMessage:
-			worldView.UpdateWorldViewOnIncomingMessage(incomingMessage, myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
+	elv_update := make(chan UpdateRequest)
+	go worldView.States[myIP].UpdateElevatorState(elv_update)
 
-		}
-	}
-}
-
-
-
-func (worldView *WorldView) UpdateWorldView2(upd_request chan UpdateRequest, inc_message chan StandardMessage, networkOverview *NetworkOverview, heardFromList *HeardFromList, lightArray *LightArray, ord_updated chan bool, wld_updated chan bool) {
-	myIP := networkOverview.MyIP
-	
 	for {
 		select{
 		case request := <-upd_request:	
 			switch request.Type{
 			case SetBehaviour:
-				worldView.SetBehaviour(myIP, request.Value.(elevator.ElevatorBehaviour))
+				worldView.SetBehaviour(myIP, request.Value.(elevator.ElevatorBehaviour), elv_update)
 			case SetFloor:
-				worldView.SetFloor(myIP, request.Value.(int))
+				worldView.SetFloor(myIP, request.Value.(int), elv_update)
 			case SetDirection:
-				fmt.Println("Trying to set direction")
-				worldView.SetDirection(myIP, request.Value.(driver.MotorDirection))
+				worldView.SetDirection(myIP, (request.Value.(driver.MotorDirection)), elv_update)
 			case SeenRequestAtFloor:
-				worldView.SeenRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
+				worldView.SeenRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button, elv_update)
 			case FinishedRequestAtFloor:
-				worldView.FinishedRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button)
+				worldView.FinishedRequestAtFloor(myIP, request.Value.(driver.ButtonEvent).Floor, request.Value.(driver.ButtonEvent).Button, elv_update)
 			case SetAssignedOrders:
 				worldView.SetAssignedOrders(request.Value.(map[string][][2]bool))
+			case SetMyAvailabilityStatus:
+				worldView.SetMyAvailabilityStatus(myIP, request.Value.(bool), elv_update)
 			}
-		case incomingMessage := <-inc_message:
-			worldView.UpdateWorldViewOnIncomingMessage(incomingMessage, myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
-	}
+		case receivedMessage := <-msg_received:
+			worldView.UpdateWorldViewOnReceivedMessage(receivedMessage, myIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
+		}
 	}
 }

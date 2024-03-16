@@ -1,17 +1,16 @@
-package fsm
+package elevator
 
 import (
-	"Sanntid/driver"
-	"Sanntid/elevator"
-	. "Sanntid/resources"
+	"Sanntid/resources/driver"
+	. "Sanntid/resources/update_request"
 )
 
 type DirnBehaviourPair struct {
 	Dirn      driver.MotorDirection
-	Behaviour elevator.ElevatorBehaviour
+	Behaviour ElevatorBehaviour
 }
 
-func requests_above(e elevator.Elevator) int {
+func requests_above(e Elevator) int {
 	for floor := e.Floor + 1; floor < driver.N_FLOORS; floor++ {
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			if intToBool(e.Request[floor][btn]) {
@@ -22,7 +21,7 @@ func requests_above(e elevator.Elevator) int {
 	return 0
 }
 
-func requests_below(e elevator.Elevator) int {
+func requests_below(e Elevator) int {
 	for floor := 0; floor < e.Floor; floor++ {
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
 			if intToBool(e.Request[floor][btn]) {
@@ -33,7 +32,7 @@ func requests_below(e elevator.Elevator) int {
 	return 0
 }
 
-func requests_here(e elevator.Elevator) int {
+func requests_here(e Elevator) int {
 	for btn := 0; btn < driver.N_BUTTONS; btn++ {
 		if intToBool(e.Request[e.Floor][btn]) {
 			return 1
@@ -42,47 +41,47 @@ func requests_here(e elevator.Elevator) int {
 	return 0
 }
 
-func Requests_chooseDirection(e elevator.Elevator) DirnBehaviourPair {
+func Requests_chooseDirection(e Elevator) DirnBehaviourPair {
 	switch e.Dirn {
 	case driver.MD_Up:
 		if intToBool(requests_above(e)) {
-			return DirnBehaviourPair{driver.MD_Up, elevator.EB_Moving}
+			return DirnBehaviourPair{driver.MD_Up, EB_Moving}
 		}
 		if intToBool(requests_here(e)) {
-			return DirnBehaviourPair{driver.MD_Down, elevator.EB_DoorOpen}
+			return DirnBehaviourPair{driver.MD_Down, EB_DoorOpen}
 		}
 		if intToBool(requests_below(e)) {
-			return DirnBehaviourPair{driver.MD_Down, elevator.EB_Moving}
+			return DirnBehaviourPair{driver.MD_Down, EB_Moving}
 		}
-		return DirnBehaviourPair{driver.MD_Stop, elevator.EB_Idle}
+		return DirnBehaviourPair{driver.MD_Stop, EB_Idle}
 	case driver.MD_Down:
 		if intToBool(requests_below(e)) {
-			return DirnBehaviourPair{driver.MD_Down, elevator.EB_Moving}
+			return DirnBehaviourPair{driver.MD_Down, EB_Moving}
 		}
 		if intToBool(requests_here(e)) {
-			return DirnBehaviourPair{driver.MD_Up, elevator.EB_DoorOpen}
+			return DirnBehaviourPair{driver.MD_Up, EB_DoorOpen}
 		}
 		if intToBool(requests_above(e)) {
-			return DirnBehaviourPair{driver.MD_Up, elevator.EB_Moving}
+			return DirnBehaviourPair{driver.MD_Up, EB_Moving}
 		}
-		return DirnBehaviourPair{driver.MD_Stop, elevator.EB_Idle}
+		return DirnBehaviourPair{driver.MD_Stop, EB_Idle}
 	case driver.MD_Stop:
 		if intToBool(requests_here(e)) {
-			return DirnBehaviourPair{driver.MD_Stop, elevator.EB_DoorOpen}
+			return DirnBehaviourPair{driver.MD_Stop, EB_DoorOpen}
 		}
 		if intToBool(requests_above(e)) {
-			return DirnBehaviourPair{driver.MD_Up, elevator.EB_Moving}
+			return DirnBehaviourPair{driver.MD_Up, EB_Moving}
 		}
 		if intToBool(requests_below(e)) {
-			return DirnBehaviourPair{driver.MD_Down, elevator.EB_Moving}
+			return DirnBehaviourPair{driver.MD_Down, EB_Moving}
 		}
-		return DirnBehaviourPair{driver.MD_Stop, elevator.EB_Idle}
+		return DirnBehaviourPair{driver.MD_Stop, EB_Idle}
 	default:
-		return DirnBehaviourPair{driver.MD_Stop, elevator.EB_Idle}
+		return DirnBehaviourPair{driver.MD_Stop, EB_Idle}
 	}
 }
 
-func Requests_shouldStop(e elevator.Elevator) bool {
+func Requests_shouldStop(e Elevator) bool {
 	switch e.Dirn {
 	case driver.MD_Down:
 		return (intToBool(e.Request[e.Floor][driver.BT_HallDown])) ||
@@ -99,7 +98,7 @@ func Requests_shouldStop(e elevator.Elevator) bool {
 	}
 }
 
-func Requests_shouldClearImmediately(elev elevator.Elevator, btn_floor int, btn_type driver.ButtonType) bool {
+func Requests_shouldClearImmediately(elev Elevator, btn_floor int, btn_type driver.ButtonType) bool {
 	return (elev.Floor == btn_floor &&
 		((elev.Dirn == driver.MD_Up && btn_type == driver.BT_HallUp) ||
 			(elev.Dirn == driver.MD_Down && btn_type == driver.BT_HallDown) ||
@@ -107,7 +106,7 @@ func Requests_shouldClearImmediately(elev elevator.Elevator, btn_floor int, btn_
 			(btn_type == driver.BT_Cab)))
 }
 
-func Requests_clearAtCurrentFloor(elev *elevator.Elevator, myIP string, upd_request chan<- UpdateRequest) {
+func Requests_clearAtCurrentFloor(elev *Elevator, myIP string, upd_request chan<- UpdateRequest) {
 	
 	elev.SetElevatorRequest(elev.Floor, driver.BT_Cab, 0)
 	upd_request<- GenerateUpdateRequest(FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_Cab})
@@ -125,7 +124,7 @@ func Requests_clearAtCurrentFloor(elev *elevator.Elevator, myIP string, upd_requ
 
 	case driver.MD_Down:
 
-		if !intToBool(requests_below(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallUp))) {
+		if !intToBool(requests_below(*elev)) && !intToBool(elev.GetElevatorRequest(elev.Floor, int(driver.BT_HallDown))) {
 			elev.SetElevatorRequest(elev.Floor, int(driver.BT_HallUp), 0)
 			upd_request<- GenerateUpdateRequest(FinishedRequestAtFloor, driver.ButtonEvent{Floor: elev.Floor, Button: driver.BT_HallUp})
 		}

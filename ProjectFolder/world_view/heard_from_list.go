@@ -1,7 +1,7 @@
 package world_view
 
 import (
-	"Sanntid/driver"
+	"Sanntid/resources/driver"
 	"fmt"
 )
 

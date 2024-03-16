@@ -12,9 +12,6 @@ type StandardMessage struct {
 	SendTime  string               `json:"sendTime"`
 }
 
-// TODO: Should probably have functions that take in struct from wordlview
-// 			and make the whole message, such that it can be called from main
-// 			and then be given the correct variables.
 
 func GetSenderIP(message StandardMessage) string {
 	return message.IPAddress

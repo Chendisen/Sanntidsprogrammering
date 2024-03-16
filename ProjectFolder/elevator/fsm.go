@@ -1,15 +1,14 @@
-package fsm
+package elevator
 
 import (
-	"Sanntid/driver"
-	"Sanntid/elevator"
+	"Sanntid/resources/driver"
 	"Sanntid/timer"
-	. "Sanntid/resources"
+	. "Sanntid/resources/update_request"
 	"fmt"
 	"runtime"
 )
 
-func Fsm_onInitBetweenFloors(elev *elevator.Elevator, myIP string, upd_request chan UpdateRequest) {
+func Fsm_onInitBetweenFloors(elev *Elevator, myIP string, upd_request chan UpdateRequest) {
 	if elev.Floor == 0 {
 		driver.SetMotorDirection(driver.MD_Up)
 		elev.Dirn = driver.MD_Up
@@ -24,72 +23,98 @@ func Fsm_onInitBetweenFloors(elev *elevator.Elevator, myIP string, upd_request c
 		upd_request <- GenerateUpdateRequest(SetDirection, driver.MD_Down)
 	}
 
-	elev.Behaviour = elevator.EB_Moving
-	// set_behaviour<- elevator.EB_Moving
-	upd_request <- GenerateUpdateRequest(SetBehaviour, elevator.EB_Moving)
+	elev.Behaviour = EB_Moving
+	// set_behaviour<- EB_Moving
+	upd_request <- GenerateUpdateRequest(SetBehaviour, EB_Moving)
 }
 
-func Fsm_onRequestButtonPress(elev *elevator.Elevator, myIP string, tmr *timer.Timer, watchdog *timer.Timer, btn_floor int, btn_type driver.ButtonType, upd_request chan UpdateRequest) {
+func Fsm_onRequestButtonPress(elev *Elevator, myIP string, tmr *timer.Timer, watchdog *timer.Timer, btn_floor int, btn_type driver.ButtonType, upd_request chan UpdateRequest) {
 
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
-	fmt.Printf("\n\n%s(%d, %s)\n", functionName, btn_floor, driver.Driver_button_toString(btn_type))
+	fmt.Printf("\n\n%s(%d, %s)\n", functionName, btn_floor, driver.DriverButtonToString(btn_type))
 
 	switch elev.Behaviour {
 
-	case elevator.EB_DoorOpen:
+	case EB_DoorOpen:
+		fmt.Println("Door open")
 		if Requests_shouldClearImmediately(*elev, btn_floor, btn_type) {
+			fmt.Println("Req should clear immediately")
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
-			//finished_request_at_floor<- driver.ButtonEvent{Floor: btn_floor, Button: btn_type}
 			upd_request <- GenerateUpdateRequest(FinishedRequestAtFloor, driver.ButtonEvent{Floor: btn_floor, Button: btn_type})
 		} else {
 			elev.SetElevatorRequest(btn_floor, int(btn_type), 1)
 		}
 
-	case elevator.EB_Moving:
+	case EB_Moving:
+		
 		elev.SetElevatorRequest(btn_floor, int(btn_type), 1)
 
-	case elevator.EB_Idle:
+	case EB_Idle:
 
 		elev.SetElevatorRequest(btn_floor, int(btn_type), 1)
 		pair := Requests_chooseDirection(*elev)
 		elev.Dirn = pair.Dirn
 		elev.Behaviour = pair.Behaviour
-		//set_direction<- pair.Dirn
-		//set_behaviour<- pair.Behaviour
-		fmt.Println("We came from req1")
 		upd_request <- GenerateUpdateRequest(SetDirection, pair.Dirn)
 		upd_request <- GenerateUpdateRequest(SetBehaviour, pair.Behaviour)
 
 		switch pair.Behaviour {
-		case elevator.EB_DoorOpen:
+		case EB_DoorOpen:
 			driver.SetDoorOpenLamp(true)
+			fmt.Println("Req door is open clear immediately")
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
 			Requests_clearAtCurrentFloor(elev, myIP, upd_request)
 
-		case elevator.EB_Moving:
+		case EB_Moving:
 			driver.SetMotorDirection(elev.Dirn)
 			watchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
 
-		case elevator.EB_Idle:
+		case EB_Idle:
 		}
 	}
 }
 
-func Fsm_onFloorArrival(elev *elevator.Elevator, myIP string, tmr *timer.Timer, newFloor int, upd_request chan UpdateRequest) {
+func Fsm_setAssignedOrders(assignedOrders [][2]bool, elev *Elevator, myIP string, timerDoor *timer.Timer, timerWatchdog *timer.Timer, upd_request chan UpdateRequest) {
+	for floor, buttons := range assignedOrders {
+		for button, value := range buttons {
+			if value {
+				Fsm_onRequestButtonPress(elev, myIP, timerDoor, timerWatchdog, floor, driver.ButtonType(button), upd_request)
+
+			} else {
+				elev.ClearElevatorLight(floor, button)
+			}
+		}
+	}
+}
+
+func Fsm_setCabOrders(cabRequests []bool, elev *Elevator, myIP string, timerDoor *timer.Timer, timerWatchdog *timer.Timer, upd_request chan UpdateRequest) {
+	for floor, value := range cabRequests {
+		if value {
+			Fsm_onRequestButtonPress(elev, myIP, timerDoor, timerWatchdog, floor, driver.BT_Cab, upd_request)
+		} else {
+			elev.ClearElevatorLight(floor, driver.BT_Cab)
+		}
+	}
+}
+
+func Fsm_initAllOrders(ord_updated chan<- bool) {
+	ord_updated<- true
+}
+
+func Fsm_onFloorArrival(elev *Elevator, myIP string, tmr *timer.Timer, newFloor int, upd_request chan UpdateRequest) {
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
 	fmt.Printf("\n\n%s(%d)\n", functionName, newFloor) //uuuuuhhhm what is all this
 
 	elev.Floor = newFloor
-	//set_floor<- newFloor
 	upd_request <- GenerateUpdateRequest(SetFloor, newFloor)
 	driver.SetFloorIndicator(elev.Floor)
 
 	switch elev.Behaviour {
-	case elevator.EB_Moving:
+	case EB_Moving:
 		if Requests_shouldStop(*elev) {
 
 			driver.SetMotorDirection(driver.MD_Stop)
@@ -97,47 +122,43 @@ func Fsm_onFloorArrival(elev *elevator.Elevator, myIP string, tmr *timer.Timer, 
 
 			Requests_clearAtCurrentFloor(elev, myIP, upd_request)
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
+			fmt.Println("Elevator should stop here")
 
-			elev.Behaviour = elevator.EB_DoorOpen
-			//set_behaviour<- elevator.EB_DoorOpen
-			upd_request <- GenerateUpdateRequest(SetBehaviour, elevator.EB_DoorOpen)
+			elev.Behaviour = EB_DoorOpen
+			upd_request <- GenerateUpdateRequest(SetBehaviour, EB_DoorOpen)
 		}
 	default:
 	}
 }
 
-func Fsm_onDoorTimeout(elev *elevator.Elevator, myIP string, tmr *timer.Timer, watchdog *timer.Timer, upd_request chan UpdateRequest) {
+func Fsm_onDoorTimeout(elev *Elevator, myIP string, tmr *timer.Timer, watchdog *timer.Timer, upd_request chan UpdateRequest) {
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
 
 	fmt.Printf("\n\n%s()\n", functionName) //uuuuuhhhm what is all this
 
 	switch elev.Behaviour {
-	case elevator.EB_DoorOpen:
+	case EB_DoorOpen:
 		pair := Requests_chooseDirection(*elev)
+		fmt.Printf("The old direction of the elevator is: %d", elev.Dirn)
 		elev.Dirn = pair.Dirn
 		elev.Behaviour = pair.Behaviour
-		//set_direction<- pair.Dirn
-		//set_behaviour<- pair.Behaviour
 
-		fmt.Printf("The type of the data is: %T\n", elev.Dirn)
-		fmt.Println("We came from req1")
 		upd_request <- GenerateUpdateRequest(SetDirection, elev.Dirn)
-
-		fmt.Printf("We sent the direction")
 		upd_request <- GenerateUpdateRequest(SetBehaviour, elev.Behaviour)
 
 		switch elev.Behaviour {
-		case elevator.EB_DoorOpen:
+		case EB_DoorOpen:
+			fmt.Println("The door is still open")
 			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
 			Requests_clearAtCurrentFloor(elev, myIP, upd_request)
 
-		case elevator.EB_Moving:
+		case EB_Moving:
 			driver.SetDoorOpenLamp(false)
 			driver.SetMotorDirection(elev.Dirn)
 			watchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
 
-		case elevator.EB_Idle:
+		case EB_Idle:
 			driver.SetDoorOpenLamp(false)
 			driver.SetMotorDirection(elev.Dirn)
 			watchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
