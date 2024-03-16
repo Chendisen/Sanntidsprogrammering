@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const PeriodInMilliseconds int = 100
+
 func StartCommunication(myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, inc_message chan world_view.StandardMessage, hfl *world_view.HeardFromList, lightArray *world_view.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	time.Sleep(2 * time.Second)
@@ -38,7 +40,7 @@ func StartCommunication(myView *world_view.WorldView, networkOverview *world_vie
 			standardMessage.WorldView = *myView
 			standardMessage.SendTime = time.Now().String()[11:19]
 			msgTx <- standardMessage
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(time.Duration(PeriodInMilliseconds) * time.Millisecond)
 		}
 	}()
 
