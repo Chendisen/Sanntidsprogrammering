@@ -26,6 +26,7 @@ type Elevator struct {
 	DoorObstructed											bool
 }
 
+
 func ElevatorBehaviourToString(elevatorBehaviour ElevatorBehaviour) string {
 	switch elevatorBehaviour {
 	case EB_Idle:
@@ -63,6 +64,7 @@ func Elevator_print(elev Elevator) {
 	}
 	fmt.Println("  +-----------------------+")
 }
+
 
 func Elevator_uninitialized() Elevator {
 	return Elevator {

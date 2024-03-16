@@ -138,9 +138,9 @@ func (worldView *WorldView) AddNewNodes(newView WorldView) {
 
 func (currentView *WorldView) UpdateWorldViewOnReceivedMessage(receivedMessage StandardMessage, myIP string, networkOverview NetworkOverview, heardFromList *HeardFromList, lightArray *elevator.LightArray, ord_updated chan<- bool, wld_updated chan<- bool) {
 
-	newView := receivedMessage.WorldView
-	senderIP := receivedMessage.IPAddress
-	sendTime := receivedMessage.SendTime
+	newView := receivedMessage.GetWorldView()
+	senderIP := receivedMessage.GetSenderIP()
+	sendTime := receivedMessage.GetSendTime()
 	
 	if senderIP == myIP {
 		if !networkOverview.AmIMaster() {
@@ -250,7 +250,7 @@ func UpdateSynchronisedRequests(cur_req *OrderStatus, rcd_req OrderStatus, heard
 }
 
 func (worldView WorldView) PrintWorldView() {
-	/*for IP, states := range worldView.States {
+	for IP, states := range worldView.States {
 
 		fmt.Printf("State of %s: \n", IP)
 		fmt.Printf("		Floor: %d\n", states.Floor)
@@ -258,12 +258,12 @@ func (worldView WorldView) PrintWorldView() {
 		fmt.Printf("	Direction: %s\n", states.Direction)
 		fmt.Println("")
 
-	}*/
+	}
 
-	/*fmt.Println("Hall requests: ")
-	for floor, floor := range worldView.HallRequests {
+	fmt.Println("Hall requests: ")
+	for floor, buttons := range worldView.HallRequests {
 		fmt.Printf("Floor: %d\n", floor)
-		for button, buttonStatus := range floor {
+		for button, buttonStatus := range buttons {
 			fmt.Printf("	Button: %d, Status: %d\n", button, buttonStatus)
 		}
 	}
@@ -275,7 +275,7 @@ func (worldView WorldView) PrintWorldView() {
 			fmt.Printf("		Floor: %d, Status: %d\n", floor, buttonStatus)
 		}
 		fmt.Println("")
-	}*/
+	}
 
 	fmt.Println("Assigned orders: ")
 	for IP, orders := range worldView.AssignedOrders {

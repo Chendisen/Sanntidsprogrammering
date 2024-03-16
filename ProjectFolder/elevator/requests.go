@@ -10,10 +10,11 @@ type DirnBehaviourPair struct {
 	Behaviour ElevatorBehaviour
 }
 
-func requests_above(e Elevator) int {
-	for floor := e.Floor + 1; floor < driver.N_FLOORS; floor++ {
+
+func requests_above(elev Elevator) int {
+	for floor := elev.Floor + 1; floor < driver.N_FLOORS; floor++ {
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
-			if intToBool(e.Request[floor][btn]) {
+			if intToBool(elev.Request[floor][btn]) {
 				return 1
 			}
 		}
@@ -21,10 +22,10 @@ func requests_above(e Elevator) int {
 	return 0
 }
 
-func requests_below(e Elevator) int {
-	for floor := 0; floor < e.Floor; floor++ {
+func requests_below(elev Elevator) int {
+	for floor := 0; floor < elev.Floor; floor++ {
 		for btn := 0; btn < driver.N_BUTTONS; btn++ {
-			if intToBool(e.Request[floor][btn]) {
+			if intToBool(elev.Request[floor][btn]) {
 				return 1
 			}
 		}
@@ -32,47 +33,47 @@ func requests_below(e Elevator) int {
 	return 0
 }
 
-func requests_here(e Elevator) int {
+func requests_here(elev Elevator) int {
 	for btn := 0; btn < driver.N_BUTTONS; btn++ {
-		if intToBool(e.Request[e.Floor][btn]) {
+		if intToBool(elev.Request[elev.Floor][btn]) {
 			return 1
 		}
 	}
 	return 0
 }
 
-func Requests_chooseDirection(e Elevator) DirnBehaviourPair {
-	switch e.Dirn {
+func Requests_chooseDirection(elev Elevator) DirnBehaviourPair {
+	switch elev.Dirn {
 	case driver.MD_Up:
-		if intToBool(requests_above(e)) {
+		if intToBool(requests_above(elev)) {
 			return DirnBehaviourPair{driver.MD_Up, EB_Moving}
 		}
-		if intToBool(requests_here(e)) {
+		if intToBool(requests_here(elev)) {
 			return DirnBehaviourPair{driver.MD_Down, EB_DoorOpen}
 		}
-		if intToBool(requests_below(e)) {
+		if intToBool(requests_below(elev)) {
 			return DirnBehaviourPair{driver.MD_Down, EB_Moving}
 		}
 		return DirnBehaviourPair{driver.MD_Stop, EB_Idle}
 	case driver.MD_Down:
-		if intToBool(requests_below(e)) {
+		if intToBool(requests_below(elev)) {
 			return DirnBehaviourPair{driver.MD_Down, EB_Moving}
 		}
-		if intToBool(requests_here(e)) {
+		if intToBool(requests_here(elev)) {
 			return DirnBehaviourPair{driver.MD_Up, EB_DoorOpen}
 		}
-		if intToBool(requests_above(e)) {
+		if intToBool(requests_above(elev)) {
 			return DirnBehaviourPair{driver.MD_Up, EB_Moving}
 		}
 		return DirnBehaviourPair{driver.MD_Stop, EB_Idle}
 	case driver.MD_Stop:
-		if intToBool(requests_here(e)) {
+		if intToBool(requests_here(elev)) {
 			return DirnBehaviourPair{driver.MD_Stop, EB_DoorOpen}
 		}
-		if intToBool(requests_above(e)) {
+		if intToBool(requests_above(elev)) {
 			return DirnBehaviourPair{driver.MD_Up, EB_Moving}
 		}
-		if intToBool(requests_below(e)) {
+		if intToBool(requests_below(elev)) {
 			return DirnBehaviourPair{driver.MD_Down, EB_Moving}
 		}
 		return DirnBehaviourPair{driver.MD_Stop, EB_Idle}
@@ -81,16 +82,16 @@ func Requests_chooseDirection(e Elevator) DirnBehaviourPair {
 	}
 }
 
-func Requests_shouldStop(e Elevator) bool {
-	switch e.Dirn {
+func Requests_shouldStop(elev Elevator) bool {
+	switch elev.Dirn {
 	case driver.MD_Down:
-		return (intToBool(e.Request[e.Floor][driver.BT_HallDown])) ||
-			(intToBool(e.Request[e.Floor][driver.BT_Cab])) ||
-			!intToBool(requests_below(e))
+		return (intToBool(elev.Request[elev.Floor][driver.BT_HallDown])) ||
+			(intToBool(elev.Request[elev.Floor][driver.BT_Cab])) ||
+			!intToBool(requests_below(elev))
 	case driver.MD_Up:
-		return (intToBool(e.Request[e.Floor][driver.BT_HallUp])) ||
-			(intToBool(e.Request[e.Floor][driver.BT_Cab])) ||
-			!intToBool(requests_above(e))
+		return (intToBool(elev.Request[elev.Floor][driver.BT_HallUp])) ||
+			(intToBool(elev.Request[elev.Floor][driver.BT_Cab])) ||
+			!intToBool(requests_above(elev))
 	case driver.MD_Stop:
 		return true
 	default:

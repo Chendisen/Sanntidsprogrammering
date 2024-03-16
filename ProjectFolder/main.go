@@ -25,8 +25,8 @@ func main() {
 	myID := *idFlag
 
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
-	var timerDoor timer.Timer = timer.Timer_uninitialized()
-	var timerWatchdog timer.Timer = timer.Timer_uninitialized()
+	var timerDoor timer.Timer = timer.TimerUninitialized()
+	var timerWatchdog timer.Timer = timer.TimerUninitialized()
 	var networkOverview world_view.NetworkOverview = world_view.MakeNetworkOverviewWithIDFlag(fmt.Sprintf("%d", myID))
 	var worldView world_view.WorldView = world_view.MakeWorldView(networkOverview.GetMyIP())
 	var heardFromList world_view.HeardFromList = world_view.MakeHeardFromList(networkOverview.GetMyIP())
@@ -82,7 +82,7 @@ func main() {
 	elevator.Fsm_onInitBetweenFloors(&elev, networkOverview.MyIP, upd_request)
 	elevator.Fsm_initAllOrders(ord_updated)
 	lightArray.InitLights(worldView.GetHallRequests(), worldView.GetMyCabRequests(networkOverview.GetMyIP()))
-	timerWatchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
+	timerWatchdog.TimerStart(timer.WATCHDOG_TimeoutTime)
 
 	for {
 		select {
@@ -91,7 +91,7 @@ func main() {
 
 		case a := <-drv_floors:
 			elevator.Fsm_onFloorArrival(&elev, networkOverview.MyIP, &timerDoor, a, upd_request)
-			timerWatchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
+			timerWatchdog.TimerStart(timer.WATCHDOG_TimeoutTime)
 
 		case a := <-drv_obstr:
 			elev.DoorObstructed = a

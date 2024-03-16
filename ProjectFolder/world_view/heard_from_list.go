@@ -5,10 +5,10 @@ import (
 	"fmt"
 )
 
-
 type HeardFromList struct {
 	HeardFrom map[string][][3]bool
 }
+
 
 func MakeHeardFromList(myIP string) HeardFromList {
 	heardFromList := HeardFromList{HeardFrom: make(map[string][][3]bool)}

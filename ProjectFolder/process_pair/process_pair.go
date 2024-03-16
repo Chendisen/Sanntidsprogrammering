@@ -16,9 +16,9 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 	time.Sleep(2 * time.Second)
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
-	go peers.Receiver(55555, peerUpdateCh)
-
 	msgRx := make(chan world_view.StandardMessage, 10)
+	
+	go peers.Receiver(55555, peerUpdateCh)
 	go bcast.Receiver(11111, msgRx)
 
 	var p peers.PeerUpdate
@@ -26,7 +26,7 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 	fmt.Println("Started listening to primary")
 
 	timeOut := make(chan bool)
-	tmr.Timer_start(timer.PROCESS_PAIR_TimeoutTime)
+	tmr.TimerStart(timer.PROCESS_PAIR_TimeoutTime)
 	go process_pair_timer.CheckProcessPairTimeout(tmr, timer.PROCESS_PAIR_TimeoutTime, timeOut)
 
 	for {
@@ -37,12 +37,12 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 			if len(p.Lost) > 0  {
 				for _,IP := range p.Lost {
 					if IP == myIP {
-						tmr.Timer_start(timer.PROCESS_PAIR_TimeoutTime)
+						tmr.TimerStart(timer.PROCESS_PAIR_TimeoutTime)
 						break
 					}
 				}
 				} else if p.New == myIP {
-					tmr.Timer_stop()
+					tmr.TimerStop()
 				}
 				
 			fmt.Printf("new peer: %s My IP: %s", p.New, myIP)
@@ -58,7 +58,6 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 			}
 
 		case <-timeOut:
-			fmt.Println("Are we often in here?")
 			if len(p.Peers) > 0{
 				*storedView = world_view.MakeWorldView(myIP)
 			}

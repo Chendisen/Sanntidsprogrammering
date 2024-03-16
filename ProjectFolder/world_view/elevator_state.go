@@ -13,6 +13,7 @@ type ElevatorState struct {
 	Available   bool          `json:"Available"`
 }
 
+
 func MakeElevatorState() *ElevatorState {
 	newElevator := new(ElevatorState)
 	*newElevator = ElevatorState{Behaviour: "idle", Floor: -1, Direction: "stop", CabRequests: make([]OrderStatus, driver.N_FLOORS), Available: true}

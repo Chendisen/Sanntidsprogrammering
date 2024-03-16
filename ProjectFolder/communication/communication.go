@@ -1,7 +1,6 @@
 package communication
 
 import (
-	//"Sanntid/message_handler"
 	"Sanntid/communication/bcast"
 	"Sanntid/communication/peers"
 	"Sanntid/timer"
@@ -13,7 +12,7 @@ import (
 
 const PeriodInMilliseconds int = 100
 
-func StartCommunication(myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, msg_received chan world_view.StandardMessage, hfl *world_view.HeardFromList, ord_updated chan<- bool, wld_updated chan<- bool) {
+func StartCommunication(myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, msg_received chan world_view.StandardMessage, heardFromList *world_view.HeardFromList, ord_updated chan<- bool, wld_updated chan<- bool) {
 
 	time.Sleep(2 * time.Second)
 
@@ -31,7 +30,7 @@ func StartCommunication(myView *world_view.WorldView, networkOverview *world_vie
 
 	var standardMessage world_view.StandardMessage = world_view.CreateStandardMessage(*myView, networkOverview.GetMyIP(), time.Now().String()[11:19])
 
-	var timerNetwork timer.Timer = timer.Timer_uninitialized()
+	var timerNetwork timer.Timer = timer.TimerUninitialized()
 	net_lost := make(chan bool)
 	go network_timer.CheckNetworkTimeout(&timerNetwork, myView, networkOverview.GetMyIP(), msgRx, net_lost)
 
@@ -59,16 +58,15 @@ func StartCommunication(myView *world_view.WorldView, networkOverview *world_vie
 
 			if networkOverview.NetworkLost(p) {
 				p.Peers = append(p.Peers, networkOverview.GetMyIP())
-				timerNetwork.Timer_start(timer.NETWORK_TIMER_TimoutTime)
+				timerNetwork.TimerStart(timer.NETWORK_TIMER_TimoutTime)
 			} else {
-				timerNetwork.Timer_stop()
+				timerNetwork.TimerStop()
 			}
 
 			networkOverview.UpdateNetworkOverview(p)
 			if len(p.New) > 0 {
-				hfl.AddNodeToList(p.New)
+				heardFromList.AddNodeToList(p.New)
 			}
-
 			if len(p.Lost) > 0 {
 				wld_updated <- true
 			}
@@ -80,13 +78,13 @@ func StartCommunication(myView *world_view.WorldView, networkOverview *world_vie
 			fmt.Printf((" Am i master?:  %t\n"), networkOverview.AmIMaster())
 
 		case recievedMsg := <-msgRx:
-			//myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, hfl, lightArray, ord_updated, wld_updated)
+			//myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
 			msg_received <- recievedMsg
 		case networkLost := <-net_lost:
 			if networkLost {
-				timerNetwork.Timer_start(timer.NETWORK_TIMER_TimoutTime)
+				timerNetwork.TimerStart(timer.NETWORK_TIMER_TimoutTime)
 			} else {
-				timerNetwork.Timer_stop()
+				timerNetwork.TimerStop()
 			}
 		}
 	}
