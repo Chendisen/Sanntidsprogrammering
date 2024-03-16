@@ -27,7 +27,8 @@ func main() {
 	var elev elevator.Elevator = elevator.Elevator_uninitialized()
 	var timerDoor timer.Timer = timer.TimerUninitialized()
 	var timerWatchdog timer.Timer = timer.TimerUninitialized()
-	var networkOverview world_view.NetworkOverview = world_view.MakeNetworkOverviewWithIDFlag(fmt.Sprintf("%d", myID))
+	// var networkOverview world_view.NetworkOverview = world_view.MakeNetworkOverviewWithIDFlag(fmt.Sprintf("%d", myID))   ////// For running with Simulator
+	var networkOverview world_view.NetworkOverview = world_view.MakeNetworkOverview()										////// For running Physical elevators
 	var worldView world_view.WorldView = world_view.MakeWorldView(networkOverview.GetMyIP())
 	var heardFromList world_view.HeardFromList = world_view.MakeHeardFromList(networkOverview.GetMyIP())
 	var lightArray elevator.LightArray = elevator.MakeLightArray()
@@ -53,7 +54,8 @@ func main() {
 	}
 
 	path, _ := os.Getwd()
-	cmd := exec.Command("gnome-terminal", "--window", "--", "sh", "-c", "cd "+path+" && go run main.go -id "+fmt.Sprintf("%d",myID))
+	// cmd := exec.Command("gnome-terminal", "--window", "--", "sh", "-c", "cd "+path+" && go run main.go -id "+fmt.Sprintf("%d",myID))   	////// For running with Simulator
+	cmd := exec.Command("gnome-terminal", "--window", "--", "sh", "-c", "cd "+path+" && go run main.go")      								////// For running Physical elevators
 	err := cmd.Start()
 	if err != nil {
 		fmt.Println("Failed to start myself")
