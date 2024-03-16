@@ -33,9 +33,7 @@ func Fsm_onRequestButtonPress(elev *Elevator, myIP string, tmr *timer.Timer, wat
 	switch elev.Behaviour {
 
 	case EB_DoorOpen:
-		fmt.Println("Door open")
 		if Requests_shouldClearImmediately(*elev, btn_floor, btn_type) {
-			fmt.Println("Req should clear immediately")
 			tmr.TimerStart(elev.Config.DoorOpenDuration_s)
 			upd_request <- GenerateUpdateRequest(FinishedRequestAtFloor, driver.ButtonEvent{Floor: btn_floor, Button: btn_type})
 		} else {
@@ -116,7 +114,6 @@ func Fsm_onFloorArrival(elev *Elevator, myIP string, tmr *timer.Timer, newFloor 
 
 			Requests_clearAtCurrentFloor(elev, myIP, upd_request)
 			tmr.TimerStart(elev.Config.DoorOpenDuration_s)
-			fmt.Println("Elevator should stop here")
 
 			elev.Behaviour = EB_DoorOpen
 			upd_request <- GenerateUpdateRequest(SetBehaviour, EB_DoorOpen)
@@ -134,7 +131,6 @@ func Fsm_onDoorTimeout(elev *Elevator, myIP string, tmr *timer.Timer, watchdog *
 	switch elev.Behaviour {
 	case EB_DoorOpen:
 		pair := Requests_chooseDirection(*elev)
-		fmt.Printf("The old direction of the elevator is: %d", elev.Dirn)
 		elev.Dirn = pair.Dirn
 		elev.Behaviour = pair.Behaviour
 
@@ -143,7 +139,6 @@ func Fsm_onDoorTimeout(elev *Elevator, myIP string, tmr *timer.Timer, watchdog *
 
 		switch elev.Behaviour {
 		case EB_DoorOpen:
-			fmt.Println("The door is still open")
 			tmr.TimerStart(elev.Config.DoorOpenDuration_s)
 			Requests_clearAtCurrentFloor(elev, myIP, upd_request)
 

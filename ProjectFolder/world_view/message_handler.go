@@ -3,6 +3,7 @@ package world_view
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 type StandardMessage struct {
@@ -11,17 +12,19 @@ type StandardMessage struct {
 	SendTime  string                `json:"sendTime"`
 }
 
+const PeriodInMilliseconds int = 100
 
-func (message StandardMessage) GetSenderIP() string {
-	return message.IPAddress
+
+func (standardMessage StandardMessage) GetSenderIP() string {
+	return standardMessage.IPAddress
 }
 
-func (message StandardMessage) GetWorldView() WorldView {
-	return message.WorldView
+func (standardMessage StandardMessage) GetWorldView() WorldView {
+	return standardMessage.WorldView
 }
 
-func (message StandardMessage) GetSendTime() string {
-	return message.SendTime
+func (standardMessage StandardMessage) GetSendTime() string {
+	return standardMessage.SendTime
 }
 
 func CreateStandardMessage(worldView WorldView, myIP string, sendTime string) StandardMessage {
@@ -32,8 +35,17 @@ func CreateStandardMessage(worldView WorldView, myIP string, sendTime string) St
 	}
 }
 
-func PackMessage(message StandardMessage) []byte {
-	jsonBytes, err := json.Marshal(message)
+func (standardMessage *StandardMessage) ContinuouslyUpdateTransmittedMessage(myView *WorldView, msgTx chan<- StandardMessage) {
+	for {
+		standardMessage.WorldView = *myView
+		standardMessage.SendTime = time.Now().String()[11:19]
+		msgTx <- *standardMessage
+		time.Sleep(time.Duration(PeriodInMilliseconds) * time.Millisecond)
+	}
+}
+
+func PackMessage(standardMessage StandardMessage) []byte {
+	jsonBytes, err := json.Marshal(standardMessage)
 	if err != nil {
 		fmt.Println("json.Marshal error: ", err)
 		panic(err)
@@ -42,11 +54,11 @@ func PackMessage(message StandardMessage) []byte {
 }
 
 func UnpackMessage(jsonBytes []byte) StandardMessage {
-	var message StandardMessage
-	err := json.Unmarshal(jsonBytes, &message)
+	var standardMessage StandardMessage
+	err := json.Unmarshal(jsonBytes, &standardMessage)
 	if err != nil {
 		fmt.Println("json.Unmarshal error: ", err)
 		panic(err)
 	}
-	return message
+	return standardMessage
 }

@@ -112,7 +112,6 @@ func main() {
 			stop_button.STOP()
 
 		case <-ord_updated:
-			elev.PrintRequest()
 			go func() {
 				lightArray.SetAllLights()
 				if worldView.GetMyAvailabilityStatus(networkOverview.MyIP) {

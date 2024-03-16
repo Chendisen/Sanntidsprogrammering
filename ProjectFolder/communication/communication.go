@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-const PeriodInMilliseconds int = 100
 
 func StartCommunication(myView *world_view.WorldView, networkOverview *world_view.NetworkOverview, msg_received chan world_view.StandardMessage, heardFromList *world_view.HeardFromList, ord_updated chan<- bool, wld_updated chan<- bool) {
 
@@ -34,21 +33,9 @@ func StartCommunication(myView *world_view.WorldView, networkOverview *world_vie
 	net_lost := make(chan bool)
 	go network_timer.CheckNetworkTimeout(&timerNetwork, myView, networkOverview.GetMyIP(), msgRx, net_lost)
 
-	go func() {
-		for {
-			standardMessage.WorldView = *myView
-			standardMessage.SendTime = time.Now().String()[11:19]
-			msgTx <- standardMessage
-			time.Sleep(time.Duration(PeriodInMilliseconds) * time.Millisecond)
-		}
-	}()
+	go standardMessage.ContinuouslyUpdateTransmittedMessage(myView, msgTx)
+	go peers.InitPeers(peerUpdateCh)
 
-	go func () {peerUpdateCh <- peers.PeerUpdate{
-		Peers: make([]string, 0),
-		New: "",
-		Lost: make([]string, 0),
-	}
-	} ()
 	
 	fmt.Println("Started communications")
 	
@@ -78,7 +65,6 @@ func StartCommunication(myView *world_view.WorldView, networkOverview *world_vie
 			fmt.Printf((" Am i master?:  %t\n"), networkOverview.AmIMaster())
 
 		case recievedMsg := <-msgRx:
-			//myView.UpdateWorldView(recievedMsg.WorldView, recievedMsg.IPAddress, recievedMsg.SendTime, networkOverview.MyIP, *networkOverview, heardFromList, lightArray, ord_updated, wld_updated)
 			msg_received <- recievedMsg
 		case networkLost := <-net_lost:
 			if networkLost {

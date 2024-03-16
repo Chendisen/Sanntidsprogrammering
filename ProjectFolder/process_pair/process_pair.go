@@ -45,8 +45,6 @@ func ProcessPair(myIP string, storedView *world_view.WorldView, tmr *timer.Timer
 					tmr.TimerStop()
 				}
 				
-			fmt.Printf("new peer: %s My IP: %s", p.New, myIP)
-				
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)

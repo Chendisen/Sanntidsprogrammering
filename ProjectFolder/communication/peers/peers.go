@@ -85,3 +85,11 @@ func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 		}
 	}
 }
+
+func InitPeers(peerUpdateCh chan<- PeerUpdate) {
+	peerUpdateCh<- PeerUpdate{
+		Peers: make([]string, 0),
+		New: "",
+		Lost: make([]string, 0),
+	}
+}
