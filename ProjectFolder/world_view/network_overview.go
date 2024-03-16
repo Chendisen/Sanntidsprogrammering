@@ -30,38 +30,8 @@ func (networkOverview NetworkOverview) GetMyIP() string {
 	return networkOverview.MyIP
 }
 
-func (networkOverview *NetworkOverview) InitNodesAlive(onlyAliveNode string) {
-	networkOverview.NodesAlive[0] = onlyAliveNode
-}
-
-func (networkOverview *NetworkOverview) SetMyIP(myIP string) {
-	networkOverview.MyIP = myIP
-}
-
-func (networkOverview *NetworkOverview) SetMaster (master string) {
-	networkOverview.Master = master
-}
-
 func (networkOverview NetworkOverview) AmIMaster() bool {
 	if networkOverview.Master == networkOverview.MyIP {
-		return true
-	} else {
-		return false
-	}
-}
-
-func (networkOverview NetworkOverview) AmIAlive(myIP string) bool {
-	var amIAlive bool = false
-	for _, aliveNode := range networkOverview.NodesAlive {
-		amIAlive = amIAlive || myIP == aliveNode
-	}
-	return amIAlive
-}
-
-func (networkOverview NetworkOverview) ShouldUpdateList(p peers.PeerUpdate) bool {
-	if len(p.Lost) != 0 {
-		return true
-	} else if len(p.New) != 0 {
 		return true
 	} else {
 		return false

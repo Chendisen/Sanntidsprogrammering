@@ -3,33 +3,32 @@ package world_view
 import (
 	"encoding/json"
 	"fmt"
-	//"Sanntid/world_view"
 )
 
 type StandardMessage struct {
-	IPAddress string               `json:"IPAddress"`
-	WorldView WorldView `json:"worldView"`
-	SendTime  string               `json:"sendTime"`
+	IPAddress string                `json:"IPAddress"`
+	WorldView WorldView 			`json:"worldView"`
+	SendTime  string                `json:"sendTime"`
 }
 
 
-func GetSenderIP(message StandardMessage) string {
+func (message StandardMessage) GetSenderIP() string {
 	return message.IPAddress
 }
 
-func GetWorldView(message StandardMessage) WorldView {
+func (message StandardMessage) GetWorldView() WorldView {
 	return message.WorldView
 }
 
-func GetSendTime(message StandardMessage) string {
+func (message StandardMessage) GetSendTime() string {
 	return message.SendTime
 }
 
-func CreateStandardMessage(a_world_view WorldView, ip_address string, send_time string) StandardMessage {
+func CreateStandardMessage(worldView WorldView, myIP string, sendTime string) StandardMessage {
 	return StandardMessage{
-		IPAddress: ip_address,
-		WorldView: a_world_view,
-		SendTime:  send_time,
+		IPAddress: myIP,
+		WorldView: worldView,
+		SendTime:  sendTime,
 	}
 }
 

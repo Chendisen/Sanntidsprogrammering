@@ -33,6 +33,9 @@ func AssignOrders(worldView world_view.WorldView, networkOverview world_view.Net
 		panic("OS not supported")
 	}
 
+
+	// Generate HRA Input
+
 	var states map[string]HRAElevState = make(map[string]HRAElevState)
 	for _, alive_elevator := range networkOverview.NodesAlive {
 		if worldView.States[alive_elevator].GetAvailabilityStatus() {
@@ -55,8 +58,6 @@ func AssignOrders(worldView world_view.WorldView, networkOverview world_view.Net
 		States:       states,
 	}
 
-	// input.PrintInput()
-	// worldView.PrintWorldView()
 
 	jsonBytes, err := json.Marshal(input)
 	if err != nil {
@@ -75,7 +76,6 @@ func AssignOrders(worldView world_view.WorldView, networkOverview world_view.Net
 	}
 
 	upd_request <- GenerateUpdateRequest(SetAssignedOrders, *output)
-	// worldView.PrintWorldView()
 }
 
 func (inp HRAInput) PrintInput() {

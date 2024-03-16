@@ -12,19 +12,14 @@ func Fsm_onInitBetweenFloors(elev *Elevator, myIP string, upd_request chan Updat
 	if elev.Floor == 0 {
 		driver.SetMotorDirection(driver.MD_Up)
 		elev.Dirn = driver.MD_Up
-		// set_direction<- driver.MD_Up
-		fmt.Println("We came from init1")
 		upd_request <- GenerateUpdateRequest(SetDirection, driver.MD_Up)
 	} else {
 		driver.SetMotorDirection(driver.MD_Down)
 		elev.Dirn = driver.MD_Down
-		// set_direction<- driver.MD_Down
-		fmt.Println("We came from init2")
 		upd_request <- GenerateUpdateRequest(SetDirection, driver.MD_Down)
 	}
 
 	elev.Behaviour = EB_Moving
-	// set_behaviour<- EB_Moving
 	upd_request <- GenerateUpdateRequest(SetBehaviour, EB_Moving)
 }
 
@@ -41,7 +36,7 @@ func Fsm_onRequestButtonPress(elev *Elevator, myIP string, tmr *timer.Timer, wat
 		fmt.Println("Door open")
 		if Requests_shouldClearImmediately(*elev, btn_floor, btn_type) {
 			fmt.Println("Req should clear immediately")
-			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
+			tmr.TimerStart(elev.Config.DoorOpenDuration_s)
 			upd_request <- GenerateUpdateRequest(FinishedRequestAtFloor, driver.ButtonEvent{Floor: btn_floor, Button: btn_type})
 		} else {
 			elev.SetElevatorRequest(btn_floor, int(btn_type), 1)
@@ -63,17 +58,20 @@ func Fsm_onRequestButtonPress(elev *Elevator, myIP string, tmr *timer.Timer, wat
 		switch pair.Behaviour {
 		case EB_DoorOpen:
 			driver.SetDoorOpenLamp(true)
-			fmt.Println("Req door is open clear immediately")
-			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
+			tmr.TimerStart(elev.Config.DoorOpenDuration_s)
 			Requests_clearAtCurrentFloor(elev, myIP, upd_request)
 
 		case EB_Moving:
 			driver.SetMotorDirection(elev.Dirn)
-			watchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
+			watchdog.TimerStart(timer.WATCHDOG_TimeoutTime)
 
 		case EB_Idle:
 		}
 	}
+}
+
+func Fsm_initAllOrders(ord_updated chan<- bool) {
+	ord_updated<- true
 }
 
 func Fsm_setAssignedOrders(assignedOrders [][2]bool, elev *Elevator, myIP string, timerDoor *timer.Timer, timerWatchdog *timer.Timer, upd_request chan UpdateRequest) {
@@ -99,10 +97,6 @@ func Fsm_setCabOrders(cabRequests []bool, elev *Elevator, myIP string, timerDoor
 	}
 }
 
-func Fsm_initAllOrders(ord_updated chan<- bool) {
-	ord_updated<- true
-}
-
 func Fsm_onFloorArrival(elev *Elevator, myIP string, tmr *timer.Timer, newFloor int, upd_request chan UpdateRequest) {
 	pc, _, _, _ := runtime.Caller(0)
 	functionName := runtime.FuncForPC(pc).Name()
@@ -121,7 +115,7 @@ func Fsm_onFloorArrival(elev *Elevator, myIP string, tmr *timer.Timer, newFloor 
 			driver.SetDoorOpenLamp(true)
 
 			Requests_clearAtCurrentFloor(elev, myIP, upd_request)
-			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
+			tmr.TimerStart(elev.Config.DoorOpenDuration_s)
 			fmt.Println("Elevator should stop here")
 
 			elev.Behaviour = EB_DoorOpen
@@ -150,18 +144,18 @@ func Fsm_onDoorTimeout(elev *Elevator, myIP string, tmr *timer.Timer, watchdog *
 		switch elev.Behaviour {
 		case EB_DoorOpen:
 			fmt.Println("The door is still open")
-			tmr.Timer_start(elev.Config.DoorOpenDuration_s)
+			tmr.TimerStart(elev.Config.DoorOpenDuration_s)
 			Requests_clearAtCurrentFloor(elev, myIP, upd_request)
 
 		case EB_Moving:
 			driver.SetDoorOpenLamp(false)
 			driver.SetMotorDirection(elev.Dirn)
-			watchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
+			watchdog.TimerStart(timer.WATCHDOG_TimeoutTime)
 
 		case EB_Idle:
 			driver.SetDoorOpenLamp(false)
 			driver.SetMotorDirection(elev.Dirn)
-			watchdog.Timer_start(timer.WATCHDOG_TimeoutTime)
+			watchdog.TimerStart(timer.WATCHDOG_TimeoutTime)
 		}
 	default:
 	}

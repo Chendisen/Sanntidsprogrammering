@@ -7,7 +7,7 @@ import (
 
 func CheckProcessPairTimeout(tmr *timer.Timer, timer_duration float64, timeout chan<- bool){
 	for {
-		if tmr.Timer_timedOut(timer_duration){
+		if tmr.TimerTimedOut(timer_duration){
 			timeout<-true
 			return
 		}
